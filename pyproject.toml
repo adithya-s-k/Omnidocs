@@ -16,7 +16,7 @@ rich = "^13.9.4"
 # Core dependencies that will always be installed
 pandas = "^2.2.2"
 Pillow = "^9.5.0"
-huggingface-hub>=0.26.2
+huggingface-hub = ">=0.26.2"
 
 
 # Layout Analysis dependencies
