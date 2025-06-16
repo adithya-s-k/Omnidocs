@@ -21,7 +21,7 @@ huggingface-hub = "^0.26.2"
 # Layout Analysis dependencies
 torch = { version = "^2.3.1", optional = true }
 torchvision = { version = "^0.19.1", optional = true }
-doclayout-yolo = { version = "^0.0.2", optional = true }
+doclayout-yolo = { version = ">=0.0.2,<0.0.3", optional = true }
 iopath = { version = "^0.1.9", optional = true }
 timm = { version = "^1.0.9", optional = true }
 einops = { version = "^0.8.0", optional = true }
