@@ -1,0 +1,16 @@
+# Math Expression Models - Strict versions required
+texteller
+nougat-ocr==0.1.17
+texify==0.2.1
+unimernet==0.2.1
+
+# Core dependencies
+torch>=2.2.2,<=2.3.1
+torchvision>=0.17.0,<1.0.0
+transformers>=4.40.0,<5.0.0
+timm>=0.5.4,<1.0.0
+pydantic
+Pillow
+rich
+opencv-python
+huggingface-hub

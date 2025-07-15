@@ -88,12 +88,17 @@ class TexifyExtractor(BaseLatexExtractor):
             confidences = []
             
             for result in results:
-                latex_expr = result.get('latex', '')
-                confidence = result.get('confidence', None)
-                
+                # Handle both string and dict results
+                if isinstance(result, str):
+                    latex_expr = result
+                    confidence = 1.0  # Default confidence for string results
+                else:
+                    latex_expr = result.get('latex', '')
+                    confidence = result.get('confidence', 1.0)
+
                 # Map to standard format
                 mapped_expr = self.map_expression(latex_expr)
-                
+
                 expressions.append(mapped_expr)
                 confidences.append(confidence)
             

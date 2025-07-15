@@ -1,6 +1,6 @@
 import sys
 import logging
-from typing import Union, List, Dict, Any, Optional, 
+from typing import Union, List, Dict, Any, Optional
 from pathlib import Path
 import cv2
 import torch
@@ -32,7 +32,7 @@ class DonutExtractor(BaseLatexExtractor):
         self,
         device: Optional[str] = None,
         show_log: bool = False,
-        model_name: str = "naver-clova-ix/donut-base-finetuned-cord-v2",
+        model_name: str = "hamandcheese82/Math-Ocr-Donut-V2.2",
         **kwargs
     ):
         """Initialize Donut Extractor."""
