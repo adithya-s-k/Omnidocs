@@ -4,4 +4,13 @@ from .latex_ocr import LaTeXOCRExtractor
 from .nougat import NougatExtractor
 from .texify import TexifyExtractor
 from .texteller import TextellerExtractor
-from .unimernet_extractor import UniMERNetExtractor
+from .unimernet import UniMERNetExtractor
+
+__all__ = [
+    'DonutExtractor',
+    'LaTeXOCRExtractor',
+    'NougatExtractor',
+    'TexifyExtractor',
+    'TextellerExtractor',
+    'UniMERNetExtractor'
+]

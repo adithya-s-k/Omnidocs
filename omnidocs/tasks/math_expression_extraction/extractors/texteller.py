@@ -1,7 +1,32 @@
+# IMPORTANT: Set up model directory BEFORE any HuggingFace imports
+import os
+from pathlib import Path
+
+# Set up model directory for texteller downloads
+def _setup_texteller_model_dir():
+    """Set up the model directory for texteller to use omnidocs/models."""
+    # Get the omnidocs project root
+    current_file = Path(__file__)
+    omnidocs_root = current_file.parent.parent.parent.parent  # Go up to omnidocs root
+    models_dir = omnidocs_root / "models"
+
+    # Create models directory if it doesn't exist
+    models_dir.mkdir(exist_ok=True)
+
+    # Set environment variables for HuggingFace cache BEFORE any imports
+    os.environ["HF_HOME"] = str(models_dir)
+    os.environ["TRANSFORMERS_CACHE"] = str(models_dir)
+    os.environ["HF_HUB_CACHE"] = str(models_dir)
+
+    return models_dir
+
+# Set up model directory before any imports
+_MODELS_DIR = _setup_texteller_model_dir()
+
+# Now import everything else
 import sys
 import logging
 from typing import Union, List, Dict, Any, Optional, Tuple
-from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
@@ -42,28 +67,36 @@ class TextellerExtractor(BaseLatexExtractor):
         self.model_name = model_name
         
         try:
-            from texteller import OCRModel
+            from texteller import load_model, load_tokenizer, img2latex
+            self._img2latex = img2latex
         except ImportError as e:
             logger.error("Failed to import texteller")
             raise ImportError(
                 "texteller is not available. Please install it with: pip install texteller"
             ) from e
-            
+
         try:
-            self.model = OCRModel.from_pretrained(
-                self.model_name,
-                device=self.device if self.device else "auto"
-            )
+            # Load model and tokenizer using new API with our model directory
             if self.show_log:
-                logger.success("Model initialized successfully")
+                logger.info(f"Loading texteller models to: {_MODELS_DIR}")
+
+            self.model = load_model(model_dir=None, use_onnx=False)  # Use PyTorch model
+            self.tokenizer = load_tokenizer()
+
+            # Set device
+            if self.device and hasattr(self.model, 'to'):
+                self.model = self.model.to(self.device)
+
+            if self.show_log:
+                logger.success(f"Model and tokenizer initialized successfully in: {_MODELS_DIR}")
         except Exception as e:
             logger.error("Failed to initialize model", exc_info=True)
             raise
     
     def _download_model(self) -> Path:
-        """Model download handled by texteller library."""
-        logger.info("Model downloading handled by texteller library")
-        return None
+        """Model download handled by texteller library to omnidocs/models directory."""
+        logger.info(f"Model downloading handled by texteller library to: {_MODELS_DIR}")
+        return _MODELS_DIR
     
     def _load_model(self) -> None:
         """Model loaded in __init__."""
@@ -81,10 +114,30 @@ class TextellerExtractor(BaseLatexExtractor):
             images = self.preprocess_input(input_path)
             
             expressions = []
+
+            # Convert PIL images to numpy arrays for texteller
+            import numpy as np
+            image_arrays = []
             for img in images:
-                # Run inference
-                latex_expr = self.model.predict(img)
-                
+                if hasattr(img, 'convert'):  # PIL Image
+                    img_array = np.array(img.convert('RGB'))
+                    image_arrays.append(img_array)
+                else:
+                    image_arrays.append(img)
+
+            # Run inference using new API
+            device = getattr(self.model, 'device', None)
+            latex_results = self._img2latex(
+                model=self.model,
+                tokenizer=self.tokenizer,
+                images=image_arrays,
+                device=device,
+                out_format='latex',
+                max_tokens=1024
+            )
+
+            # Process results
+            for latex_expr in latex_results:
                 # Map to standard format
                 mapped_expr = self.map_expression(latex_expr)
                 expressions.append(mapped_expr)
