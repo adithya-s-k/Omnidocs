@@ -1,90 +1,48 @@
-[tool.poetry]
+[project]
 name = "omnidocs"
 version = "0.1.1"
 description = "Deep document processing toolkit with modular components"
-authors = ["adithya-s-kolavi <adithyaskolavi@gmail.com>"]
+authors = [{name = "adithya-s-kolavi", email = "adithyaskolavi@gmail.com"}]
 readme = "README.md"
-packages = [
-    { include = "omnidocs" }
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "pydantic>=2.8",
+    "rich>=13.9.4",
+    "pandas>=2.2.2",
+    "Pillow>=10.4.0",
+    "huggingface-hub>=0.26.2",
+    "setuptools>=80.9.0",
+    "torch==2.7.1",
+    "torchvision==0.22.1",
+    "transformers==4.53.2",
+    "numpy==1.26.4",
+    "easyocr==1.7.2",
+    "pytesseract==0.3.13",
+    "paddleocr==2.8.1",
+    "paddlepaddle==2.6.1",
+    "protobuf==3.20.2",
+    "PyMuPDF==1.26.3",
+    "PyPDF2==3.0.1",
+    "pdftext==0.6.3",
+    "docling==2.41.0",
+    "pdfplumber==0.11.7",
+    "camelot-py==1.0.0",
+    "tabula-py==2.10.0",
+    "opencv-python>=4.8.0",
+    "pdf2image>=1.17.0",
+    "doclayout-yolo>=0.0.3",
+    "iopath>=0.1.9",
+    "timm==1.0.17",
+    "einops>=0.8.0",
+    "omegaconf",
+    "sentencepiece",
+    "albumentations",
+    "webdataset",
+    "ftfy",
+    "hf_xet",
+    "surya-ocr==0.14.6"
 ]
-
-[tool.poetry.dependencies]
-python = ">=3.10,<3.13"
-pydantic = "^2.8"
-rich = "^13.9.4"
-
-# Core dependencies that will always be installed
-pandas = "^2.2.2"
-Pillow = "^9.5.0"
-huggingface-hub = ">=0.26.2"
-
-
-# Layout Analysis dependencies
-torch = { version = "^2.3.1", optional = true }
-torchvision = { version = "^0.19.1", optional = true }
-doclayout-yolo = { version = ">=0.0.2,<0.0.3", optional = true }
-iopath = { version = "^0.1.9", optional = true }
-timm = { version = "^1.0.9", optional = true }
-einops = { version = "^0.8.0", optional = true }
-
-# OCR dependencies
-pytesseract = { version = "^0.3.13", optional = true }
-pdf2image = { version = "^1.17.0", optional = true }
-
-# Text Extraction dependencies
-transformers = { version = "^4.46.3", optional = true }
-
-# Table Extraction dependencies
-paddlepaddle = { version = "^2.6.2", optional = true }
-
-[tool.poetry.extras]
-layout = [
-    "torch",
-    "torchvision",
-    "doclayout-yolo",
-    "iopath",
-    "timm",
-    "einops"
-]
-ocr = [
-    "pytesseract",
-    "pdf2image"
-]
-text = [
-    "transformers"
-]
-table = [
-    "paddlepaddle"
-]
-latex = [
-    "texify",
-    "pix2tex",
-    "opencv-python",
-    "torch",
-    "torchvision"
-]
-all = [
-    "torch",
-    "torchvision",
-    "doclayout-yolo",
-    "iopath",
-    "timm",
-    "einops",
-    "pytesseract",
-    "pdf2image",
-    "transformers",
-    "paddlepaddle"
-]
-
-[tool.poetry.dev-dependencies]
-bump2version = "^1.0.1"
-poetry-dynamic-versioning = "^1.4.1"
-toml = "^0.10.2"
-
-[tool.poetry-dynamic-versioning]
-enable = true
-vcs = "git"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

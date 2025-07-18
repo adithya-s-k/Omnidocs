@@ -164,12 +164,6 @@ class EasyOCRExtractor(BaseOCRExtractor):
             full_text=' '.join(full_text_parts),
             source_img_size=img_size
         )
-        
-        return OCROutput(
-            texts=texts,
-            full_text=' '.join(full_text_parts),
-            source_img_size=img_size
-        )
     
     @log_execution_time
     def extract(
