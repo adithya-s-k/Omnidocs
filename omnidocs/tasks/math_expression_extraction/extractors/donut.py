@@ -1,7 +1,28 @@
+# IMPORTANT: Set up model directory BEFORE any HuggingFace imports
+import os
+from pathlib import Path
+
+def _setup_hf_model_dir():
+    """Set up the model directory for HuggingFace to use omnidocs/models."""
+    current_file = Path(__file__)
+    omnidocs_root = current_file.parent.parent.parent.parent  # Go up to omnidocs root
+    models_dir = omnidocs_root / "models"
+    models_dir.mkdir(exist_ok=True)
+    
+    # Set environment variables BEFORE any imports
+    os.environ["HF_HOME"] = str(models_dir)
+    os.environ["TRANSFORMERS_CACHE"] = str(models_dir)
+    os.environ["HF_HUB_CACHE"] = str(models_dir)
+    
+    return models_dir
+
+#call this immediately
+_MODELS_DIR = _setup_hf_model_dir()
+
+
 import sys
 import logging
 from typing import Union, List, Dict, Any, Optional
-from pathlib import Path
 import cv2
 import torch
 import numpy as np
@@ -80,6 +101,9 @@ class DonutExtractor(BaseLatexExtractor):
             if self.device is None:
                 self.device = "cuda" if torch.cuda.is_available() else "cpu"
             
+            logger.info(f"Loading Donut model from Hugging Face: {self.model_name}")
+            logger.info(f"Models will be cached in: {_MODELS_DIR}")
+            
             # Load processor and model
             self.processor = DonutProcessor.from_pretrained(self.model_name)
             self.model = VisionEncoderDecoderModel.from_pretrained(self.model_name)
@@ -99,7 +123,7 @@ class DonutExtractor(BaseLatexExtractor):
             # Try to parse as JSON
             data = json.loads(json_str)
             
-            # Look for math-related fields (adjust based on your use case)
+            # Look for math-related fields
             math_content = ""
             
             if isinstance(data, dict):
@@ -139,11 +163,11 @@ class DonutExtractor(BaseLatexExtractor):
                 pixel_values = pixel_values.to(self.device)
                 
                 # Prepare task prompt (adjust based on your specific task)
-                task_prompt = "<s_cord-v2>"  # Default CORD v2 task
+                task_prompt = "<s_cord-v2>"  # Default CORD v2 task(this is used for receipt/invoice parsing)
                 decoder_input_ids = self.processor.tokenizer(
                     task_prompt, 
                     add_special_tokens=False, 
-                    return_tensors="pt"
+                    return_tensors="pt" #returns pytorch tensor 
                 ).input_ids
                 decoder_input_ids = decoder_input_ids.to(self.device)
                 
@@ -163,8 +187,11 @@ class DonutExtractor(BaseLatexExtractor):
                     )
                 
                 # Decode output
+                #converts the generated token IDs back into a string
                 sequence = self.processor.batch_decode(outputs.sequences)[0]
+                #removes any pos and eos 
                 sequence = sequence.replace(self.processor.tokenizer.eos_token, "").replace(self.processor.tokenizer.pad_token, "")
+                #removes task prompt 
                 sequence = sequence.replace(task_prompt, "")
                 
                 # Extract math content from JSON-like output

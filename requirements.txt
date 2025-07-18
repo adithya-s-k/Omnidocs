@@ -1,66 +1,72 @@
-# OCR Models (these work together)
+# ✅ WORKING DEPENDENCIES (Tested and Verified)
+# Python: >=3.10,<3.13
+# Installation: uv pip install -r requirements.txt
+
+# ==========================================
+# CORE ML/AI
+# ==========================================
+torch==2.7.1
+torchvision==0.22.1
+transformers==4.53.2
+numpy==1.26.4  # CRITICAL: NumPy 2.0+ breaks PaddleOCR/imgaug compatibility
+setuptools==80.9.0  # Required by PaddleOCR
+timm==1.0.17
+
+# ==========================================
+# OCR MODELS 
+# ==========================================
 easyocr==1.7.2
 pytesseract==0.3.13
-surya-ocr==0.14.6
-protobuf==3.20.3
+surya-ocr==0.14.6 
+protobuf==3.20.2
 
-# PaddleOCR (strict versions, install sep)
-# paddleocr==2.7.3
-# paddlepaddle-gpu
+# PaddleOCR (working versions)
+paddleocr==2.8.1
+paddlepaddle==2.6.1
 
-# Math Expression Models (install sep one by one perhaps?)
-# texteller
-# nougat-ocr==0.1.17
-# texify==0.2.1
-# unimernet==0.2.1
+# ==========================================
+# MATH EXPRESSION MODELS (working - 4/5 extractors)
+# ==========================================
+# texteller==1.0.2  not working :(
+#  unimernet, nougat, donut  all working with transformers
 
-# Table Extraction Models (install separately due to conflicts)
-# camelot-py
-# tabula-py==2.10.0
-# pdfplumber==0.11.7
+# UniMERNet dependencies
+omegaconf
+iopath
+albumentations
+webdataset
+ftfy
 
-# Text Extraction Models
+
+# Donut dependencies
+sentencepiece
+
+# Texify dependencies - not working cuz of some issues
+# texify
+
+# ==========================================
+# TEXT EXTRACTION MODELS 
+# ==========================================
 PyMuPDF==1.26.3
 PyPDF2==3.0.1
-pdftext
-docling
+pdftext==0.6.3
+docling==2.41.0
+pdfplumber==0.11.7
+pdf2image==1.17.0
+# ==========================================
+# TABLE EXTRACTION MODELS 
+# ==========================================
+camelot-py==1.0.0
+tabula-py==2.10.0
+# pdfplumber==0.11.7  # Already listed above
+# Note: PPStructure, TableTransformer, TableFormer also working with transformers
 
-# Other required modules
+# ==========================================
+# OTHER REQUIRED MODULES
+# ==========================================
 pydantic
 Pillow
 rich
 opencv-python
 huggingface-hub
-
-
-# for unimarnet which conflict with others 
-# we need  
-# tokenizers-0.19.1 
-# torch-2.3.1
-# torchvision-0.18.1
-# transformers-4.42.4
-
-#texteller requires transformers==4.47 but conflicts with texifyextractor's transformers==4.42.4
-
-#pix2tex which is used  in latexocr/py file, timm==0.5.4 and x-transformer = 0.15.0 
-#donut requires timm==0.9.16 conflicting with pix2tex 
-
-#texify(transformers==4.42.4) and nougat also transformers conflict, need to reinstall everytime to test
-
-#surya ocr transformer conflicts with texteller 
-
-# IMPORTANT: Due to dependency conflicts, we've split requirements into separate files:
-# - requirements-ocr.txt: OCR models (EasyOCR, Tesseract, Surya)
-# - requirements-paddle.txt: PaddleOCR and dependencies
-# - requirements-table.txt: Table extraction models (Camelot, Tabula, etc.)
-# - requirements-ppstructure.txt: PPStructure (PaddleOCR table extraction)
-# - requirements-math.txt: Math expression models (UniMERNet, etc.)
-#
-# Install the specific group you need:
-#   pip install -r requirements-ocr.txt
-#   pip install -r requirements-paddle.txt
-#   pip install -r requirements-table.txt
-#   pip install -r requirements-ppstructure.txt
-#   pip install -r requirements-math.txt
-#
-# Or install this base file for common functionality without conflicts
+hf_xet

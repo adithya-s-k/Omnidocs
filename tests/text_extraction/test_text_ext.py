@@ -19,8 +19,6 @@ def test_text_extraction():
         DoclingExtractor
     ]
 
-    # All extractors should be available now
-
     pdf_path = "tests/text_extraction/assets/sample_document.pdf"
 
     for extractor_cls in extractors:

@@ -1,7 +1,28 @@
+import os
+from pathlib import Path
+
+# Set up model directory for HuggingFace downloads
+def _setup_hf_model_dir():
+    """Set up the model directory for HuggingFace to use omnidocs/models."""
+    current_file = Path(__file__)
+    omnidocs_root = current_file.parent.parent.parent.parent  # Go up to omnidocs root
+    models_dir = omnidocs_root / "models"
+    models_dir.mkdir(exist_ok=True)
+    
+    # Set environment variables BEFORE any imports
+    os.environ["HF_HOME"] = str(models_dir)
+    os.environ["TRANSFORMERS_CACHE"] = str(models_dir)
+    os.environ["HF_HUB_CACHE"] = str(models_dir)
+    
+    return models_dir
+
+# Call this immediately
+_MODELS_DIR = _setup_hf_model_dir()
+
+# Now do the other imports
 import time
 import numpy as np
 from typing import Union, List, Dict, Any, Optional, Tuple
-from pathlib import Path
 from PIL import Image
 import cv2
 import torch
@@ -94,23 +115,21 @@ class TableTransformerExtractor(BaseTableExtractor):
         """Load Table Transformer models."""
         try:
             if self.show_log:
-                logger.info("Loading Table Transformer detection model...")
-            
+                logger.info(f"Loading Table Transformer models")
+                logger.info(f"Models will be downloaded in: {_MODELS_DIR}")
+
             # Load detection model
             self.detection_processor = self.processor_class.from_pretrained(self.detection_model_name)
             self.detection_model = self.model_class.from_pretrained(self.detection_model_name)
             self.detection_model.to(self.device)
             self.detection_model.eval()
-            
-            if self.show_log:
-                logger.info("Loading Table Transformer structure model...")
-            
-            # Load structure model
+
+            # Load structure model  
             self.structure_processor = self.processor_class.from_pretrained(self.structure_model_name)
             self.structure_model = self.model_class.from_pretrained(self.structure_model_name)
             self.structure_model.to(self.device)
             self.structure_model.eval()
-            
+
             if self.show_log:
                 logger.info("Table Transformer models loaded successfully")
                 

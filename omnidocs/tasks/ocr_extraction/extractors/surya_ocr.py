@@ -8,6 +8,7 @@ import torch
 from PIL import Image
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.ocr_extraction.base import BaseOCRExtractor, BaseOCRMapper, OCROutput, OCRText
+import os
 
 logger = get_logger(__name__)
 
@@ -121,13 +122,29 @@ class SuryaOCRExtractor(BaseOCRExtractor):
     def _load_model(self) -> None:
         """Load Surya OCR models."""
         try:
+            # Set up omnidocs/models directory for HuggingFace cache
+            current_file = Path(__file__)
+            omnidocs_root = current_file.parent.parent.parent.parent  # Go up to omnidocs root
+            models_dir = omnidocs_root / "models"
+            models_dir.mkdir(exist_ok=True)
+
+            # Set environment variables for HuggingFace cache
+            import os
+            os.environ["HF_HOME"] = str(models_dir)
+            os.environ["TRANSFORMERS_CACHE"] = str(models_dir)
+            os.environ["HF_HUB_CACHE"] = str(models_dir)
+
+            if self.show_log:
+                logger.info("Loading Surya OCR models")
+                logger.info(f"Models will be downloaded in: {models_dir}")
+
             # Initialize predictors - the new API handles model loading internally
             self.recognition_predictor = self.RecognitionPredictor()
             self.detection_predictor = self.DetectionPredictor()
             
             if self.show_log:
                 logger.info(f"Surya OCR models loaded on device: {self.device}")
-                
+        
         except Exception as e:
             logger.error("Failed to load Surya OCR models", exc_info=True)
             raise

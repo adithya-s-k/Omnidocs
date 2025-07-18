@@ -1,3 +1,30 @@
+# IMPORTANT: Set up model directory BEFORE any PaddleOCR imports
+import os
+import sys
+from pathlib import Path
+
+# Set up model directory for PaddleOCR downloads
+def _setup_paddle_model_dir():
+    """Set up the model directory for PaddleOCR to use omnidocs/models."""
+    current_file = Path(__file__)
+    omnidocs_root = current_file.parent.parent.parent.parent  # Go up to omnidocs root
+    models_dir = omnidocs_root / "models" / "paddleocr"
+    models_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Monkey-patch PaddleOCR's BASE_DIR before importing
+    import paddleocr.paddleocr
+    paddleocr.paddleocr.BASE_DIR = str(models_dir) + "/"
+    
+    # Also patch the network module
+    import paddleocr.ppocr.utils.network
+    paddleocr.ppocr.utils.network.MODELS_DIR = str(models_dir) + "/models/"
+    
+    return models_dir
+
+# Call this immediately
+_MODELS_DIR = _setup_paddle_model_dir()
+
+# Now do the other imports
 import time
 import copy
 import base64
@@ -7,6 +34,7 @@ from io import BytesIO
 from typing import Union, List, Dict, Any, Optional, Tuple
 from pathlib import Path
 from PIL import Image
+import os
 
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.ocr_extraction.base import BaseOCRExtractor, BaseOCRMapper, OCROutput, OCRText
@@ -281,25 +309,33 @@ class PaddleOCRExtractor(BaseOCRExtractor):
         return None
     
     def _load_model(self) -> None:
-        """Load PaddleOCR models."""
+        """Load PaddleOCR model."""
         try:
             # Map languages to PaddleOCR format
-            paddle_languages = []
+            paddleocr_languages = []
             for lang in self.languages:
                 mapped_lang = self._label_mapper.from_standard_language(lang)
-                paddle_languages.append(mapped_lang)
+                paddleocr_languages.append(mapped_lang)
             
-            # Initialize PaddleOCR with inference package
-            self.paddle_ocr = self.PaddleOCR(
+            # If multiple languages, use the first one
+            primary_lang = paddleocr_languages[0] if paddleocr_languages else 'en'
+            
+            if self.show_log:
+                logger.info(f"Loading PaddleOCR with language: {primary_lang}")
+                logger.info(f"Models will be downloaded in: {_MODELS_DIR}")
+            
+            # Initialize PaddleOCR
+            self.model = self.PaddleOCR(
                 use_angle_cls=self.use_angle_cls,
-                lang=paddle_languages[0] if paddle_languages else 'en',
+                lang=primary_lang,  # Pass single string, not list
                 use_gpu=self.use_gpu,
-                show_log=self.show_log
+                show_log=self.show_log,
+                drop_score=self.drop_score
             )
             
             if self.show_log:
-                logger.info(f"PaddleOCR models loaded")
-                
+                logger.info("PaddleOCR model loaded successfully")
+        
         except Exception as e:
             logger.error("Failed to load PaddleOCR models", exc_info=True)
             raise
@@ -331,7 +367,7 @@ class PaddleOCRExtractor(BaseOCRExtractor):
                 img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
             
             # Perform OCR
-            result = self.paddle_ocr.ocr(img, cls=self.use_angle_cls)
+            result = self.model.ocr(img, cls=self.use_angle_cls)
             
             # Convert to standardized format
             texts = []

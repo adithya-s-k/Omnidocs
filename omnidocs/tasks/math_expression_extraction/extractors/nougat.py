@@ -34,13 +34,37 @@ from timm.models.vision_transformer import VisionTransformer
 from timm.models.swin_transformer import SwinTransformer
 import re
 
+import os
+from pathlib import Path
+
+# Set up model directory for HuggingFace downloads
+def _setup_hf_model_dir():
+    """Set up the model directory for HuggingFace to use omnidocs/models."""
+    current_file = Path(__file__)
+    omnidocs_root = current_file.parent.parent.parent.parent  # Go up to omnidocs root
+    models_dir = omnidocs_root / "models"
+    models_dir.mkdir(exist_ok=True)
+    
+    # Set environment variables BEFORE any imports
+    os.environ["HF_HOME"] = str(models_dir)
+    os.environ["TRANSFORMERS_CACHE"] = str(models_dir)
+    os.environ["HF_HUB_CACHE"] = str(models_dir)
+    
+    return models_dir
+
+_MODELS_DIR = _setup_hf_model_dir()
+
+# Now do the other imports
+import sys
+import logging
+
 # Import omnidocs modules
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.math_expression_extraction.base import BaseLatexExtractor, BaseLatexMapper, LatexOutput
 
 logger = get_logger(__name__)
 
-# Configuration - Using Hugging Face models instead of broken GitHub releases
+# Configuration - Using Hugging Face models
 NOUGAT_CHECKPOINTS = {
     "base": {
         "hf_model": "facebook/nougat-base",
@@ -694,6 +718,7 @@ class NougatExtractor(BaseLatexExtractor):
             hf_model_name = checkpoint_info["hf_model"]
 
             logger.info(f"Loading Nougat model from Hugging Face: {hf_model_name}")
+            logger.info(f"Models will be downloaded in: {_MODELS_DIR}")
 
             # Load processor and model
             self.processor = NougatProcessor.from_pretrained(hf_model_name)
