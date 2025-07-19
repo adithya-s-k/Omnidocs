@@ -1,41 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (c) Facebook Research, Adapted by omnidocs
-#repo: https://github.com/facebookresearch/nougat
-#license: MIT License
+"""
+Nougat (Neural Optical Understanding for Academic Documents) LaTeX Expression Extractor
 
+This module provides LaTeX expression extraction using Facebook's Nougat model
+via Hugging Face transformers.
+"""
+
+import hashlib
+import io
+import torch
+from PIL import Image
+from typing import List, Optional, Union
+from pathlib import Path
+import numpy as np
+import re
 import os
 import sys
-import json
-import math
-import time
-import torch
-
-import requests
-import shutil
-import tarfile
-import zipfile
-import hashlib
-import argparse
-import tempfile
-from PIL import Image
-from tqdm import tqdm
-from pathlib import Path
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union, Any
-
-import numpy as np
-from transformers import PreTrainedTokenizerFast
-from transformers.modeling_outputs import Seq2SeqLMOutput
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.nn import CrossEntropyLoss
-import torchvision.transforms as transforms
-from timm.models.vision_transformer import VisionTransformer
-from timm.models.swin_transformer import SwinTransformer
-import re
-
-import os
-from pathlib import Path
+import logging
 
 # Set up model directory for HuggingFace downloads
 def _setup_hf_model_dir():
@@ -54,10 +35,6 @@ def _setup_hf_model_dir():
 
 _MODELS_DIR = _setup_hf_model_dir()
 
-# Now do the other imports
-import sys
-import logging
-
 # Import omnidocs modules
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.math_expression_extraction.base import BaseLatexExtractor, BaseLatexMapper, LatexOutput
@@ -75,396 +52,6 @@ NOUGAT_CHECKPOINTS = {
         "extract_dir": "nougat_small_ckpt"
     }
 }
-
-# Model Constants
-CONTEXT_SIZE = 4096
-BOS_TOKEN = "<s>"
-EOS_TOKEN = "</s>"
-PAD_TOKEN = "<pad>"
-IMAGE_TOKEN = "<image>"
-
-# ===================== Utility Functions =====================
-def md5(file_path):
-    """Calculate MD5 hash of a file"""
-    hash_md5 = hashlib.md5()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
-def download_file(url, target_path, expected_md5=None):
-    """Download a file with progress bar and MD5 check"""
-    target_path = Path(target_path)
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    if target_path.exists():
-        if expected_md5 and md5(target_path) == expected_md5:
-            logger.info(f"File already exists and MD5 matches: {target_path}")
-            return target_path
-        logger.info(f"File exists but MD5 doesn't match. Re-downloading: {target_path}")
-    
-    logger.info(f"Downloading {url} to {target_path}")
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-    
-    total_size = int(response.headers.get('content-length', 0))
-    block_size = 8192
-    
-    with open(target_path, 'wb') as f, tqdm(
-        total=total_size, unit='B', unit_scale=True, desc=url.split('/')[-1]
-    ) as pbar:
-        for data in response.iter_content(block_size):
-            f.write(data)
-            pbar.update(len(data))
-    
-    if expected_md5:
-        actual_md5 = md5(target_path)
-        if actual_md5 != expected_md5:
-            raise ValueError(f"MD5 mismatch for {target_path}: expected {expected_md5}, got {actual_md5}")
-    
-    return target_path
-
-def extract_archive(archive_path, extract_dir):
-    """Extract tar.gz or zip archive"""
-    extract_path = Path(extract_dir)
-    extract_path.mkdir(parents=True, exist_ok=True)
-    
-    if str(archive_path).endswith('.tar.gz'):
-        with tarfile.open(archive_path) as tar:
-            tar.extractall(path=extract_path)
-    elif str(archive_path).endswith('.zip'):
-        with zipfile.ZipFile(archive_path) as zip_ref:
-            zip_ref.extractall(extract_path)
-    else:
-        raise ValueError(f"Unsupported archive format: {archive_path}")
-    
-    return extract_path
-
-# ===================== Model Components =====================
-@dataclass
-class ModelConfig:
-    """Configuration for the Nougat model"""
-    vocab_size: int = 50280
-    hidden_size: int = 1024
-    encoder_hidden_size: int = 1024
-    num_hidden_layers: int = 12
-    num_attention_heads: int = 16
-    intermediate_size: int = 4096
-    hidden_act: str = "gelu"
-    hidden_dropout_prob: float = 0.1
-    attention_probs_dropout_prob: float = 0.1
-    max_position_embeddings: int = 4098
-    initializer_range: float = 0.02
-    layer_norm_eps: float = 1e-5
-    encoder_layers: int = 12
-    decoder_layers: int = 12
-    patch_size: int = 16
-    max_length: int = 4096
-    max_patches: int = 4096
-    width: int = 2560
-    height: int = 2560
-    encoder_name: str = "swin"
-    embed_dim: int = 192
-    depths: List[int] = None
-    num_heads: List[int] = None
-    window_size: int = 12
-    patch_norm: bool = True
-    
-
-class NougatDecoder(nn.Module):
-    """The Nougat decoder module"""
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size)
-        self.layers = nn.ModuleList([DecoderLayer(config) for _ in range(config.decoder_layers)])
-        self.norm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        
-        # Initialize position embeddings
-        self.max_positions = config.max_position_embeddings - 2  # Subtract 2 for BOS and EOS tokens
-        self.position_embedding = nn.Embedding(config.max_position_embeddings, config.hidden_size)
-        
-    def get_position_ids(self, input_ids):
-        """Get position IDs for the decoder"""
-        seq_length = input_ids.shape[1]
-        position_ids = torch.arange(
-            0, seq_length, dtype=torch.long, device=input_ids.device
-        ).unsqueeze(0).expand_as(input_ids)
-        return position_ids
-        
-    def forward(
-        self,
-        input_ids,
-        encoder_hidden_states,
-        attention_mask=None,
-        encoder_attention_mask=None,
-        past_key_values=None,
-        use_cache=None,
-        output_attentions=False,
-        output_hidden_states=False,
-        return_dict=True,
-    ):
-        # Get position IDs and embeddings
-        position_ids = self.get_position_ids(input_ids)
-        inputs_embeds = self.embed_tokens(input_ids) 
-        pos_embeds = self.position_embedding(position_ids)
-        
-        hidden_states = self.dropout(inputs_embeds + pos_embeds)
-        
-        # Stack output states and attentions if needed
-        all_hidden_states = () if output_hidden_states else None
-        all_self_attentions = () if output_attentions else None
-        all_cross_attentions = () if output_attentions else None
-        
-        next_decoder_cache = () if use_cache else None
-        
-        # Decoder layers
-        for idx, decoder_layer in enumerate(self.layers):
-            if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
-                
-            layer_outputs = decoder_layer(
-                hidden_states,
-                attention_mask=attention_mask,
-                encoder_hidden_states=encoder_hidden_states,
-                encoder_attention_mask=encoder_attention_mask,
-                past_key_value=None if past_key_values is None else past_key_values[idx],
-                output_attentions=output_attentions,
-                use_cache=use_cache,
-            )
-            
-            hidden_states = layer_outputs[0]
-            
-            if use_cache:
-                next_decoder_cache += (layer_outputs[1],)
-                
-            if output_attentions:
-                all_self_attentions = all_self_attentions + (layer_outputs[1],)
-                all_cross_attentions = all_cross_attentions + (layer_outputs[2],)
-                
-        hidden_states = self.norm(hidden_states)
-        
-        # Add hidden states from the final layer
-        if output_hidden_states:
-            all_hidden_states = all_hidden_states + (hidden_states,)
-            
-        if not return_dict:
-            return tuple(
-                v
-                for v in [hidden_states, next_decoder_cache, all_hidden_states, all_self_attentions, all_cross_attentions]
-                if v is not None
-            )
-            
-        return Seq2SeqLMOutput(
-            last_hidden_state=hidden_states,
-            past_key_values=next_decoder_cache,
-            decoder_hidden_states=all_hidden_states,
-            decoder_attentions=all_self_attentions,
-            cross_attentions=all_cross_attentions,
-            encoder_last_hidden_state=encoder_hidden_states,
-        )
-
-class DecoderLayer(nn.Module):
-    """Single decoder layer with self-attention and cross-attention"""
-    def __init__(self, config):
-        super().__init__()
-        self.self_attn = nn.MultiheadAttention(config.hidden_size, config.num_attention_heads, dropout=config.attention_probs_dropout_prob)
-        self.cross_attn = nn.MultiheadAttention(config.hidden_size, config.num_attention_heads, dropout=config.attention_probs_dropout_prob)
-        
-        self.norm1 = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-        self.norm2 = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-        self.norm3 = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-        
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        
-        self.ffn = nn.Sequential(
-            nn.Linear(config.hidden_size, config.intermediate_size),
-            nn.GELU(),
-            nn.Dropout(config.hidden_dropout_prob),
-            nn.Linear(config.intermediate_size, config.hidden_size),
-            nn.Dropout(config.hidden_dropout_prob),
-        )
-        
-    def forward(
-        self,
-        hidden_states,
-        attention_mask=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        past_key_value=None,
-        output_attentions=False,
-        use_cache=False,
-    ):
-        # Self-Attention
-        residual = hidden_states
-        hidden_states = self.norm1(hidden_states)
-        
-        # Convert shapes for MultiheadAttention (seq_len, batch, dim)
-        hidden_states_transformed = hidden_states.transpose(0, 1)
-        self_attn_output, self_attn_weights = self.self_attn(
-            hidden_states_transformed, 
-            hidden_states_transformed, 
-            hidden_states_transformed,
-            attn_mask=None,  # attention_mask, 
-            need_weights=output_attentions
-        )
-        self_attn_output = self_attn_output.transpose(0, 1)
-        hidden_states = residual + self.dropout(self_attn_output)
-        
-        # Cross-Attention
-        if encoder_hidden_states is not None:
-            residual = hidden_states
-            hidden_states = self.norm2(hidden_states)
-            
-            # Convert shapes for MultiheadAttention
-            hidden_states_transformed = hidden_states.transpose(0, 1)
-            encoder_hidden_states_transformed = encoder_hidden_states.transpose(0, 1)
-            
-            cross_attn_output, cross_attn_weights = self.cross_attn(
-                query=hidden_states_transformed,
-                key=encoder_hidden_states_transformed,
-                value=encoder_hidden_states_transformed,
-                attn_mask=None,  # encoder_attention_mask
-                need_weights=output_attentions
-            )
-            cross_attn_output = cross_attn_output.transpose(0, 1)
-            hidden_states = residual + self.dropout(cross_attn_output)
-        
-        # Feed-forward network
-        residual = hidden_states
-        hidden_states = self.norm3(hidden_states)
-        hidden_states = residual + self.ffn(hidden_states)
-        
-        outputs = (hidden_states,)
-        
-        if output_attentions:
-            outputs += (self_attn_weights, cross_attn_weights)
-        
-        if use_cache:
-            outputs += (None,)  # Cache is not implemented 
-        return outputs
-
-
-class NougatModel(nn.Module):
-    """The complete Nougat model with encoder and decoder"""
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        
-        # Initialize encoder based on configuration
-        if config.encoder_name == "swin":
-            self.encoder = SwinTransformer(
-                img_size=(config.height, config.width),
-                patch_size=config.patch_size,
-                in_chans=3,
-                embed_dim=config.embed_dim,
-                depths=config.depths or [2, 2, 18, 2],
-                num_heads=config.num_heads or [6, 12, 24, 48],
-                window_size=config.window_size,
-                patch_norm=config.patch_norm,
-            )
-        else:
-            self.encoder = VisionTransformer(
-                img_size=(config.height, config.width),
-                patch_size=config.patch_size,
-                in_chans=3,
-                embed_dim=config.encoder_hidden_size,
-                depth=config.encoder_layers,
-                num_heads=config.num_attention_heads,
-            )
-        
-        # Initialize decoder
-        self.decoder = NougatDecoder(config)
-        
-        # Project encoder output to decoder input dimension if needed
-        if config.encoder_name == "swin":
-            self.encoder_proj = nn.Linear(self.encoder.num_features, config.hidden_size)
-        else:
-            if config.encoder_hidden_size != config.hidden_size:
-                self.encoder_proj = nn.Linear(config.encoder_hidden_size, config.hidden_size)
-            else:
-                self.encoder_proj = nn.Identity()
-        
-        # Output projection
-        self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
-        
-    def get_encoder(self):
-        return self.encoder
-        
-    def get_decoder(self):
-        return self.decoder
-        
-    def get_output_embeddings(self):
-        return self.lm_head
-        
-    def forward(
-        self,
-        pixel_values=None,
-        input_ids=None,
-        attention_mask=None,
-        decoder_attention_mask=None,
-        encoder_outputs=None,
-        past_key_values=None,
-        labels=None,
-        use_cache=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=True,
-    ):
-        # Encode if needed
-        if encoder_outputs is None:
-            encoder_outputs = self.encoder.forward_features(pixel_values)
-            
-        # Project encoder outputs to decoder dimension
-        if self.config.encoder_name == "swin":
-            # For Swin, reshape from (B, H*W, C) to (B, H*W, hidden_size)
-            encoder_hidden_states = self.encoder_proj(encoder_outputs)
-        else:
-            # For Vision Transformer
-            encoder_hidden_states = self.encoder_proj(encoder_outputs)
-            
-        # Decode
-        decoder_outputs = self.decoder(
-            input_ids=input_ids,
-            encoder_hidden_states=encoder_hidden_states,
-            attention_mask=attention_mask,
-            encoder_attention_mask=None,  # No encoder attention mask for images
-            past_key_values=past_key_values,
-            use_cache=use_cache,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
-        
-        sequence_output = decoder_outputs[0]
-        logits = self.lm_head(sequence_output)
-        
-        loss = None
-        if labels is not None:
-            # Calculate loss
-            loss_fct = CrossEntropyLoss(ignore_index=-100)
-            shifted_logits = logits[..., :-1, :].contiguous()
-            shifted_labels = labels[..., 1:].contiguous()
-            loss = loss_fct(
-                shifted_logits.view(-1, self.config.vocab_size), 
-                shifted_labels.view(-1)
-            )
-            
-        if not return_dict:
-            output = (logits,) + decoder_outputs[1:]
-            return (loss,) + output if loss is not None else output
-            
-        return Seq2SeqLMOutput(
-            loss=loss,
-            logits=logits,
-            past_key_values=decoder_outputs.past_key_values,
-            decoder_hidden_states=decoder_outputs.decoder_hidden_states,
-            decoder_attentions=decoder_outputs.decoder_attentions,
-            cross_attentions=decoder_outputs.cross_attentions,
-            encoder_last_hidden_state=encoder_hidden_states,
-        )
-
 
 # ===================== Model API =====================
 class Nougat:
@@ -506,23 +93,6 @@ class Nougat:
         except Exception as e:
             logger.error(f"Failed to load model from Hugging Face: {e}")
             raise
-        
-    def preprocess_image(self, image_path):
-        """Preprocess the input image"""
-        if isinstance(image_path, str) or isinstance(image_path, Path):
-            image = Image.open(image_path).convert("RGB")
-        else:
-            image = image_path
-            
-        # Resize to model's expected dimensions
-        transform = transforms.Compose([
-            transforms.Resize((self.model.config.height, self.model.config.width)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-        
-        pixel_values = transform(image).unsqueeze(0)
-        return pixel_values.to(self.device)
     
     @torch.no_grad()
     @log_execution_time
@@ -564,7 +134,6 @@ class Nougat:
         except Exception as e:
             logger.error(f"Error during text generation: {e}")
             raise
-
         
     def __call__(self, image_path, **kwargs):
         """Convenience method to process an image"""

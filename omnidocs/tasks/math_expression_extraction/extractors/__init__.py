@@ -3,7 +3,6 @@ from .donut import DonutExtractor
 from .latex_ocr import LaTeXOCRExtractor
 from .nougat import NougatExtractor
 from .texify import TexifyExtractor
-from .texteller import TextellerExtractor
 from .unimernet import UniMERNetExtractor
 
 __all__ = [
@@ -11,6 +10,5 @@ __all__ = [
     'LaTeXOCRExtractor',
     'NougatExtractor',
     'TexifyExtractor',
-    'TextellerExtractor',
     'UniMERNetExtractor'
 ]
