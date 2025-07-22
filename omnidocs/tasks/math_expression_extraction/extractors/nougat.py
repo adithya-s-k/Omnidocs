@@ -53,168 +53,6 @@ NOUGAT_CHECKPOINTS = {
     }
 }
 
-# ===================== Model API =====================
-class Nougat:
-    """Main Nougat API for document understanding"""
-    def __init__(
-        self, 
-        model_dir="omnidocs/models", 
-        model_type="base",
-        device="cuda" if torch.cuda.is_available() else "cpu"
-    ):
-        self.model_dir = Path(model_dir)
-        self.model_type = model_type
-        self.device = device
-        
-        # Create model directory if it doesn't exist
-        os.makedirs(self.model_dir, exist_ok=True)
-        
-        # Download and set up the model
-        self.setup_model()
-        
-    def setup_model(self):
-        """Download and set up the model and tokenizer using Hugging Face"""
-        try:
-            from transformers import NougatProcessor, VisionEncoderDecoderModel
-
-            checkpoint_info = NOUGAT_CHECKPOINTS[self.model_type]
-            hf_model_name = checkpoint_info["hf_model"]
-
-            logger.info(f"Loading Nougat model from Hugging Face: {hf_model_name}")
-
-            # Load processor and model from Hugging Face
-            self.processor = NougatProcessor.from_pretrained(hf_model_name)
-            self.model = VisionEncoderDecoderModel.from_pretrained(hf_model_name)
-            self.model.to(self.device)
-            self.model.eval()
-
-            logger.info(f"Model loaded successfully on {self.device}")
-
-        except Exception as e:
-            logger.error(f"Failed to load model from Hugging Face: {e}")
-            raise
-    
-    @torch.no_grad()
-    @log_execution_time
-    def generate(
-        self,
-        image_path,
-        max_length=512,
-        num_beams=4,
-        temperature=1.0,
-        no_repeat_ngram_size=3
-    ):
-        """Generate text from document image using Hugging Face model"""
-        try:
-            # Load and preprocess image
-            from PIL import Image, ImageOps
-            image = Image.open(image_path).convert('RGB')
-
-            # Add padding to make it look more like a document page (helps with math recognition)
-            padded_image = ImageOps.expand(image, border=100, fill='white')
-
-            # Process image with Hugging Face processor
-            pixel_values = self.processor(padded_image, return_tensors="pt").pixel_values
-            pixel_values = pixel_values.to(self.device)
-
-            # Generate text using the model with optimized parameters for math
-            outputs = self.model.generate(
-                pixel_values,
-                max_length=max_length,
-                num_beams=max(1, num_beams),  # Ensure at least 1 beam
-                do_sample=False,
-                early_stopping=False if num_beams == 1 else True  # Only use early_stopping with beam search
-            )
-
-            # Decode the generated text
-            generated_text = self.processor.batch_decode(outputs, skip_special_tokens=True)[0]
-
-            return generated_text
-
-        except Exception as e:
-            logger.error(f"Error during text generation: {e}")
-            raise
-        
-    def __call__(self, image_path, **kwargs):
-        """Convenience method to process an image"""
-        return self.generate(image_path, **kwargs)
-
-
-# ===================== Main Application =====================
-@log_execution_time
-def process_document(image_path, output_path=None, model_type="small"):
-    """Process a document image and generate text"""
-    logger.info(f"Processing document: {image_path}")
-    
-    # Initialize Nougat model
-    nougat = Nougat(model_type=model_type)
-    
-    # Generate text from document
-    generated_text = nougat(image_path)
-    
-    # Save to file if output_path is provided
-    if output_path:
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(generated_text)
-        logger.info(f"Output saved to: {output_path}")
-    
-    return generated_text
-
-
-def process_pdf(pdf_path, output_dir=None, model_type="base"):
-    """Process a PDF file and extract text from each page"""
-    try:
-        import fitz  # PyMuPDF
-    except ImportError:
-        logger.error("PyMuPDF is required for PDF processing. Install with: pip install pymupdf")
-        return None
-    
-    logger.info(f"Processing PDF: {pdf_path}")
-    
-    # Initialize Nougat model
-    nougat = Nougat(model_type=model_type)
-    
-    # Create output directory
-    if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
-    
-    # Open PDF
-    document = fitz.open(pdf_path)
-    results = []
-    
-    for page_num in range(len(document)):
-        logger.info(f"Processing page {page_num+1}/{len(document)}")
-        
-        # Get page as image
-        page = document[page_num]
-        pix = page.get_pixmap(matrix=fitz.Matrix(300/72, 300/72))
-        
-        # Convert to PIL Image
-        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-        
-        # Process image
-        text = nougat(img)
-        results.append(text)
-        
-        # Save individual page if output_dir is provided
-        if output_dir:
-            output_path = os.path.join(output_dir, f"page_{page_num+1:03d}.txt")
-            with open(output_path, "w", encoding="utf-8") as f:
-                f.write(text)
-    
-    # Combine all results
-    combined_text = "\n\n".join(results)
-    
-    # Save combined text if output_dir is provided
-    if output_dir:
-        combined_output_path = os.path.join(output_dir, "combined_output.txt")
-        with open(combined_output_path, "w", encoding="utf-8") as f:
-            f.write(combined_text)
-    
-    return combined_text
-
-
-# ===================== BaseLatexExtractor Implementation =====================
 class NougatMapper(BaseLatexMapper):
     """Label mapper for Nougat model output."""
 
@@ -236,6 +74,7 @@ class NougatExtractor(BaseLatexExtractor):
         model_type: str = "small",
         device: Optional[str] = None,
         show_log: bool = False,
+        model_path: Optional[str] = None,
         **kwargs
     ):
         """Initialize Nougat Extractor."""
@@ -243,11 +82,25 @@ class NougatExtractor(BaseLatexExtractor):
 
         self._label_mapper = NougatMapper()
         self.model_type = model_type
+        
+        # Set default model path if not provided
+        if model_path is None:
+            model_path = _MODELS_DIR / f"nougat_{model_type}"
+        self.model_path = Path(model_path)
 
         # Check dependencies
         self._check_dependencies()
 
         try:
+            # Check if model exists locally, download if needed
+            if not self._model_exists():
+                if self.show_log:
+                    logger.info("Model not found locally, will download from Hugging Face")
+                self._download_model()
+            else:
+                if self.show_log:
+                    logger.info("Model found locally, using that version")
+            
             self._load_model()
             if self.show_log:
                 logger.success("Nougat model initialized successfully")
@@ -268,10 +121,62 @@ class NougatExtractor(BaseLatexExtractor):
                 "pip install transformers torch torchvision"
             ) from e
 
+    def _model_exists(self) -> bool:
+        """Check if the model exists in the local cache."""
+        try:
+            from transformers.utils import cached_file
+            from huggingface_hub import try_to_load_from_cache
+            
+            checkpoint_info = NOUGAT_CHECKPOINTS[self.model_type]
+            hf_model_name = checkpoint_info["hf_model"]
+            
+            # Check if model files exist in HF cache
+            try:
+                # Check for key model files
+                config_path = try_to_load_from_cache(hf_model_name, "config.json")
+                model_path = try_to_load_from_cache(hf_model_name, "pytorch_model.bin")
+                processor_path = try_to_load_from_cache(hf_model_name, "tokenizer.json")
+                
+                if config_path and model_path and processor_path:
+                    return True
+                    
+            except Exception:
+                pass
+            
+            # Fallback: check if model directory exists
+            model_cache_dir = _MODELS_DIR / "models--facebook--" / hf_model_name.replace("/", "--")
+            return model_cache_dir.exists()
+            
+        except Exception as e:
+            if self.show_log:
+                logger.warning(f"Could not check model existence: {e}")
+            return False
+
     def _download_model(self) -> Path:
-        """Model download handled by transformers library."""
-        logger.info("Model downloading handled by transformers library")
-        return None
+        """Download model if it doesn't exist locally."""
+        try:
+            checkpoint_info = NOUGAT_CHECKPOINTS[self.model_type]
+            hf_model_name = checkpoint_info["hf_model"]
+            
+            if self.show_log:
+                logger.info(f"Downloading Nougat model: {hf_model_name}")
+                logger.info(f"Download location: {_MODELS_DIR}")
+            
+            # Import here to trigger download
+            from transformers import NougatProcessor, VisionEncoderDecoderModel
+            
+            # This will download the model if not cached
+            NougatProcessor.from_pretrained(hf_model_name, cache_dir=_MODELS_DIR)
+            VisionEncoderDecoderModel.from_pretrained(hf_model_name, cache_dir=_MODELS_DIR)
+            
+            if self.show_log:
+                logger.success("Model download completed")
+                
+            return self.model_path
+            
+        except Exception as e:
+            logger.error("Failed to download model", exc_info=True)
+            raise
 
     def _load_model(self) -> None:
         """Load Nougat model and processor."""
@@ -286,12 +191,31 @@ class NougatExtractor(BaseLatexExtractor):
             checkpoint_info = NOUGAT_CHECKPOINTS[self.model_type]
             hf_model_name = checkpoint_info["hf_model"]
 
-            logger.info(f"Loading Nougat model from Hugging Face: {hf_model_name}")
-            logger.info(f"Models will be downloaded in: {_MODELS_DIR}")
-
-            # Load processor and model
-            self.processor = NougatProcessor.from_pretrained(hf_model_name)
-            self.model = VisionEncoderDecoderModel.from_pretrained(hf_model_name)
+            # Try to load from local path first, fallback to HuggingFace
+            try:
+                if self.model_path.exists():
+                    if self.show_log:
+                        logger.info(f"Loading Nougat model from local path: {self.model_path}")
+                    
+                    self.processor = NougatProcessor.from_pretrained(str(self.model_path))
+                    self.model = VisionEncoderDecoderModel.from_pretrained(str(self.model_path))
+                else:
+                    raise FileNotFoundError(f"Local model path does not exist: {self.model_path}")
+                    
+            except (FileNotFoundError, OSError, Exception) as e:
+                if self.show_log:
+                    logger.info(f"Could not load from local path ({e}), falling back to HuggingFace: {hf_model_name}")
+                
+                # Fallback to HuggingFace
+                self.processor = NougatProcessor.from_pretrained(
+                    hf_model_name, 
+                    cache_dir=_MODELS_DIR
+                )
+                self.model = VisionEncoderDecoderModel.from_pretrained(
+                    hf_model_name,
+                    cache_dir=_MODELS_DIR
+                )
+            
             self.model.to(self.device)
             self.model.eval()
 

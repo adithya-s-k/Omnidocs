@@ -14,6 +14,48 @@ from omnidocs.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
+def sanitize_for_json(obj: Any) -> Any:
+    """
+    Recursively convert PyPDF2 objects (like IndirectObject) to JSON-serializable types.
+    
+    Args:
+        obj: Input object that might contain non-serializable types
+        
+    Returns:
+        JSON-serializable version of the input object
+    """
+    if obj is None:
+        return None
+        
+    # Handle common collection types recursively
+    if isinstance(obj, dict):
+        return {k: sanitize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_for_json(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(sanitize_for_json(item) for item in obj)
+    
+    # Try to determine if this is a PyPDF2 IndirectObject or similar custom type
+    # that's not JSON-serializable
+    try:
+        # This will work for built-in types that are JSON-serializable
+        if isinstance(obj, (str, int, float, bool)):
+            return obj
+            
+        # Check if it's a custom class from PyPDF2
+        class_name = obj.__class__.__name__
+        if "PyPDF2" in str(obj.__class__) or class_name in [
+            "IndirectObject", "DictionaryObject", "ArrayObject", 
+            "PdfObject", "NullObject", "NameObject"
+        ]:
+            return str(obj)
+            
+        # If we got here, it might be a normal object, let's try to serialize it
+        return obj
+    except Exception:
+        # If all else fails, convert to string
+        return str(obj)
+
 class PyPDF2TextMapper(BaseTextMapper):
     """Mapper for PyPDF2 text extraction output."""
     
@@ -175,7 +217,8 @@ class PyPDF2TextExtractor(BaseTextExtractor):
             if hasattr(reader, 'metadata') and reader.metadata:
                 pdf_metadata = reader.metadata
                 
-                metadata.update({
+                # Extract metadata and sanitize values to ensure JSON compatibility
+                raw_metadata = {
                     'title': pdf_metadata.get('/Title', ''),
                     'author': pdf_metadata.get('/Author', ''),
                     'subject': pdf_metadata.get('/Subject', ''),
@@ -183,7 +226,10 @@ class PyPDF2TextExtractor(BaseTextExtractor):
                     'producer': pdf_metadata.get('/Producer', ''),
                     'creation_date': pdf_metadata.get('/CreationDate', ''),
                     'modification_date': pdf_metadata.get('/ModDate', '')
-                })
+                }
+                
+                # Sanitize the metadata before updating
+                metadata.update(sanitize_for_json(raw_metadata))
                 
         except Exception as e:
             if self.show_log:
@@ -208,6 +254,10 @@ class PyPDF2TextExtractor(BaseTextExtractor):
             'extract_forms': self.extract_forms,
             'total_blocks': len(text_blocks)
         }
+        
+        # Make everything JSON serializable
+        metadata = sanitize_for_json(metadata)
+        source_info = sanitize_for_json(source_info)
         
         return TextOutput(
             text_blocks=text_blocks,

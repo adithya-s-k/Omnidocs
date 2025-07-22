@@ -73,25 +73,27 @@ class EasyOCRExtractor(BaseOCRExtractor):
             engine_name='easyocr'
         )
         
-        self.gpu = gpu and self.device == 'cuda'
+        self.gpu = gpu 
         self._label_mapper = EasyOCRMapper()
         
-        try:
-            import easyocr
-            self.easyocr = easyocr
-        except ImportError as e:
-            logger.error("Failed to import easyocr")
-            raise ImportError(
-                "easyocr is not available. Please install it with: pip install easyocr"
-            ) from e
+        # Set default model path
+        self.model_path = Path("omnidocs/models/easyocr")
+        
+        # Check dependencies
+        self._check_dependencies()
+        
+        # Download model if needed
+        if not self.model_path.exists():
+            self._download_model()
         
         self._load_model()
-    
+
     def _download_model(self) -> Path:
-        """Model download handled by easyocr library."""
+        """Download EasyOCR models if needed."""
+        self.model_path.mkdir(parents=True, exist_ok=True)
         if self.show_log:
-            logger.info("Model downloading handled by easyocr library")
-        return None
+            logger.info(f"EasyOCR models will be downloaded to: {self.model_path}")
+        return self.model_path
     
     def _load_model(self) -> None:
         """Load EasyOCR model."""
@@ -114,6 +116,22 @@ class EasyOCRExtractor(BaseOCRExtractor):
         except Exception as e:
             logger.error("Failed to load EasyOCR model", exc_info=True)
             raise
+
+    def _check_dependencies(self):
+        """Check if required dependencies are available."""
+        try:
+            import torch
+            import cv2
+            import numpy as np
+            from PIL import Image
+            import easyocr
+            self.easyocr = easyocr
+        except ImportError as e:
+            logger.error("Failed to import required dependencies")
+            raise ImportError(
+                "Required dependencies not available. Please install with: "
+                "pip install easyocr torch opencv-python"
+            ) from e
     
     def postprocess_output(self, raw_output: List, img_size: Tuple[int, int]) -> OCROutput:
         """Convert EasyOCR output to standardized OCROutput format."""
@@ -121,30 +139,23 @@ class EasyOCRExtractor(BaseOCRExtractor):
         full_text_parts = []
         
         for i, detection in enumerate(raw_output):
-            # Handle different EasyOCR output formats
             if isinstance(detection, str):
-                # detail=0 format: just text strings
                 text = detection
-                confidence = 0.9  # Default confidence
-                bbox = [0, 0, img_size[0], img_size[1]]  # Default bbox
+                confidence = 0.9
+                bbox = [0, 0, img_size[0], img_size[1]]
                 polygon = [[0, 0], [img_size[0], 0], [img_size[0], img_size[1]], [0, img_size[1]]]
             elif isinstance(detection, (list, tuple)) and len(detection) == 3:
-                # detail=1 format: [bbox_coords, text, confidence]
                 bbox_coords, text, confidence = detection
                 
-                # Convert bbox format from polygon to [x1, y1, x2, y2]
                 bbox_array = np.array(bbox_coords)
                 x1, y1 = bbox_array.min(axis=0)
                 x2, y2 = bbox_array.max(axis=0)
                 bbox = [float(x1), float(y1), float(x2), float(y2)]
                 
-                # Convert polygon coordinates
                 polygon = [[float(x), float(y)] for x, y in bbox_coords]
             else:
-                # Skip invalid detections
                 continue
             
-            # Detect language
             detected_lang = self.detect_text_language(text)
             
             ocr_text = OCRText(

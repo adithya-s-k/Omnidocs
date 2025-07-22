@@ -1,6 +1,7 @@
 import sys
 import os
 import warnings
+import json 
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -17,6 +18,29 @@ warnings.filterwarnings("ignore")
 os.environ["PYTHONWARNINGS"] = "ignore"
 # Fix protobuf compatibility issue with PaddleOCR
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
+def table_to_dict(table):
+    return {
+        "num_rows": table.num_rows,
+        "num_cols": table.num_cols,
+        "cells": [
+            {
+                "row": cell.row,
+                "col": cell.col,
+                "text": cell.text,
+                "bbox": getattr(cell, "bbox", None)
+            }
+            for cell in table.cells
+        ],
+        "bbox": getattr(table, "bbox", None)
+    }
+
+def save_tables_to_json(tables, extractor_name, filetype):
+    data = [table_to_dict(table) for table in tables]
+    out_path = f"output_{extractor_name}_{filetype}.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    print(f"Saved JSON: {out_path}")
 
 def test_table_extraction():
     # Define which extractors work with which file types
@@ -70,6 +94,9 @@ def test_table_extraction():
                     except Exception as e:
                         print(f"  CSV preview failed: {e}")
 
+            # Save to JSON
+            save_tables_to_json(result.tables, extractor_cls.__name__, "pdf")
+
             print("SUCCESS: PDF extraction completed")
             assert len(result.tables) >= 0
 
@@ -111,6 +138,9 @@ def test_table_extraction():
                             print(f"  {line}")
                     except Exception as e:
                         print(f"  CSV preview failed: {e}")
+
+            # Save to JSON
+            save_tables_to_json(result.tables, extractor_cls.__name__, "image")
 
             print("SUCCESS: Image extraction completed")
             assert len(result.tables) >= 0

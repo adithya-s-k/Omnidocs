@@ -223,42 +223,41 @@ class TesseractOCRExtractor(BaseOCRExtractor):
             logger.error("Failed to configure Tesseract", exc_info=True)
             raise
     
-    def postprocess_output(self, raw_output: Dict, img_size: Tuple[int, int]) -> OCROutput:
+    def postprocess_output(self, raw_output: dict, img_size: Tuple[int, int]) -> OCROutput:
         """Convert Tesseract output to standardized OCROutput format."""
         texts = []
         full_text_parts = []
         
-        # Extract data from Tesseract output
         n_boxes = len(raw_output['text'])
         
         for i in range(n_boxes):
             text = raw_output['text'][i].strip()
             
-            # Skip empty text
             if not text:
                 continue
-                
-            # Get confidence
+            
             confidence = float(raw_output['conf'][i])
             
-            # Skip low confidence detections
             if confidence < 0:
                 continue
             
-            # Get bounding box coordinates
             x = int(raw_output['left'][i])
             y = int(raw_output['top'][i])
             w = int(raw_output['width'][i])
             h = int(raw_output['height'][i])
             bbox = [float(x), float(y), float(x + w), float(y + h)]
-            
-            # Detect language
+
+            # Create polygon from bbox
+            polygon = [[float(x), float(y)], [float(x + w), float(y)], 
+                       [float(x + w), float(y + h)], [float(x), float(y + h)]]
+
             detected_lang = self.detect_text_language(text)
-            
+
             ocr_text = OCRText(
                 text=text,
-                confidence=confidence / 100.0,  # Convert to 0-1 scale
+                confidence=confidence / 100.0,
                 bbox=bbox,
+                polygon=polygon,
                 language=detected_lang,
                 reading_order=i
             )

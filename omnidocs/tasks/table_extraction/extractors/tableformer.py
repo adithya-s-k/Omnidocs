@@ -1,5 +1,14 @@
 import os
 from pathlib import Path
+import time
+import numpy as np
+from typing import Union, List, Dict, Any, Optional, Tuple
+from PIL import Image
+import cv2
+import torch
+from omnidocs.utils.logging import get_logger, log_execution_time
+from omnidocs.tasks.table_extraction.base import BaseTableExtractor, BaseTableMapper, TableOutput, Table, TableCell
+
 
 # Set up model directory for HuggingFace downloads
 def _setup_hf_model_dir():
@@ -18,14 +27,6 @@ def _setup_hf_model_dir():
 
 _MODELS_DIR = _setup_hf_model_dir()
 
-import time
-import numpy as np
-from typing import Union, List, Dict, Any, Optional, Tuple
-from PIL import Image
-import cv2
-import torch
-from omnidocs.utils.logging import get_logger, log_execution_time
-from omnidocs.tasks.table_extraction.base import BaseTableExtractor, BaseTableMapper, TableOutput, Table, TableCell
 
 logger = get_logger(__name__)
 
@@ -68,7 +69,8 @@ class TableFormerExtractor(BaseTableExtractor):
         self,
         device: Optional[str] = None,
         show_log: bool = False,
-        model_name: Optional[str] = None,
+        model_path: Optional[str] = None,
+        model_type: str = 'structure',
         confidence_threshold: float = 0.7,
         max_size: int = 1000,
         **kwargs
@@ -81,13 +83,45 @@ class TableFormerExtractor(BaseTableExtractor):
         )
         
         self._label_mapper = TableFormerMapper()
-        self.model_name = model_name or "microsoft/table-structure-recognition-v1.1-all"
+        self.model_type = model_type
         self.confidence_threshold = confidence_threshold
         self.max_size = max_size
         
+        # Set default model paths
+        if model_path is None:
+            model_path = f"omnidocs/models/tableformer_{model_type}"
+        
+        self.model_path = Path(model_path)
+        
+        # Check dependencies
+        self._check_dependencies()
+        
+        # Try to load from local path first, fallback to HuggingFace
+        if self.model_path.exists() and any(self.model_path.iterdir()):
+            if self.show_log:
+                logger.info(f"Found local {self.model_type} model at: {self.model_path}")
+            self.model_name_or_path = str(self.model_path)
+        else:
+            # Get HuggingFace model name from config
+            hf_model_name = self._label_mapper._model_configs[self.model_type]['model_name']
+            if self.show_log:
+                logger.info(f"Local {self.model_type} model not found, will download from HuggingFace: {hf_model_name}")
+            
+            # Download model if needed
+            if not self.model_path.exists():
+                self._download_model()
+            
+            self.model_name_or_path = hf_model_name
+        
+        # Load model
+        self._load_model()
+    
+    def _check_dependencies(self):
+        """Check if required dependencies are available."""
         try:
             from transformers import DetrImageProcessor, TableTransformerForObjectDetection
             import torch
+            
             self.processor_class = DetrImageProcessor
             self.model_class = TableTransformerForObjectDetection
             self.torch = torch
@@ -97,31 +131,34 @@ class TableFormerExtractor(BaseTableExtractor):
             raise ImportError(
                 "TableFormer dependencies not available. Please install with: pip install transformers torch"
             ) from e
-        
-        self._load_model()
+    
+
     
     def _download_model(self) -> Optional[Path]:
         """
-        TableFormer models are downloaded automatically by transformers library.
-        This method is required by the abstract base class.
+        Download TableFormer model if not available locally.
+        TableFormer models are downloaded automatically by transformers library to HF_HOME.
         """
         if self.show_log:
-            logger.info("TableFormer models will be downloaded automatically by transformers library")
-        return None
+            logger.info(f"TableFormer models will be downloaded automatically by transformers library to: {_MODELS_DIR}")
+        
+        # Create local model directory for future use
+        self.model_path.mkdir(parents=True, exist_ok=True)
+        
+        return self.model_path
     
     def _load_model(self) -> None:
         """Load TableFormer model."""
         try:
             if self.show_log:
-                logger.info(f"Loading TableFormer model: {self.model_name}")
-                logger.info(f"Models will be downloaded in: {_MODELS_DIR}")
+                logger.info(f"Loading TableFormer model: {self.model_name_or_path}")
             
             # Load processor and model with proper size configuration
             self.processor = self.processor_class.from_pretrained(
-                self.model_name,
-                size={"shortest_edge": 800, "longest_edge": 1333}  # Fix the size configuration
+                self.model_name_or_path,
+                size={"shortest_edge": 800, "longest_edge": 1333}
             )
-            self.model = self.model_class.from_pretrained(self.model_name)
+            self.model = self.model_class.from_pretrained(self.model_name_or_path)
             self.model.to(self.device)
             self.model.eval()
             
@@ -134,7 +171,6 @@ class TableFormerExtractor(BaseTableExtractor):
     
     def _preprocess_image(self, image: Image.Image) -> Image.Image:
         """Preprocess image for TableFormer."""
-        # Resize image if too large
         width, height = image.size
         if max(width, height) > self.max_size:
             if width > height:
@@ -150,7 +186,6 @@ class TableFormerExtractor(BaseTableExtractor):
     
     def _detect_table_structure(self, image: Image.Image) -> List[Dict]:
         """Detect table structure using TableFormer."""
-        # Preprocess image
         processed_image = self._preprocess_image(image)
         
         # Prepare inputs
@@ -290,7 +325,7 @@ class TableFormerExtractor(BaseTableExtractor):
             source_img_size=img_size,
             metadata={
                 'engine': 'tableformer',
-                'model_name': self.model_name,
+                'model_name': self.model_name_or_path,
                 'confidence_threshold': self.confidence_threshold,
                 'max_size': self.max_size
             }
