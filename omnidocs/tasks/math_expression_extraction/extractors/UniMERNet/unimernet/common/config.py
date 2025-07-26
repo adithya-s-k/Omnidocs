@@ -100,45 +100,13 @@ class Config:
 
     @staticmethod
     def build_dataset_config(config):
+        """Simplified dataset config for inference only."""
         datasets = config.get("datasets", None)
         if datasets is None:
-            raise KeyError(
-                "Expecting 'datasets' as the root key for dataset configuration."
-            )
+            raise KeyError("Expecting 'datasets' as the root key for dataset configuration.")
 
-        dataset_config = OmegaConf.create()
-
-        for dataset_name in datasets:
-            # For inference-only, skip dataset builder lookup and just use the config as-is
-            try:
-                builder_cls = registry.get_builder_class(dataset_name)
-                if builder_cls is None:
-                    # No builder found, use config directly for inference
-                    dataset_config = OmegaConf.merge(
-                        dataset_config,
-                        {"datasets": {dataset_name: config["datasets"][dataset_name]}},
-                    )
-                    continue
-
-                dataset_config_type = datasets[dataset_name].get("type", "default")
-                dataset_config_path = builder_cls.default_config_path(
-                    type=dataset_config_type
-                )
-
-                # hiararchy override, customized config > default config
-                dataset_config = OmegaConf.merge(
-                    dataset_config,
-                    OmegaConf.load(dataset_config_path),
-                    {"datasets": {dataset_name: config["datasets"][dataset_name]}},
-                )
-            except Exception:
-                # If builder lookup fails, use config directly for inference
-                dataset_config = OmegaConf.merge(
-                    dataset_config,
-                    {"datasets": {dataset_name: config["datasets"][dataset_name]}},
-                )
-
-        return dataset_config
+        # For inference, just return the config as-is
+        return {"datasets": config["datasets"]}
 
     def _convert_to_dot_list(self, opts):
         if opts is None:
@@ -169,28 +137,6 @@ class Config:
     def model_cfg(self):
         return self.config.model
 
-    def pretty_print(self):
-        logging.info("\n=====  Running Parameters    =====")
-        logging.info(self._convert_node_to_json(self.config.run))
-
-        logging.info("\n======  Dataset Attributes  ======")
-        datasets = self.config.datasets
-
-        for dataset in datasets:
-            if dataset in self.config.datasets:
-                logging.info(f"\n======== {dataset} =======")
-                dataset_config = self.config.datasets[dataset]
-                logging.info(self._convert_node_to_json(dataset_config))
-            else:
-                logging.warning(f"No dataset named '{dataset}' in config. Skipping")
-
-        logging.info(f"\n======  Model Attributes  ======")
-        logging.info(self._convert_node_to_json(self.config.model))
-
-    def _convert_node_to_json(self, node):
-        container = OmegaConf.to_container(node, resolve=True)
-        return json.dumps(container, indent=4, sort_keys=True)
-
     def to_dict(self):
         return OmegaConf.to_container(self.config)
 
@@ -199,7 +145,7 @@ def node_to_dict(node):
     return OmegaConf.to_container(node)
 
 
-class ConfigValidator:
+# Minimal config for inference only
     """
     This is a preliminary implementation to centralize and validate the configuration.
     May be altered in the future.
