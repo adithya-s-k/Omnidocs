@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union, Any
 import cv2
 import torch
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont 
 import numpy as np
 from pydantic import BaseModel, Field
 from omnidocs.utils.logging import get_logger
@@ -297,3 +297,114 @@ class BaseOCRExtractor(ABC):
     def get_supported_languages(self) -> List[str]:
         """Get list of supported language codes."""
         return self.languages.copy()
+
+    def visualize(self,
+                  ocr_result: 'OCROutput',
+                  image_path: Union[str, Path, Image.Image],
+                  output_path: str = "visualized.png",
+                  box_color: str = 'red',
+                  box_width: int = 2,
+                  show_text: bool = False,
+                  text_color : str = 'blue',
+                  font_size : int = 12) -> None:
+        """Visualize OCR results by drawing bounding boxes on the original image.
+
+        This method allows users to easily see which extractor is working better
+        by visualizing the detected text regions with bounding boxes.
+        """
+        try:
+            # Handle different input types
+            if isinstance(image_path, (str, Path)):
+                image = Image.open(image_path).convert("RGB")
+            elif isinstance(image_path, Image.Image):
+                image = image_path.convert("RGB")
+            else:
+                raise ValueError(f"Unsupported image input type: {type(image_path)}")
+            
+            # Create a copy to draw on
+            annotated_image = image.copy()
+            draw = ImageDraw.Draw(annotated_image)
+            
+            # Try to load a font for text overlay
+            font = None
+            if show_text:
+                try:
+                    # Try to use a better font if available
+                    font = ImageFont.truetype("arial.ttf", font_size)
+                except (OSError, IOError):
+                    try:
+                        # Fallback to default font
+                        font = ImageFont.load_default()
+                    except:
+                        font = None
+            
+            # Draw bounding boxes and text if OCR results exist
+            if hasattr(ocr_result, "texts") and ocr_result.texts:
+                for item in ocr_result.texts:
+                    bbox = getattr(item, "bbox", None)
+                    text = getattr(item, "text", "")
+                    
+                    if bbox and len(bbox) == 4:
+                        x1, y1, x2, y2 = bbox
+                        
+                        # Draw rectangle around text
+                        draw.rectangle(
+                            [(x1, y1), (x2, y2)], 
+                            outline=box_color, 
+                            width=box_width
+                        )
+            # Save the annotated image
+            annotated_image.save(output_path)
+            
+            if self.show_log:
+                logger.info(f"OCR visualization saved to {output_path}")
+                logger.info(f"Visualized {len(ocr_result.texts) if ocr_result.texts else 0} text detections")
+                
+        except Exception as e:
+            error_msg = f"Error creating OCR visualization: {str(e)}"
+            if self.show_log:
+                logger.error(error_msg)
+            raise RuntimeError(error_msg)
+    
+    def visualize_from_json(self, 
+                           image_path: Union[str, Path, Image.Image],
+                           json_path: Union[str, Path],
+                           output_path: str = "visualized_from_json.png",
+                           **kwargs) -> None:
+        """
+        Load OCR results from JSON file and visualize them.
+        
+        Args:
+            image_path: Path to original image or PIL Image object
+            json_path: Path to JSON file containing OCR results
+            output_path: Path to save the annotated image
+            **kwargs: Additional arguments passed to visualize method
+        """
+        import json
+        
+        try:
+            # Load OCR results from JSON
+            with open(json_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            # Convert back to OCROutput format
+            texts = []
+            for text_data in data.get('texts', []):
+                texts.append(OCRText(**text_data))
+            
+            ocr_result = OCROutput(
+                texts=texts,
+                full_text=data.get('full_text', ''),
+                source_img_size=data.get('source_img_size'),
+                processing_time=data.get('processing_time'),
+                metadata=data.get('metadata')
+            )
+            
+            # Visualize the loaded results
+            self.visualize(ocr_result, image_path, output_path, **kwargs)
+            
+        except Exception as e:
+            error_msg = f"Error loading and visualizing from JSON: {str(e)}"
+            if self.show_log:
+                logger.error(error_msg)
+            raise RuntimeError(error_msg)

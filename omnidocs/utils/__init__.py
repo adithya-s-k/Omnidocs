@@ -15,15 +15,23 @@ from .language import (
     is_supported_language,
     get_all_supported_languages
 )
+from .model_config import (
+    setup_model_environment,
+    get_models_directory,
+    get_model_path
+)
 
 __all__ = [
     'get_logger',
     'LanguageCode',
-    'GlobalLanguageMapper', 
+    'GlobalLanguageMapper',
     'LanguageDetector',
     'global_language_mapper',
     'get_language_mapper',
     'detect_language',
     'is_supported_language',
-    'get_all_supported_languages'
+    'get_all_supported_languages',
+    'setup_model_environment',
+    'get_models_directory',
+    'get_model_path'
 ]

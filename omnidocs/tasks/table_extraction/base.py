@@ -360,3 +360,273 @@ class BaseTableExtractor(ABC):
         if self._label_mapper is None:
             raise ValueError("Label mapper not initialized")
         return self._label_mapper
+
+    def _convert_pdf_to_image(self, pdf_path: Union[str, Path]) -> Image.Image:
+        """Convert PDF first page to image for visualization."""
+        try:
+            from pdf2image import convert_from_path
+            images = convert_from_path(str(pdf_path), first_page=1, last_page=1)
+            if images:
+                return images[0]
+            else:
+                raise ValueError("Could not convert PDF to image")
+        except ImportError:
+            logger.error("pdf2image not available. Install with: pip install pdf2image")
+            raise ImportError("pdf2image is required for PDF visualization. Install with: pip install pdf2image")
+        except Exception as e:
+            logger.error(f"Error converting PDF to image: {str(e)}")
+            raise
+
+    def _pdf_to_img(self, bbox_pdf: List[float], pdf_size: Tuple[float, float], img_size: Tuple[int, int]) -> List[float]:
+        """
+        Convert [x1, y1, x2, y2] from PDF space (origin = bottom-left, points)
+        to image space (origin = top-left, pixels).
+
+        Parameters
+        ----------
+        bbox_pdf : list[float]
+            PDF coordinates (points).
+        pdf_size : (width_pts, height_pts)
+        img_size : (width_px,  height_px)
+
+        Returns
+        -------
+        list[float]
+            Image-space bbox [x1, y1, x2, y2] in pixels.
+        """
+        if not bbox_pdf or len(bbox_pdf) != 4:
+            return [0.0, 0.0, 0.0, 0.0]
+
+        pdf_w, pdf_h   = pdf_size
+        img_w, img_h   = img_size
+        sx, sy         = img_w / pdf_w, img_h / pdf_h
+
+        x1, y1, x2, y2 = bbox_pdf
+        return [
+            x1 * sx,
+            (pdf_h - y2) * sy,   # flip Y
+            x2 * sx,
+            (pdf_h - y1) * sy
+        ]
+
+    def _safe_bbox(self, bbox: List[float], img_size: Tuple[int, int]) -> List[float]:
+        """
+        Keep bbox inside image borders.
+
+        Parameters
+        ----------
+        bbox : list[float]
+            [x1, y1, x2, y2] in pixels.
+        img_size : (width_px, height_px)
+
+        Returns
+        -------
+        list[float]
+            Clamped bbox.
+        """
+        if not bbox or len(bbox) != 4:
+            return bbox
+
+        x1, y1, x2, y2 = bbox
+        img_w, img_h   = img_size
+
+        x1 = max(0, min(x1, img_w - 1))
+        y1 = max(0, min(y1, img_h - 1))
+        x2 = max(x1 + 1, min(x2, img_w))
+        y2 = max(y1 + 1, min(y2, img_h))
+        return [x1, y1, x2, y2]
+
+    def _transform_pdf_to_image_coords(self, bbox, pdf_size, image_size):
+        """Legacy method - use _pdf_to_img instead."""
+        return self._pdf_to_img(bbox, pdf_size, image_size)
+
+    def _needs_coordinate_transformation(self, table_result, image_size):
+        """Check if coordinates need transformation from PDF to image space."""
+        if not hasattr(table_result, "tables") or not table_result.tables:
+            return False
+
+        # Check if any bbox coordinates are outside image bounds
+        img_width, img_height = image_size
+        for table in table_result.tables:
+            if table.bbox and len(table.bbox) == 4:
+                x1, y1, x2, y2 = table.bbox
+                if x2 > img_width or y2 > img_height:
+                    return True
+            if hasattr(table, "cells") and table.cells:
+                for cell in table.cells:
+                    if cell.bbox and len(cell.bbox) == 4:
+                        x1, y1, x2, y2 = cell.bbox
+                        if x2 > img_width or y2 > img_height:
+                            return True
+        return False
+
+    def visualize(self,
+                  table_result: 'TableOutput',
+                  image_path: Union[str, Path, Image.Image],
+                  output_path: str = "visualized_tables.png",
+                  table_color: str = 'red',
+                  cell_color: str = 'blue',
+                  box_width: int = 2,
+                  show_text: bool = False,
+                  text_color: str = 'green',
+                  font_size: int = 12,
+                  show_table_ids: bool = True) -> None:
+        """Visualize table extraction results by drawing bounding boxes on the original image.
+
+        This method allows users to easily see which extractor is working better
+        by visualizing the detected tables and cells with bounding boxes.
+
+        Args:
+            table_result: TableOutput containing extracted tables
+            image_path: Path to original image or PIL Image object
+            output_path: Path to save the annotated image
+            table_color: Color for table bounding boxes
+            cell_color: Color for cell bounding boxes
+            box_width: Width of bounding box lines
+            show_text: Whether to overlay cell text
+            text_color: Color for text overlay
+            font_size: Font size for text overlay
+            show_table_ids: Whether to show table IDs
+        """
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+
+            # Handle different input types
+            if isinstance(image_path, (str, Path)):
+                image_path = Path(image_path)
+
+                # Check if it's a PDF file
+                if image_path.suffix.lower() == '.pdf':
+                    # Convert PDF to image
+                    image = self._convert_pdf_to_image(image_path)
+                else:
+                    # Regular image file
+                    image = Image.open(image_path).convert("RGB")
+            elif isinstance(image_path, Image.Image):
+                image = image_path.convert("RGB")
+            else:
+                raise ValueError(f"Unsupported image input type: {type(image_path)}")
+
+            # Create a copy to draw on
+            annotated_image = image.copy()
+            draw = ImageDraw.Draw(annotated_image)
+
+            # Just use original coordinates - no transformation needed
+
+            # Try to load a font for text overlay
+            font = None
+            if show_text or show_table_ids:
+                try:
+                    # Try to use a better font if available
+                    font = ImageFont.truetype("arial.ttf", font_size)
+                except (OSError, IOError):
+                    try:
+                        # Fallback to default font
+                        font = ImageFont.load_default()
+                    except:
+                        font = None
+
+            # Draw tables and cells if table results exist
+            if hasattr(table_result, "tables") and table_result.tables:
+                for table_idx, table in enumerate(table_result.tables):
+                    # Draw table bounding box
+                    if table.bbox and len(table.bbox) == 4:
+                        x1, y1, x2, y2 = table.bbox
+                        draw.rectangle(
+                            [(x1, y1), (x2, y2)],
+                            outline=table_color,
+                            width=box_width + 1
+                        )
+
+                        # Draw table ID (only if requested)
+                        if show_table_ids and font:
+                            table_id = getattr(table, 'table_id', f'Table {table_idx}')
+                            draw.text((x1, y1 - font_size - 2), table_id,
+                                    fill=table_color, font=font)
+
+                    # Draw cell bounding boxes
+                    if hasattr(table, "cells") and table.cells:
+                        for cell in table.cells:
+                            if cell.bbox and len(cell.bbox) == 4:
+                                x1, y1, x2, y2 = cell.bbox
+
+                                # Draw cell rectangle - no text overlay
+                                draw.rectangle(
+                                    [(x1, y1), (x2, y2)],
+                                    outline=cell_color,
+                                    width=box_width
+                                )
+
+            # Save the annotated image
+            annotated_image.save(output_path)
+
+            if self.show_log:
+                logger.info(f"Table visualization saved to {output_path}")
+                num_tables = len(table_result.tables) if table_result.tables else 0
+                total_cells = sum(len(table.cells) for table in table_result.tables) if table_result.tables else 0
+                logger.info(f"Visualized {num_tables} tables with {total_cells} cells")
+
+        except Exception as e:
+            error_msg = f"Error creating table visualization: {str(e)}"
+            if self.show_log:
+                logger.error(error_msg)
+            raise RuntimeError(error_msg)
+
+    def visualize_from_json(self,
+                           image_path: Union[str, Path, Image.Image],
+                           json_path: Union[str, Path],
+                           output_path: str = "visualized_tables_from_json.png",
+                           **kwargs) -> None:
+        """
+        Load table extraction results from JSON file and visualize them.
+
+        Args:
+            image_path: Path to original image, PDF file, or PIL Image object
+            json_path: Path to JSON file containing table extraction results
+            output_path: Path to save the annotated image
+            **kwargs: Additional arguments passed to visualize method
+        """
+        import json
+
+        try:
+            # Load table results from JSON
+            with open(json_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            # Reconstruct TableOutput from JSON data
+            tables = []
+            if isinstance(data, list):
+                # Handle list of tables format
+                for table_data in data:
+                    cells = []
+                    if 'cells' in table_data:
+                        for cell_data in table_data['cells']:
+                            cell = TableCell(**cell_data)
+                            cells.append(cell)
+
+                    table = Table(
+                        cells=cells,
+                        num_rows=table_data.get('num_rows', 0),
+                        num_cols=table_data.get('num_cols', 0),
+                        bbox=table_data.get('bbox'),
+                        confidence=table_data.get('confidence'),
+                        table_id=table_data.get('table_id', ''),
+                        structure_confidence=table_data.get('structure_confidence')
+                    )
+                    tables.append(table)
+
+            # Create TableOutput object
+            table_result = TableOutput(
+                tables=tables,
+                source_img_size=data[0].get('source_img_size') if data else None,
+                metadata=data[0].get('metadata', {}) if data else {}
+            )
+
+            # Visualize the loaded results
+            self.visualize(table_result, image_path, output_path, **kwargs)
+
+        except Exception as e:
+            error_msg = f"Error loading and visualizing tables from JSON: {str(e)}"
+            if self.show_log:
+                logger.error(error_msg)
+            raise RuntimeError(error_msg)

@@ -11,6 +11,8 @@ from omnidocs.utils.logging import get_logger, log_execution_time
 
 logger = get_logger(__name__)
 
+# TODO : add a .visualize() method to LatexOutput for visualization into an image
+
 class LatexOutput(BaseModel):
     """
     Container for extracted LaTeX expressions.
