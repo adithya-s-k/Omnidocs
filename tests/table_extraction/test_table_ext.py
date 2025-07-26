@@ -56,8 +56,8 @@ def test_table_extraction():
         TableFormerExtractor
     ]
 
-    pdf_path = "tests/table_extraction/assets/table_document.pdf"
-    image_path = "tests/table_extraction/assets/table_image.png"
+    pdf_path = "assets/table_document.pdf"
+    image_path = "assets/table_image.png"
 
     # Test PDF extractors
     print("Testing PDF extractors...")

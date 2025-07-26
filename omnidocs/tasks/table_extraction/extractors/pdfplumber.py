@@ -95,8 +95,28 @@ class PDFPlumberExtractor(BaseTableExtractor):
         except ImportError:
             logger.error("pdf2image not available. Install with: pip install pdf2image")
             raise
-    
-    def postprocess_output(self, raw_output: List[Dict], img_size: Tuple[int, int]) -> TableOutput:
+
+    def _estimate_cell_bbox(self, table_bbox: List[float], row: int, col: int,
+                           num_rows: int, num_cols: int) -> List[float]:
+        """Estimate cell bounding box based on table bbox and grid position."""
+        if not table_bbox or len(table_bbox) < 4:
+            return [0.0, 0.0, 100.0, 100.0]  # Default bbox
+
+        x1, y1, x2, y2 = table_bbox
+
+        # Calculate cell dimensions
+        cell_width = (x2 - x1) / num_cols
+        cell_height = (y2 - y1) / num_rows
+
+        # Calculate cell position
+        cell_x1 = x1 + (col * cell_width)
+        cell_y1 = y1 + (row * cell_height)
+        cell_x2 = cell_x1 + cell_width
+        cell_y2 = cell_y1 + cell_height
+
+        return [cell_x1, cell_y1, cell_x2, cell_y2]
+
+    def postprocess_output(self, raw_output: List[Dict], img_size: Tuple[int, int], pdf_size: Tuple[int, int] = None) -> TableOutput:
         """Convert PDFPlumber output to standardized TableOutput format."""
         tables = []
         
@@ -104,20 +124,49 @@ class PDFPlumberExtractor(BaseTableExtractor):
             # Get table data
             table_cells = table_data.get('cells', [])
             bbox = table_data.get('bbox', None)
-            
+
+            # If no bbox available, estimate based on image size
+            if bbox is None:
+                bbox = [0, 0, img_size[0], img_size[1]]
+
+            # Transform PDF coordinates to image coordinates if needed
+            if pdf_size and bbox:
+                bbox = self._transform_pdf_to_image_coords(bbox, pdf_size, img_size)
+
             # Convert to our cell format
             cells = []
             max_row = 0
             max_col = 0
-            
+
             for cell_data in table_cells:
                 text = cell_data.get('text', '').strip()
                 row = cell_data.get('row', 0)
                 col = cell_data.get('col', 0)
-                
+
                 max_row = max(max_row, row)
                 max_col = max(max_col, col)
-                
+
+            # Calculate table dimensions
+            num_rows = max_row + 1
+            num_cols = max_col + 1
+
+            # Create cells with estimated bboxes
+            for cell_data in table_cells:
+                text = cell_data.get('text', '').strip()
+                row = cell_data.get('row', 0)
+                col = cell_data.get('col', 0)
+
+                # Use provided bbox or estimate one
+                cell_bbox = cell_data.get('bbox', None)
+                if cell_bbox is None:
+                    cell_bbox = self._estimate_cell_bbox(
+                        bbox, row, col, num_rows, num_cols
+                    )
+
+                # Transform cell coordinates if needed
+                if pdf_size and cell_bbox:
+                    cell_bbox = self._transform_pdf_to_image_coords(cell_bbox, pdf_size, img_size)
+
                 # Create cell
                 cell = TableCell(
                     text=text,
@@ -125,7 +174,7 @@ class PDFPlumberExtractor(BaseTableExtractor):
                     col=col,
                     rowspan=cell_data.get('rowspan', 1),
                     colspan=cell_data.get('colspan', 1),
-                    bbox=cell_data.get('bbox', None),
+                    bbox=cell_bbox,
                     confidence=0.9,  # PDFPlumber is generally reliable
                     is_header=(row == 0)  # Assume first row is header
                 )
@@ -134,8 +183,8 @@ class PDFPlumberExtractor(BaseTableExtractor):
             # Create table object
             table = Table(
                 cells=cells,
-                num_rows=max_row + 1,
-                num_cols=max_col + 1,
+                num_rows=num_rows,
+                num_cols=num_cols,
                 bbox=bbox,
                 confidence=0.9,
                 table_id=f"table_{i}",
@@ -213,18 +262,27 @@ class PDFPlumberExtractor(BaseTableExtractor):
                         page_tables = self._extract_tables_from_page(page)
                         all_tables.extend(page_tables)
                 
-                # Get image size (estimate from first page)
+                # Get image size and PDF size for coordinate transformation
                 try:
+                    # Get actual PDF page size first
+                    import fitz
+                    doc = fitz.open(str(pdf_path))
+                    page = doc[0]
+                    pdf_size = (page.rect.width, page.rect.height)
+                    doc.close()
+
+                    # Convert PDF to image to get actual image size
                     images = self._convert_pdf_to_image(pdf_path)
-                    img_size = images[0].size if images else (612, 792)  # Default PDF size
+                    img_size = images[0].size if images else pdf_size
                 except:
-                    img_size = (612, 792)  # Default PDF size
-                
+                    pdf_size = (612, 792)  # Default PDF size
+                    img_size = (612, 792)  # Default image size
+
             else:
                 raise ValueError("PDFPlumber requires PDF file path, not image data")
-            
+
             # Convert to standardized format
-            result = self.postprocess_output(all_tables, img_size)
+            result = self.postprocess_output(all_tables, img_size, pdf_size)
             
             if self.show_log:
                 logger.info(f"Extracted {len(result.tables)} tables using PDFPlumber")

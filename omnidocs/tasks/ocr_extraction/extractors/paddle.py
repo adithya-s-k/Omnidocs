@@ -1,7 +1,20 @@
-# IMPORTANT: Set up model directory BEFORE any PaddleOCR imports
 import os
 import sys
 from pathlib import Path
+import time
+import copy
+import base64
+import cv2
+import numpy as np
+from io import BytesIO
+from typing import Union, List, Dict, Any, Optional, Tuple
+from pathlib import Path
+from PIL import Image
+import os
+
+from omnidocs.utils.logging import get_logger, log_execution_time
+from omnidocs.tasks.ocr_extraction.base import BaseOCRExtractor, BaseOCRMapper, OCROutput, OCRText
+
 
 # Set up model directory for PaddleOCR downloads
 def _setup_paddle_model_dir():
@@ -24,20 +37,6 @@ def _setup_paddle_model_dir():
 # Call this immediately
 _MODELS_DIR = _setup_paddle_model_dir()
 
-# Now do the other imports
-import time
-import copy
-import base64
-import cv2
-import numpy as np
-from io import BytesIO
-from typing import Union, List, Dict, Any, Optional, Tuple
-from pathlib import Path
-from PIL import Image
-import os
-
-from omnidocs.utils.logging import get_logger, log_execution_time
-from omnidocs.tasks.ocr_extraction.base import BaseOCRExtractor, BaseOCRMapper, OCROutput, OCRText
 
 logger = get_logger(__name__)
 

@@ -145,33 +145,61 @@ class TabulaExtractor(BaseTableExtractor):
         options.update(kwargs)
         
         return options
-    
-    def _dataframe_to_cells(self, df, table_idx: int = 0) -> List[TableCell]:
+
+    def _estimate_cell_bbox(self, table_bbox: List[float], row: int, col: int,
+                           num_rows: int, num_cols: int) -> List[float]:
+        """Estimate cell bounding box based on table bbox and grid position."""
+        if not table_bbox or len(table_bbox) < 4:
+            return [0.0, 0.0, 100.0, 100.0]  # Default bbox
+
+        x1, y1, x2, y2 = table_bbox
+
+        # Calculate cell dimensions
+        cell_width = (x2 - x1) / num_cols
+        cell_height = (y2 - y1) / num_rows
+
+        # Calculate cell position
+        cell_x1 = x1 + (col * cell_width)
+        cell_y1 = y1 + (row * cell_height)
+        cell_x2 = cell_x1 + cell_width
+        cell_y2 = cell_y1 + cell_height
+
+        return [cell_x1, cell_y1, cell_x2, cell_y2]
+
+    def _dataframe_to_cells(self, df, table_idx: int = 0, table_bbox: Optional[List[float]] = None) -> List[TableCell]:
         """Convert pandas DataFrame to TableCell objects."""
         cells = []
-        
+        num_rows, num_cols = df.shape
+
         for row_idx, row in df.iterrows():
             for col_idx, value in enumerate(row):
                 # Clean cell text
                 cell_text = str(value).strip() if value is not None else ""
                 if cell_text in ['nan', 'NaN', 'None']:
                     cell_text = ""
-                
+
                 # Determine if cell is header (first row heuristic)
                 is_header = row_idx == 0 and cell_text != ""
-                
+
+                # Estimate cell bbox if table bbox is available
+                cell_bbox = None
+                if table_bbox:
+                    cell_bbox = self._estimate_cell_bbox(
+                        table_bbox, row_idx, col_idx, num_rows, num_cols
+                    )
+
                 cell = TableCell(
                     text=cell_text,
                     row=row_idx,
                     col=col_idx,
                     rowspan=1,
                     colspan=1,
-                    bbox=None,  # Tabula doesn't provide bbox info
+                    bbox=cell_bbox,
                     confidence=None,  # Tabula doesn't provide confidence scores
                     is_header=is_header
                 )
                 cells.append(cell)
-        
+
         return cells
     
     def _estimate_table_bbox(self, df, img_size: Tuple[int, int]) -> Optional[List[float]]:
@@ -189,7 +217,7 @@ class TabulaExtractor(BaseTableExtractor):
             height * 0.9   # y2
         ]
     
-    def postprocess_output(self, raw_output: List, img_size: Tuple[int, int]) -> TableOutput:
+    def postprocess_output(self, raw_output: List, img_size: Tuple[int, int], pdf_size: Tuple[int, int] = None) -> TableOutput:
         """Convert Tabula output to standardized TableOutput format."""
         tables = []
         
@@ -197,14 +225,18 @@ class TabulaExtractor(BaseTableExtractor):
             if df.empty:
                 continue
             
-            # Convert DataFrame to cells
-            cells = self._dataframe_to_cells(df, i)
-            
             # Get table dimensions
             num_rows, num_cols = df.shape
-            
+
             # Estimate table bbox
             bbox = self._estimate_table_bbox(df, img_size)
+
+            # Transform PDF coordinates to image coordinates if needed
+            if pdf_size and bbox:
+                bbox = self._transform_pdf_to_image_coords(bbox, pdf_size, img_size)
+
+            # Convert DataFrame to cells with estimated bboxes
+            cells = self._dataframe_to_cells(df, i, bbox)
             
             # Create table object
             table = Table(
@@ -261,18 +293,27 @@ class TabulaExtractor(BaseTableExtractor):
                         logger.error(f"Tabula extraction failed: {str(e)}")
                     tables_list = []
                 
-                # Get image size (estimate from first page)
+                # Get image size and PDF size for coordinate transformation
                 try:
+                    # Get actual PDF page size first
+                    import fitz
+                    doc = fitz.open(str(pdf_path))
+                    page = doc[0]
+                    pdf_size = (page.rect.width, page.rect.height)
+                    doc.close()
+
+                    # Convert PDF to image to get actual image size
                     images = self._convert_pdf_to_image(pdf_path)
-                    img_size = images[0].size if images else (612, 792)  # Default PDF size
+                    img_size = images[0].size if images else pdf_size
                 except:
-                    img_size = (612, 792)  # Default PDF size
-                
+                    pdf_size = (612, 792)  # Default PDF size
+                    img_size = (612, 792)  # Default image size
+
             else:
                 raise ValueError("Tabula requires PDF file path, not image data")
-            
+
             # Convert to standardized format
-            result = self.postprocess_output(tables_list, img_size)
+            result = self.postprocess_output(tables_list, img_size, pdf_size)
             
             if self.show_log:
                 logger.info(f"Extracted {len(result.tables)} tables using Tabula")
