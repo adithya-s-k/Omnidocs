@@ -23,8 +23,15 @@ class LaTeXOCRMapper(BaseLatexMapper):
         self._reverse_mapping = {v: k for k, v in mapping.items()}
 
 class LaTeXOCRExtractor(BaseLatexExtractor):
-    """LaTeX-OCR (pix2tex) based expression extraction implementation."""
-    
+    """LaTeX-OCR (pix2tex) based expression extraction implementation.
+
+    TODO: This extractor is currently not working properly.
+    Issues to fix:
+    - Model initialization failures
+    - Dependency conflicts with other packages
+    - Need to resolve import and runtime errors
+    """
+
     def __init__(
         self,
         device: Optional[str] = None,
@@ -33,9 +40,9 @@ class LaTeXOCRExtractor(BaseLatexExtractor):
     ):
         """Initialize LaTeX-OCR Extractor."""
         super().__init__(device=device, show_log=show_log)
-        
+
         self._label_mapper = LaTeXOCRMapper()
-        
+
         try:
             from pix2tex import cli as pix2tex
         except ImportError as e:
@@ -43,7 +50,7 @@ class LaTeXOCRExtractor(BaseLatexExtractor):
             raise ImportError(
                 "pix2tex is not available. Please install it with: pip install pix2tex"
             ) from e
-            
+
         try:
             self.model = pix2tex.LatexOCR()
             if self.show_log:

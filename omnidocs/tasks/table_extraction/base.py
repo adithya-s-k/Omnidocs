@@ -473,6 +473,9 @@ class BaseTableExtractor(ABC):
                   show_table_ids: bool = True) -> None:
         """Visualize table extraction results by drawing bounding boxes on the original image.
 
+        This method allows users to easily see which extractor is working better
+        by visualizing the detected tables and cells with bounding boxes.
+
         Args:
             table_result: TableOutput containing extracted tables
             image_path: Path to original image or PIL Image object

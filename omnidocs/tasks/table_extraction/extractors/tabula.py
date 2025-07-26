@@ -148,7 +148,14 @@ class TabulaExtractor(BaseTableExtractor):
 
     def _estimate_cell_bbox(self, table_bbox: List[float], row: int, col: int,
                            num_rows: int, num_cols: int) -> List[float]:
-        """Estimate cell bounding box based on table bbox and grid position."""
+        """Estimate cell bounding box based on table bbox and grid position.
+
+        TODO: Cell bbox estimation is still broken.
+        Current issues:
+        - Relies on inaccurate table bbox estimation
+        - No proper coordinate transformation
+        - Grid-based estimation doesn't account for variable cell sizes
+        """
         if not table_bbox or len(table_bbox) < 4:
             return [0.0, 0.0, 100.0, 100.0]  # Default bbox
 
@@ -203,10 +210,17 @@ class TabulaExtractor(BaseTableExtractor):
         return cells
     
     def _estimate_table_bbox(self, df, img_size: Tuple[int, int]) -> Optional[List[float]]:
-        """Estimate table bounding box based on DataFrame size."""
+        """Estimate table bounding box based on DataFrame size.
+
+        TODO: This bbox estimation is still broken and needs improvement.
+        Current issues:
+        - Rough estimation doesn't match actual table positions
+        - No proper coordinate transformation from PDF to image space
+        - Need better heuristics or actual table detection
+        """
         if df.empty:
             return None
-        
+
         # Simple estimation - in practice, you'd need more sophisticated methods
         # This is just a placeholder
         width, height = img_size

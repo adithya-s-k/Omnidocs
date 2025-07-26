@@ -1,35 +1,17 @@
-import os
 from pathlib import Path
-import sys
-import logging
 from typing import Union, List, Dict, Any, Optional
-import cv2
 import torch
-import numpy as np
 from PIL import Image
 import json
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.math_expression_extraction.base import BaseLatexExtractor, BaseLatexMapper, LatexOutput
+from omnidocs.utils.model_config import setup_model_environment
 
 logger = get_logger(__name__)
 
 
-def _setup_hf_model_dir():
-    """Set up the model directory for HuggingFace to use omnidocs/models."""
-    current_file = Path(__file__)
-    omnidocs_root = current_file.parent.parent.parent.parent  # Go up to omnidocs root
-    models_dir = omnidocs_root / "models"
-    models_dir.mkdir(exist_ok=True)
-    
-    # Set environment variables BEFORE any imports
-    os.environ["HF_HOME"] = str(models_dir)
-    os.environ["TRANSFORMERS_CACHE"] = str(models_dir)
-    os.environ["HF_HUB_CACHE"] = str(models_dir)
-    
-    return models_dir
-
-#call this immediately
-_MODELS_DIR = _setup_hf_model_dir()
+# Setup model environment
+_MODELS_DIR = setup_model_environment()
 
 class DonutMapper(BaseLatexMapper):
     """Label mapper for Donut model output."""

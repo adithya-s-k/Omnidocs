@@ -298,7 +298,7 @@ class BaseOCRExtractor(ABC):
         """Get list of supported language codes."""
         return self.languages.copy()
 
-    def visualize(self, 
+    def visualize(self,
                   ocr_result: 'OCROutput',
                   image_path: Union[str, Path, Image.Image],
                   output_path: str = "visualized.png",
@@ -307,7 +307,11 @@ class BaseOCRExtractor(ABC):
                   show_text: bool = False,
                   text_color : str = 'blue',
                   font_size : int = 12) -> None:
-        """Visualize OCR results by drawing bounding boxes on the original image."""
+        """Visualize OCR results by drawing bounding boxes on the original image.
+
+        This method allows users to easily see which extractor is working better
+        by visualizing the detected text regions with bounding boxes.
+        """
         try:
             # Handle different input types
             if isinstance(image_path, (str, Path)):

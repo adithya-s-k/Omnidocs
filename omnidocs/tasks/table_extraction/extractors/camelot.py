@@ -26,8 +26,16 @@ class CamelotMapper(BaseTableMapper):
         self._default_method = 'lattice'
 
 class CamelotExtractor(BaseTableExtractor):
-    """Camelot based table extraction implementation."""
-    
+    """Camelot based table extraction implementation.
+
+    TODO: Bbox coordinate transformation from PDF to image space is still broken.
+    Current issues:
+    - Coordinate transformation accuracy issues between PDF points and image pixels
+    - Cell bbox estimation doesn't account for actual cell sizes from Camelot
+    - Need better integration with Camelot's internal coordinate data
+    - Grid-based estimation fallback is inaccurate for real table layouts
+    """
+
     def __init__(
         self,
         device: Optional[str] = None,

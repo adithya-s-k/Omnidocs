@@ -98,7 +98,14 @@ class PDFPlumberExtractor(BaseTableExtractor):
 
     def _estimate_cell_bbox(self, table_bbox: List[float], row: int, col: int,
                            num_rows: int, num_cols: int) -> List[float]:
-        """Estimate cell bounding box based on table bbox and grid position."""
+        """Estimate cell bounding box based on table bbox and grid position.
+
+        TODO: Cell bbox estimation is still broken for PDF extractors.
+        Current issues:
+        - Grid-based estimation doesn't match actual cell positions
+        - Coordinate transformation from PDF to image space is inaccurate
+        - Need better cell detection or coordinate mapping
+        """
         if not table_bbox or len(table_bbox) < 4:
             return [0.0, 0.0, 100.0, 100.0]  # Default bbox
 
@@ -116,90 +123,78 @@ class PDFPlumberExtractor(BaseTableExtractor):
 
         return [cell_x1, cell_y1, cell_x2, cell_y2]
 
-    def postprocess_output(self, raw_output: List[Dict], img_size: Tuple[int, int], pdf_size: Tuple[int, int] = None) -> TableOutput:
+    def postprocess_output(
+        self,
+        raw_output: List[Dict],
+        img_size: Tuple[int, int],
+        pdf_size: Tuple[int, int] = None,
+    ) -> TableOutput:
         """Convert PDFPlumber output to standardized TableOutput format."""
-        tables = []
-        
+        tables: List[Table] = []
+
         for i, table_data in enumerate(raw_output):
-            # Get table data
-            table_cells = table_data.get('cells', [])
-            bbox = table_data.get('bbox', None)
+            table_bbox = table_data.get("bbox")
+            if table_bbox is None:
+                table_bbox = [0, 0, img_size[0], img_size[1]]
 
-            # If no bbox available, estimate based on image size
-            if bbox is None:
-                bbox = [0, 0, img_size[0], img_size[1]]
+            if pdf_size:
+                table_bbox_img = self._transform_pdf_to_image_coords(
+                    table_bbox, pdf_size, img_size
+                )
+            else:
+                table_bbox_img = table_bbox
 
-            # Transform PDF coordinates to image coordinates if needed
-            if pdf_size and bbox:
-                bbox = self._transform_pdf_to_image_coords(bbox, pdf_size, img_size)
-
-            # Convert to our cell format
-            cells = []
-            max_row = 0
-            max_col = 0
-
-            for cell_data in table_cells:
-                text = cell_data.get('text', '').strip()
-                row = cell_data.get('row', 0)
-                col = cell_data.get('col', 0)
-
-                max_row = max(max_row, row)
-                max_col = max(max_col, col)
-
-            # Calculate table dimensions
+            # Get max row/col indexes to know dimensions
+            max_row = max(c["row"] for c in table_data["cells"])
+            max_col = max(c["col"] for c in table_data["cells"])
             num_rows = max_row + 1
             num_cols = max_col + 1
 
-            # Create cells with estimated bboxes
-            for cell_data in table_cells:
-                text = cell_data.get('text', '').strip()
-                row = cell_data.get('row', 0)
-                col = cell_data.get('col', 0)
+            # Pre-compute equally spaced cell rectangles inside the table bbox
+            x0, y0, x1, y1 = table_bbox_img
+            cell_w = (x1 - x0) / num_cols
+            cell_h = (y1 - y0) / num_rows
 
-                # Use provided bbox or estimate one
-                cell_bbox = cell_data.get('bbox', None)
-                if cell_bbox is None:
-                    cell_bbox = self._estimate_cell_bbox(
-                        bbox, row, col, num_rows, num_cols
+            cells: List[TableCell] = []
+            for c in table_data["cells"]:
+                r, cidx = c["row"], c["col"]
+
+                # exact rectangle in image space
+                cx0 = x0 + cidx * cell_w
+                cy0 = y0 + r * cell_h
+                cx1 = cx0 + cell_w
+                cy1 = cy0 + cell_h
+                cell_bbox_img = [cx0, cy0, cx1, cy1]
+
+                cells.append(
+                    TableCell(
+                        text=c["text"].strip(),
+                        row=r,
+                        col=cidx,
+                        rowspan=c.get("rowspan", 1),
+                        colspan=c.get("colspan", 1),
+                        bbox=cell_bbox_img,
+                        confidence=0.9,
+                        is_header=(r == 0),
                     )
-
-                # Transform cell coordinates if needed
-                if pdf_size and cell_bbox:
-                    cell_bbox = self._transform_pdf_to_image_coords(cell_bbox, pdf_size, img_size)
-
-                # Create cell
-                cell = TableCell(
-                    text=text,
-                    row=row,
-                    col=col,
-                    rowspan=cell_data.get('rowspan', 1),
-                    colspan=cell_data.get('colspan', 1),
-                    bbox=cell_bbox,
-                    confidence=0.9,  # PDFPlumber is generally reliable
-                    is_header=(row == 0)  # Assume first row is header
                 )
-                cells.append(cell)
-            
-            # Create table object
-            table = Table(
-                cells=cells,
-                num_rows=num_rows,
-                num_cols=num_cols,
-                bbox=bbox,
-                confidence=0.9,
-                table_id=f"table_{i}",
-                structure_confidence=0.9
+
+            tables.append(
+                Table(
+                    cells=cells,
+                    num_rows=num_rows,
+                    num_cols=num_cols,
+                    bbox=table_bbox_img,
+                    confidence=0.9,
+                    table_id=f"table_{i}",
+                    structure_confidence=0.9,
+                )
             )
-            
-            tables.append(table)
-        
+
         return TableOutput(
             tables=tables,
             source_img_size=img_size,
-            metadata={
-                'engine': 'pdfplumber',
-                'table_settings': self.table_settings
-            }
+            metadata={"engine": "pdfplumber", "table_settings": self.table_settings},
         )
     
     def _extract_tables_from_page(self, page) -> List[Dict]:

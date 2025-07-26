@@ -23,8 +23,16 @@ class TexifyMapper(BaseLatexMapper):
         self._reverse_mapping = {v: k for k, v in mapping.items()}
 
 class TexifyExtractor(BaseLatexExtractor):
-    """Texify-based LaTeX expression extraction implementation."""
-    
+    """Texify-based LaTeX expression extraction implementation.
+
+    TODO: This extractor is currently not working properly.
+    Issues to fix:
+    - Model loading failures
+    - Dependency version conflicts
+    - Runtime errors during inference
+    - Need to resolve compatibility issues
+    """
+
     def __init__(
         self,
         device: Optional[str] = None,
@@ -33,9 +41,9 @@ class TexifyExtractor(BaseLatexExtractor):
     ):
         """Initialize Texify Extractor."""
         super().__init__(device=device, show_log=show_log)
-        
+
         self._label_mapper = TexifyMapper()
-        
+
         try:
             from texify.inference import batch_inference
             from texify.model.model import load_model
@@ -45,7 +53,7 @@ class TexifyExtractor(BaseLatexExtractor):
             raise ImportError(
                 "texify is not available. Please install it with: pip install texify"
             ) from e
-            
+
         try:
             self.model = load_model()
             self.processor = load_processor()
