@@ -49,7 +49,7 @@ def test_text_extraction():
         DoclingExtractor
     ]
 
-    pdf_path = "tests/text_extraction/assets/sample_document.pdf"
+    pdf_path = "./assets/sample_document.pdf"
 
     # Test PDF extractors
     print("Testing PDF text extractors...")

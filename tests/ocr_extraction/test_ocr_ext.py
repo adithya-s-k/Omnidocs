@@ -63,7 +63,7 @@ def test_ocr_extraction():
 
     print(f"Total working extractors: {len(extractors)}")
 
-    image_path = "tests/ocr_extraction/assets/invoice.jpg"
+    image_path = "./assets/invoice.jpg"
 
     for extractor_cls in extractors:
         print(f"\n{'='*50}")

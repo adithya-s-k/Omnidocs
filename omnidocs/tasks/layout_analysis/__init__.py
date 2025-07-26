@@ -1,8 +1,8 @@
-from .detectors.doc_layout_yolo import YOLOLayoutDetector
-from .detectors.florence import FlorenceLayoutDetector
-from .detectors.paddle import PaddleLayoutDetector
-from .detectors.rtdetr import RTDETRLayoutDetector
-from .detectors.surya import SuryaLayoutDetector
+from .extractors.doc_layout_yolo import YOLOLayoutDetector
+from .extractors.florence import FlorenceLayoutDetector
+from .extractors.paddle import PaddleLayoutDetector
+from .extractors.rtdetr import RTDETRLayoutDetector
+from .extractors.surya import SuryaLayoutDetector
 
 __all__ = [
     "YOLOLayoutDetector","FlorenceLayoutDetector", "PaddleLayoutDetector", "RTDETRLayoutDetector", "SuryaLayoutDetector"
