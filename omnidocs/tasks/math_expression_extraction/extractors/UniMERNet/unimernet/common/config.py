@@ -109,19 +109,34 @@ class Config:
         dataset_config = OmegaConf.create()
 
         for dataset_name in datasets:
-            builder_cls = registry.get_builder_class(dataset_name)
+            # For inference-only, skip dataset builder lookup and just use the config as-is
+            try:
+                builder_cls = registry.get_builder_class(dataset_name)
+                if builder_cls is None:
+                    # No builder found, use config directly for inference
+                    dataset_config = OmegaConf.merge(
+                        dataset_config,
+                        {"datasets": {dataset_name: config["datasets"][dataset_name]}},
+                    )
+                    continue
 
-            dataset_config_type = datasets[dataset_name].get("type", "default")
-            dataset_config_path = builder_cls.default_config_path(
-                type=dataset_config_type
-            )
+                dataset_config_type = datasets[dataset_name].get("type", "default")
+                dataset_config_path = builder_cls.default_config_path(
+                    type=dataset_config_type
+                )
 
-            # hiararchy override, customized config > default config
-            dataset_config = OmegaConf.merge(
-                dataset_config,
-                OmegaConf.load(dataset_config_path),
-                {"datasets": {dataset_name: config["datasets"][dataset_name]}},
-            )
+                # hiararchy override, customized config > default config
+                dataset_config = OmegaConf.merge(
+                    dataset_config,
+                    OmegaConf.load(dataset_config_path),
+                    {"datasets": {dataset_name: config["datasets"][dataset_name]}},
+                )
+            except Exception:
+                # If builder lookup fails, use config directly for inference
+                dataset_config = OmegaConf.merge(
+                    dataset_config,
+                    {"datasets": {dataset_name: config["datasets"][dataset_name]}},
+                )
 
         return dataset_config
 

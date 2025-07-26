@@ -22,24 +22,15 @@
 from unimernet.processors.base_processor import BaseProcessor
 
 
-from unimernet.processors.blip_processors import (
-    BlipImageTrainProcessor,
-    Blip2ImageTrainProcessor,
-    BlipImageEvalProcessor,
-    BlipCaptionProcessor,
-)
-
 from unimernet.processors.formula_processor import (
-    FormulaImageTrainProcessor,
     FormulaImageEvalProcessor,
-    FormulaImageMultiScaleTrainProcessor,
 )
 
 from unimernet.common.registry import registry
 
 __all__ = [
     "BaseProcessor",
-    "BlipCaptionProcessor",
+    "FormulaImageEvalProcessor",
 ]
 
 

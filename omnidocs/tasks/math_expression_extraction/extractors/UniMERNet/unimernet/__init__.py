@@ -27,7 +27,6 @@ from omegaconf import OmegaConf
 
 from unimernet.common.registry import registry
 
-from unimernet.datasets.builders import *
 from unimernet.models import *
 from unimernet.processors import *
 from unimernet.tasks import *

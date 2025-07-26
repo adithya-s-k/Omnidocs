@@ -176,7 +176,6 @@ class UniMERNetExtractor(BaseLatexExtractor):
                 sys.path.insert(0, str(unimernet_path))
 
             from unimernet.common.config import Config
-            import unimernet.datasets.builders
             import unimernet.models
             import unimernet.processors
             import unimernet.tasks as tasks
