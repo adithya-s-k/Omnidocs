@@ -62,13 +62,10 @@ class SuryaLayoutDetector(BaseLayoutDetector):
             logger.info(f"Using device: {self.device}")
             
         try:
-            # Import required libraries
-            from surya.detection import batch_text_detection
-            from surya.layout import batch_layout_detection
-            from surya.model.detection.model import (
-                load_model as load_detection_model,
-                load_processor as load_detection_processor
-            )
+            # Import required libraries - use new API
+            import surya
+            if self.show_log:
+                logger.info(f"Found surya package at: {surya.__file__}")
         except ImportError as ex:
             if self.show_log:
                 logger.error("Failed to import surya")
@@ -77,20 +74,16 @@ class SuryaLayoutDetector(BaseLayoutDetector):
             ) from ex
             
         try:
-            # Initialize detection and layout models
-            self.det_model = load_detection_model()
-            self.det_processor = load_detection_processor()
-            self.layout_model = load_detection_model(checkpoint="vikp/surya_layout3")
-            self.layout_processor = load_detection_processor(checkpoint="vikp/surya_layout3")
-            
-            # Move models to specified device
-            if self.device == "cuda":
-                self.det_model = self.det_model.cuda()
-                self.layout_model = self.layout_model.cuda()
-                
+            # Initialize detection and layout models using new API
+            from surya.detection import DetectionPredictor
+            from surya.layout import LayoutPredictor
+
+            self.det_predictor = DetectionPredictor()
+            self.layout_predictor = LayoutPredictor()
+
             if self.show_log:
                 logger.success("Models initialized successfully")
-                
+
         except Exception as e:
             if self.show_log:
                 logger.error("Failed to initialize models", exc_info=True)
@@ -120,11 +113,6 @@ class SuryaLayoutDetector(BaseLayoutDetector):
     ) -> Tuple[Image.Image, LayoutOutput]:
         """Run layout detection with standardized labels."""
         try:
-            # Import here to avoid circular imports
-            from surya.detection import batch_text_detection
-            from surya.layout import batch_layout_detection
-            from surya.postprocessing.heatmap import draw_polys_on_image
-            
             # Load and preprocess input
             if isinstance(input_path, (str, Path)):
                 image = Image.open(input_path).convert("RGB")
@@ -134,22 +122,10 @@ class SuryaLayoutDetector(BaseLayoutDetector):
                 image = Image.fromarray(input_path).convert("RGB")
             else:
                 raise ValueError("Unsupported input type")
-            
-            # Run text detection first
-            line_predictions = batch_text_detection(
-                [image], 
-                self.det_model, 
-                self.det_processor
-            )
-            
-            # Run layout detection
-            layout_predictions = batch_layout_detection(
-                [image], 
-                self.layout_model,
-                self.layout_processor, 
-                line_predictions
-            )
-            
+
+            # Run layout detection using new API
+            layout_predictions = self.layout_predictor([image])
+
             # Process the layout prediction (take first since we only processed one image)
             layout_pred = layout_predictions[0]
             

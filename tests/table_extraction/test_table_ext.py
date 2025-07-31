@@ -11,7 +11,8 @@ from omnidocs.tasks.table_extraction.extractors import (
     # PPStructureExtractor,  # not working cuz of some issues
     TableTransformerExtractor,
     TableFormerExtractor,
-    TabulaExtractor
+    TabulaExtractor,
+    SuryaTableExtractor
 )
 
 warnings.filterwarnings("ignore")
@@ -53,7 +54,8 @@ def test_table_extraction():
     image_extractors = [
         # PPStructureExtractor,  # not working cuz of some issues
         TableTransformerExtractor,
-        TableFormerExtractor
+        TableFormerExtractor,
+        SuryaTableExtractor
     ]
 
     pdf_path = "assets/table_document.pdf"

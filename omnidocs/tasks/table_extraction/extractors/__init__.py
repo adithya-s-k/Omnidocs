@@ -10,6 +10,7 @@ from .ppstructure import PPStructureExtractor
 from .table_transfomer import TableTransformerExtractor
 from .tableformer import TableFormerExtractor
 from .tabula import TabulaExtractor
+from .surya_table import SuryaTableExtractor
 
 __all__ = [
     'CamelotExtractor',
@@ -17,5 +18,6 @@ __all__ = [
     'PPStructureExtractor',
     'TableTransformerExtractor',
     'TableFormerExtractor',
-    'TabulaExtractor'
+    'TabulaExtractor',
+    'SuryaTableExtractor'
 ]
