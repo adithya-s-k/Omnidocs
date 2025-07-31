@@ -20,38 +20,6 @@ result = extractor.extract("path/to/math_equation_image.png")
 print(result.expressions[0])  # Prints LaTeX code
 ```
 
-### 2. LaTeXOCRExtractor (pix2tex)
-High-accuracy LaTeX OCR using the pix2tex model.
-
-```python
-from omnidocs.tasks.math_expression_extraction.extractors.latexocr import LaTeXOCRExtractor
-
-# Initialize extractor
-extractor = LaTeXOCRExtractor(device='cuda', show_log=True)
-
-# Extract LaTeX from image
-result = extractor.extract("math_formula.png")
-print(result.expressions[0])  # Clean LaTeX output
-```
-
-### 3. FlorenceExtractor
-Microsoft's Florence model for mathematical content understanding.
-
-```python
-from omnidocs.tasks.math_expression_extraction.extractors.florence import FlorenceExtractor
-
-# Initialize with specific model configuration
-extractor = FlorenceExtractor(
-    device='cuda', 
-    show_log=True,
-    model_name='microsoft/Florence-2-large'
-)
-
-# Process mathematical image
-result = extractor.extract("complex_equation.jpg")
-for expr in result.expressions:
-    print(f"LaTeX: {expr}")
-```
 
 ### 4. NougatExtractor
 Neural Optical Understanding for Academic Documents.
@@ -88,17 +56,17 @@ for i, expr in enumerate(result.expressions):
 ### Batch Processing Multiple Images
 ```python
 import os
-from omnidocs.tasks.math_expression_extraction.extractors.latexocr import LaTeXOCRExtractor
+from omnidocs.tasks.math_expression_extraction.extractors.donut import DonutExtractor
 
-# Initialize extractor once
-extractor = LaTeXOCRExtractor(device='cuda', show_log=True)
+# Initialize extractor once (choose Donut, Nougat, SuryaMath, or UniMERNet)
+extractor = DonutExtractor(device='cuda', show_log=True)
 
-# Process multiple images
+# Process multiple images in a folder
 image_folder = "path/to/math_images/"
 results = []
 
 for filename in os.listdir(image_folder):
-    if filename.endswith(('.png', '.jpg', '.jpeg')):
+    if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
         image_path = os.path.join(image_folder, filename)
         try:
             result = extractor.extract(image_path)
@@ -121,9 +89,9 @@ for item in results:
 ```python
 from PIL import Image
 import numpy as np
-from omnidocs.tasks.math_expression_extraction.extractors.florence import FlorenceExtractor
+from omnidocs.tasks.math_expression_extraction.extractors.donut import DonutExtractor
 
-extractor = FlorenceExtractor(device='cuda', show_log=True)
+extractor = DonutExtractor(device='cuda', show_log=True)
 
 # From file path
 result1 = extractor.extract("equation.png")
@@ -160,9 +128,9 @@ except Exception as e:
 | Extractor | Accuracy | Speed | Memory Usage | Best Use Case |
 |-----------|----------|-------|--------------|---------------|
 | **DonutExtractor** | High | Medium | Medium | General mathematical expressions |
-| **LaTeXOCRExtractor** | Very High | Medium | Medium | Clean, high-quality math images |
-| **FlorenceExtractor** | High | Fast | Low | Multi-modal document understanding |
 | **NougatExtractor** | Very High | Slow | High | Academic papers, complex layouts |
+| **SuryaMathExtractor** | High | Fast | Low | Lightweight, fast math extraction |
+| **UniMERNetExtractor** | High | Fast | Medium | Universal math recognition |
 
 ## Configuration Options
 
@@ -181,22 +149,14 @@ extractor = DonutExtractor(device=None, show_log=True)  # Auto-selects best avai
 ### Logging and Debugging
 ```python
 # Enable detailed logging
-extractor = LaTeXOCRExtractor(device='cuda', show_log=True)
+extractor = DonutExtractor(device='cuda', show_log=True)
 
 # Disable logging for production
-extractor = LaTeXOCRExtractor(device='cuda', show_log=False)
+extractor = DonutExtractor(device='cuda', show_log=False)
 ```
 
 ### Model-Specific Parameters
 ```python
-# Florence with custom model
-extractor = FlorenceExtractor(
-    device='cuda',
-    show_log=True,
-    model_name='microsoft/Florence-2-base',  # Different model variant
-    trust_remote_code=True
-)
-
 # Nougat with specific checkpoint
 extractor = NougatExtractor(
     device='cuda',
@@ -239,15 +199,16 @@ if latex_code:
 ### Comparing Multiple Extractors
 ```python
 from omnidocs.tasks.math_expression_extraction.extractors import (
-    DonutExtractor, LaTeXOCRExtractor, FlorenceExtractor
+    DonutExtractor, NougatExtractor, SuryaMathExtractor, UniMERNetExtractor
 )
 
 def compare_extractors(image_path):
     """Compare results from different extractors."""
     extractors = {
         'Donut': DonutExtractor,
-        'LaTeXOCR': LaTeXOCRExtractor,
-        'Florence': FlorenceExtractor
+        'Nougat': NougatExtractor,
+        'SuryaMath': SuryaMathExtractor,
+        'UniMERNet': UniMERNetExtractor
     }
 
     results = {}
@@ -359,19 +320,19 @@ Each extractor has specific dependencies:
 pip install transformers torch pillow
 ```
 
-### LaTeXOCRExtractor
-```bash
-pip install pix2tex
-```
-
-### FlorenceExtractor
-```bash
-pip install transformers torch pillow
-```
-
 ### NougatExtractor
 ```bash
 pip install nougat-ocr
+```
+
+### SuryaMathExtractor
+```bash
+pip install surya-ocr torch pillow
+```
+
+### UniMERNetExtractor
+```bash
+pip install unimer-net torch pillow
 ```
 
 ## Troubleshooting
@@ -390,7 +351,7 @@ extractor = DonutExtractor(device='cpu', show_log=True)
 ```python
 # Ensure internet connection for first-time model download
 # Models are cached locally after first download
-extractor = LaTeXOCRExtractor(device='cuda', show_log=True)  # Will download if needed
+extractor = DonutExtractor(device='cuda', show_log=True)  # Will download if needed
 ```
 
 **3. Import Errors**
@@ -416,10 +377,10 @@ if not result.expressions:
 ## Best Practices
 
 1. **Choose the Right Extractor**: 
-   - Use LaTeXOCR for highest accuracy on clean images
    - Use Donut for general-purpose extraction
    - Use Nougat for academic papers
-   - Use Florence for multi-modal tasks
+   - Use SuryaMath for lightweight, fast math extraction
+   - Use UniMERNet for universal math recognition
 
 2. **Optimize Performance**:
    - Use GPU when available (`device='cuda'`)

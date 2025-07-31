@@ -15,9 +15,25 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.top
+    - navigation.expand
     - search.suggest
     - search.highlight
-  custom_dir: ./assets/overrides
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_toc_entry: false
+            merge_init_into_class: true
+            show_signature_annotations: true
+            separate_signature: true
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -29,12 +45,14 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true
+  - attr_list
+  - md_in_html
 
 nav:
   - Home: index.md
   - Getting Started:
     - Installation: getting_started/installation.md
-    - Quick Start: getting_started/quickstart.ipynb
+    - Quick Start: getting_started/quickstart.md
   - Tasks:
     - Layout Analysis:
       - Overview: tasks/layout_analysis/overview.md
@@ -47,35 +65,40 @@ nav:
     - Text Extraction:
       - Overview: tasks/text_extraction/overview.md
       - Tutorials:
-        - PyMuPDF: tasks/text_extraction/tutorials/pymupdf.ipynb
-        - PDFPlumber: tasks/text_extraction/tutorials/pdfplumber.ipynb
-        - PyPDF2: tasks/text_extraction/tutorials/pypdf2.ipynb
+        - Text Extractors: tasks/text_extraction/tutorials/text_extractors.ipynb
     - Math Expression:
-      - Overview: tasks/math_extraction/overview.md
+      - Overview: tasks/math_expression_extraction/overview.md
       - Tutorials:
-        - LaTeX OCR: tasks/math_extraction/tutorials/latex_ocr.ipynb
-        - UniMathNet: tasks/math_extraction/tutorials/unimathnet.ipynb
+        - UniMERNet: tasks/math_expression_extraction/tutorials/unimernet.ipynb
+        - SuryaMath: tasks/math_expression_extraction/tutorials/suryamath.ipynb
+        - Nougat: tasks/math_expression_extraction/tutorials/nougat.ipynb
+        - Donut: tasks/math_expression_extraction/tutorials/donut.ipynb
     - OCR:
       - Overview: tasks/ocr/overview.md
       - Tutorials:
         - PaddleOCR: tasks/ocr/tutorials/paddle.ipynb
         - Tesseract: tasks/ocr/tutorials/tesseract.ipynb
         - EasyOCR: tasks/ocr/tutorials/easyocr.ipynb
+        - SuryaOCR: tasks/ocr/tutorials/suryaocr.ipynb
     - Table Extraction:
       - Overview: tasks/table_extraction/overview.md
       - Tutorials:
         - Camelot: tasks/table_extraction/tutorials/camelot.ipynb
         - PDFPlumber: tasks/table_extraction/tutorials/pdfplumber.ipynb
-  - Workflows:
-    - Overview: workflows/overview.md
-    - Tutorials:
-      - PDF to Markdown: workflows/pdf_to_md/implementation.ipynb
-      - Invoice Extraction: workflows/invoice_parser/implementation.ipynb
-  - Benchmarks:
-    - Overview: benchmarks/overview.md
+        - Surya Table: tasks/table_extraction/tutorials/surya_table.ipynb
+        - Tabula: tasks/table_extraction/tutorials/tabula.ipynb
+        - TableTransformer: tasks/table_extraction/tutorials/tabletransformer.ipynb
+        - TableFormer: tasks/table_extraction/tutorials/tableformer.ipynb
   - API Reference:
-    - Overview: api_reference/overview.md
-    # - API Docs: api_reference/modules/
+    - Overview: api_reference/index.md
+    - Core: api_reference/core.md
+    - Tasks:
+      - Layout Analysis: api_reference/tasks/layout_analysis.md
+      - Text Extraction: api_reference/tasks/text_extraction.md
+      - Table Extraction: api_reference/tasks/table_extraction.md
+      - OCR: api_reference/tasks/ocr.md
+      - Math Expression: api_reference/tasks/math_expression.md
+    - Utils: api_reference/utils.md
 
   
 extra:
@@ -85,9 +108,4 @@ extra:
     - icon: fontawesome/brands/twitter
       link: https://x.com/adithya_s_k
 
-plugins:
-  - search
-  - mkdocs-jupyter
-  - social
-
-copyright: "&copy; 2024 OmniDocs. All rights reserved."
+copyright: "&copy; 2025 OmniDocs. All rights reserved."
