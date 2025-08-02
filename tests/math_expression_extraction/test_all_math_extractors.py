@@ -122,35 +122,28 @@ def test_all_math_extractors():
         extractors_tested += 1
         failed_extractors.append(f"Donut: {str(e)[:50]}...")
     
-    # 4. Test Texify: not working cuz of some issues(deprecated)
-    # print("\n4️⃣ Testing Texify...")
-    # try:
-    #     from omnidocs.tasks.math_expression_extraction.extractors.texify import TexifyExtractor
-    #
-    #     print("✅ TexifyExtractor imported successfully!")
-    #     extractor = TexifyExtractor(device='cpu', show_log=False)
-    #     print("✅ TexifyExtractor initialized!")
-    #
-    #     result = extractor.extract(image_path)
-    #     print(f"✅ Texify: Found {len(result.expressions)} expressions")
-    #
-    #     if result.expressions:
-    #         expr = result.expressions[0]
-    #         print(f"   LaTeX: {expr[:80]}...")
-    #
-    #     extractors_tested += 1
-    #     extractors_working += 1
-    #     working_extractors.append("Texify")
-    #
-    # except Exception as e:
-    #     print(f"❌ Texify error: {e}")
-    #     extractors_tested += 1
-    #     failed_extractors.append(f"Texify: {str(e)[:50]}...")
-    
-    # 5. Skip Texteller (being problematic)
-    print("\n5️⃣ Skipping Texteller...")
-    print("🚫 Texteller temporarily disabled (API/download issues)")
-    
+    # 4. Test Surya 
+    try:
+        from omnidocs.tasks.math_expression_extraction.extractors import SuryaMathExtractor
+        print("Surya imported successfully!")
+        extractor = SuryaMathExtractor(device='cpu', show_log=False)
+        print("Surya Extractor initialized!")
+        result = extractor.extract(image_path)
+        print(f"Sruya : Found {len(result.expressions)} expressions")
+        
+        if result.expressions:
+            expr = result.expressions[0]
+            print(f"   LaTeX: {expr[:80]}...")
+        
+        extractors_tested += 1
+        extractors_working += 1
+        working_extractors.append("Surya")
+    except Exception as e:
+        print(f"Surya error: {e}")
+        extractors_tested += 1
+        failed_extractors.append(f"Surya: {str(e)[:50]}...")
+
+        
     # Final summary
     print("\n" + "=" * 70)
     print("🎯 MATH EXTRACTION TEST SUMMARY")

@@ -10,7 +10,8 @@ from omnidocs.tasks.text_extraction.extractors import (
     PyPDF2Extractor,
     PDFPlumberTextExtractor,
     PDFTextExtractor,
-    DoclingExtractor
+    DoclingExtractor,
+    SuryaTextExtractor
 )
 
 warnings.filterwarnings("ignore")
@@ -46,7 +47,9 @@ def test_text_extraction():
         PyPDF2Extractor,
         PDFPlumberTextExtractor,
         PDFTextExtractor,
-        DoclingExtractor
+        DoclingExtractor,
+        SuryaTextExtractor
+        
     ]
 
     pdf_path = "./assets/sample_document.pdf"

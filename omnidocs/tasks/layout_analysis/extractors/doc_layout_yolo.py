@@ -10,8 +10,12 @@ from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.layout_analysis.base import BaseLayoutDetector, BaseLayoutMapper
 from omnidocs.tasks.layout_analysis.enums import LayoutLabel
 from omnidocs.tasks.layout_analysis.models import LayoutBox, LayoutOutput
+from omnidocs.utils.model_config import setup_model_environment
 
 logger = get_logger(__name__)
+
+# Setup model environment
+_MODELS_DIR = setup_model_environment()
 
 class YOLOLayoutMapper(BaseLayoutMapper):
     """Label mapper for YOLO layout detection model."""
@@ -36,14 +40,14 @@ class YOLOLayoutDetector(BaseLayoutDetector):
     DEFAULT_LOCAL_DIR = "./models/DocLayout-YOLO-DocStructBench"
 
     def __init__(
-        self, 
-        device: Optional[str] = None, 
+        self,
+        device: Optional[str] = None,
         show_log: bool = False,
-        local_dir: Optional[Union[str, Path]] = None
+        model_path: Optional[Union[str, Path]] = None
     ):
         """Initialize YOLO Layout Detector."""
         super().__init__(show_log=show_log)
-        
+
         self._label_mapper = YOLOLayoutMapper()
         if self.show_log:
             logger.info(f"Initializing YOLOLayoutDetector")
@@ -53,15 +57,28 @@ class YOLOLayoutDetector(BaseLayoutDetector):
         if self.show_log:
             logger.info(f"Using device: {self.device}")
 
-        self.local_dir = Path(local_dir) if local_dir else Path(self.DEFAULT_LOCAL_DIR)
+        # Set default paths
+        if model_path is None:
+            model_path = _MODELS_DIR / "yolo_layout" / self.MODEL_REPO.replace("/", "_")
+
+        self.model_path = Path(model_path)
         if self.show_log:
-            logger.info(f"Model directory: {self.local_dir}")
+            logger.info(f"Model directory: {self.model_path}")
 
         self.conf_threshold = 0.2
         self.img_size = 1024
 
-        try:
+        # Check dependencies
+        self._check_dependencies()
+
+        # Download model if needed
+        if not self._model_exists():
+            if self.show_log:
+                logger.info(f"Model not found at {self.model_path}, will download from HuggingFace")
             self._download_model()
+
+        # Load model
+        try:
             self._load_model()
             if self.show_log:
                 logger.success("Model initialized successfully")
@@ -70,32 +87,62 @@ class YOLOLayoutDetector(BaseLayoutDetector):
                 logger.error("Failed to initialize model", exc_info=True)
             raise
 
-    @log_execution_time
+    def _check_dependencies(self):
+        """Check if required dependencies are available."""
+        try:
+            from doclayout_yolo import YOLOv10
+        except ImportError as ex:
+            logger.error("Failed to import doclayout-yolo")
+            raise ImportError(
+                "doclayout-yolo is not available. Please install it with: pip install doclayout-yolo"
+            ) from ex
+
+    def _model_exists(self) -> bool:
+        """Check if model files exist locally."""
+        model_file = self.model_path / self.MODEL_FILENAME
+        return model_file.exists()
+
     def _download_model(self) -> Path:
         """Download model from HuggingFace Hub."""
         try:
             if self.show_log:
-                logger.info(f"Downloading model from {self.MODEL_REPO}...")
-            model_dir = snapshot_download(self.MODEL_REPO, local_dir=str(self.local_dir))
-            self.model_path = Path(model_dir) / self.MODEL_FILENAME
+                logger.info(f"Downloading YOLO model from {self.MODEL_REPO}...")
+                logger.info(f"Saving to: {self.model_path}")
+
+            # Create model directory
+            self.model_path.mkdir(parents=True, exist_ok=True)
+
+            # Download model file
+            model_dir = snapshot_download(
+                self.MODEL_REPO,
+                local_dir=str(self.model_path)
+            )
+
             if self.show_log:
-                logger.success(f"Model downloaded to {self.model_path}")
+                logger.success(f"Model downloaded successfully to {self.model_path}")
+
             return self.model_path
 
         except Exception as e:
-            if self.show_log:
-                logger.error("Failed to download model", exc_info=True)
+            logger.error("Error downloading YOLO model", exc_info=True)
+            # Clean up partial download
+            if self.model_path.exists():
+                import shutil
+                shutil.rmtree(self.model_path)
             raise
 
-    @log_execution_time
     def _load_model(self) -> None:
-        """Load YOLOv10 model."""
+        """Load YOLOv10 model from local path."""
         try:
             from doclayout_yolo import YOLOv10
 
-            self.model = YOLOv10(str(self.model_path))
+            model_file = self.model_path / self.MODEL_FILENAME
             if self.show_log:
-                logger.success(f"Model loaded successfully on {self.device}")
+                logger.info(f"Loading YOLO model from {model_file}")
+
+            self.model = YOLOv10(str(model_file))
+            if self.show_log:
+                logger.success(f"YOLO model loaded successfully on {self.device}")
         except ImportError:
             if self.show_log:
                 logger.error("Failed to import doclayout_yolo")

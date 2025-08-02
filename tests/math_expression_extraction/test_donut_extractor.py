@@ -23,9 +23,9 @@ def main():
     image_path = "tests/math_expression_extraction/assets/math_equation.png"
 
     result = extractor.extract(image_path)
-    result.save_json()
-    result.save_txt()
-    result.save_md()
+    # result.save_json()
+    # result.save_txt()
+    # result.save_md()
 
     
 if __name__ == "__main__":
