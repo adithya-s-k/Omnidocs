@@ -11,7 +11,8 @@ pip install omnidocs
 
 ## 2. Install with uv (fast, modern Python package manager)
 
-If you have [uv](https://github.com/astral-sh/uv) installed:
+If you have [uv](https://github.com/astral-sh/uv) installed 
+(`pip install uv`) you can:
 
 ```bash
 uv pip install omnidocs

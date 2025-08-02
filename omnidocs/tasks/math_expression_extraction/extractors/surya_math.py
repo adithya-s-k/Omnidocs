@@ -70,11 +70,11 @@ class SuryaMathExtractor(BaseLatexExtractor):
             import surya
             if self.show_log:
                 logger.info(f"Found surya package at: {surya.__file__}")
-        except ImportError:
+        except ImportError as ex:
             raise ImportError(
                 "surya-ocr package not found. Please install with: "
                 "pip install surya-ocr"
-            )
+            ) from ex 
 
     def _load_model(self):
         """Load Surya math models."""

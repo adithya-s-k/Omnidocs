@@ -251,7 +251,7 @@ class RTDETRLayoutDetector(BaseLayoutDetector):
                 with torch.no_grad():
                     outputs = self.model(**inputs)
             except Exception as e:
-                raise RuntimeError(f"Error during model inference: {e}")
+                raise RuntimeError(f"Error during model inference: {e}") from e 
 
             # Post-process results
             threshold = confidence_threshold or self.confidence_threshold
@@ -281,12 +281,12 @@ class RTDETRLayoutDetector(BaseLayoutDetector):
 
                     # Convert box coordinates (already in image space)
                     box = [round(i, 2) for i in box.tolist()]
-                    l, t, r, b = box
+                    left, top, right, bottom = box
 
                     layout_boxes.append(
                         LayoutBox(
                             label=mapped_label,
-                            bbox=[l, t, r, b],
+                            bbox=[left, top, right, bottom],
                             confidence=score_val
                         )
                     )

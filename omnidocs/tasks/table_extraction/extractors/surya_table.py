@@ -67,7 +67,7 @@ class SuryaTableExtractor(BaseTableExtractor):
             raise ImportError(
                 "surya-ocr package not found. Please install with: "
                 "pip install surya-ocr"
-            )
+            ) from None 
 
     def _load_model(self):
         """Load Surya table detection and recognition models."""

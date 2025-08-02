@@ -149,13 +149,13 @@ The standardized output format for text extraction results.
       show_root_heading: true
       show_source: false
 
-#### Key Properties
+### Key Properties
 
 - `text_blocks` (List[TextBlock]): List of extracted text blocks with positions.
 - `full_text` (str): The complete extracted text content.
 - `source_file` (str): Path to the processed file.
 
-#### Key Methods
+### Key Methods
 
 - `save_json(output_path)`: Save results to a JSON file.
 

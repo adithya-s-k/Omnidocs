@@ -113,8 +113,8 @@ See the [**Quick Start Guide**](./getting_started/quickstart.md) for a comprehen
 
 ## 🗺️ Learn More
 
-* **[Tutorials](./tasks/):** Hands-on notebooks and guides for every task.
-* **[API Reference](./api_reference/):** The full dictionary of all public methods and classes.
+ **[Tutorials](./tasks/):** Hands-on notebooks and guides for every task.
+ **[API Reference](./api_reference/):** The full dictionary of all public methods and classes.
 
 ## 🤝 Contributing
 
@@ -136,5 +136,5 @@ If you find **OmniDocs** helpful, please ⭐ the repo on [GitHub](https://github
 
 ## 🗨️ Join the Community
 
-* **Issues:** Report bugs or suggest features [here](https://github.com/adithya-s-k/OmniDocs/issues)
-* **Email:** [adithyaskolavi@gmail.com](mailto:adithyaskolavi@gmail.com) or [laxmansrivastacc@gmail.com](mailto:laxmansrivastacc@gmail.com)
+ **Issues:** Report bugs or suggest features [here](https://github.com/adithya-s-k/OmniDocs/issues)
+ **Email:** [adithyaskolavi@gmail.com](mailto:adithyaskolavi@gmail.com) or [laxmansrivastacc@gmail.com](mailto:laxmansrivastacc@gmail.com)

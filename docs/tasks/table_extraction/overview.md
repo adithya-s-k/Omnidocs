@@ -121,17 +121,17 @@ pip install tableformer torch pandas
 ## Troubleshooting
 
 **1. Java Not Found (TabulaExtractor):**
-  - Ensure Java is installed and added to your system PATH.
+- Ensure Java is installed and added to your system PATH.
 
 **2. No Tables Detected:**
-  - Try a different extractor or adjust parameters (e.g., lattice/stream mode for Camelot).
-  - Check PDF quality and ensure tables are not scanned images (use OCR if needed).
+- Try a different extractor or adjust parameters (e.g., lattice/stream mode for Camelot).
+- Check PDF quality and ensure tables are not scanned images (use OCR if needed).
 
 **3. Import Errors:**
-  - Install missing dependencies as shown above.
+- Install missing dependencies as shown above.
 
 **4. Output Not as Expected:**
-  - Inspect the DataFrame output and adjust extraction settings.
+- Inspect the DataFrame output and adjust extraction settings.
 
 ## Best Practices
 

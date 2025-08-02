@@ -59,11 +59,11 @@ class SuryaTextExtractor(BaseTextExtractor):
             import surya
             if self.show_log:
                 logger.info(f"Found surya package at: {surya.__file__}")
-        except ImportError:
+        except ImportError as ex :
             raise ImportError(
                 "surya-ocr package not found. Please install with: "
                 "pip install surya-ocr"
-            )
+            ) from ex 
 
     def _download_model(self) -> Path:
         """Download model from remote source (handled by Surya automatically)."""
@@ -85,7 +85,7 @@ class SuryaTextExtractor(BaseTextExtractor):
             if self.show_log:
                 logger.success("Surya text models loaded successfully")
 
-        except Exception as e:
+        except Exception:
             if self.show_log:
                 logger.error("Failed to load Surya text models", exc_info=True)
             raise
@@ -202,7 +202,7 @@ class SuryaTextExtractor(BaseTextExtractor):
 
             return result
 
-        except Exception as e:
+        except Exception:
             if self.show_log:
                 logger.error("Error during Surya text extraction", exc_info=True)
             raise

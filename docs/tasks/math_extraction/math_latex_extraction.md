@@ -21,7 +21,7 @@ print(result.expressions[0])  # Prints LaTeX code
 ```
 
 
-### 4. NougatExtractor
+### 2. NougatExtractor
 Neural Optical Understanding for Academic Documents.
 
 ```python
@@ -33,6 +33,34 @@ extractor = NougatExtractor(device='cuda', show_log=True)
 # Extract from academic paper image
 result = extractor.extract("paper_with_equations.png")
 print(result.expressions[0])  # Mathematical expressions in LaTeX
+```
+
+### 3. SuryaMathExtractor
+Lightweight and fast extractor for mathematical expressions.
+
+```python
+from omnidocs.tasks.math_expression_extraction.extractors.surya_math import SuryaMathExtractor
+
+# Initialize SuryaMath extractor
+extractor = SuryaMathExtractor(device='cuda', show_log=True)
+
+# Extract from image
+result = extractor.extract("path/to/math_equation_image.png")
+print(result.expressions[0])  # Prints LaTeX code
+```
+
+### 4. UniMERNetExtractor
+Universal Mathematical Expression Recognition Network.
+
+```python
+from omnidocs.tasks.math_expression_extraction.extractors.unimernet import UniMERNetExtractor
+
+# Initialize UniMERNet extractor
+extractor = UniMERNetExtractor(device='cuda', show_log=True)
+
+# Extract from image
+result = extractor.extract("path/to/math_equation_image.png")
+print(result.expressions[0])  # Prints LaTeX code
 ```
 
 ## Common Usage Patterns

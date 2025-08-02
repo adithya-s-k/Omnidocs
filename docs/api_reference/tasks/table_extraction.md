@@ -179,7 +179,7 @@ The standardized output format for table extraction results.
       show_root_heading: true
       show_source: false
 
-#### Key Properties
+### Key Properties
 
 - `tables` (List[Table]): List of extracted tables.
 - `source_file` (str): Path to the processed file.
@@ -200,7 +200,7 @@ Represents a single extracted table.
       show_root_heading: true
       show_source: false
 
-#### Attributes
+### Attributes
 
 - `df` (pandas.DataFrame): The extracted table data as a DataFrame.
 - `bbox` (List[float]): Bounding box coordinates of the table.

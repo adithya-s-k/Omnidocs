@@ -127,7 +127,7 @@ The standardized output format for layout analysis results.
       show_root_heading: true
       show_source: false
 
-#### Key Properties
+### Key Properties
 
 - `layouts` (List[LayoutElement]): List of detected layout elements.
 - `source_file` (str): Path to the processed file.
@@ -147,7 +147,7 @@ Represents a single detected layout element.
       show_root_heading: true
       show_source: false
 
-#### Attributes
+### Attributes
 
 - `type` (str): Type of the element (e.g., 'text', 'title', 'table', 'figure').
 - `bbox` (List[float]): Bounding box coordinates [x1, y1, x2, y2].

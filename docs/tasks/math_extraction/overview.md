@@ -107,7 +107,7 @@ result3 = extractor.extract(img_array)
 print("All methods produce LaTeX:", result1.expressions[0])
 ```
 #!/usr/bin/env python3
-
+```
 from omnidocs.tasks.math_expression_extraction.extractors.unimernet_ocr import UniMERNetExtractor
 import torch
 

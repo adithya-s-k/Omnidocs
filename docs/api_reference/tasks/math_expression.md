@@ -105,7 +105,7 @@ The standardized output format for mathematical expression extraction results.
       show_root_heading: true
       show_source: false
 
-#### Key Properties
+### Key Properties
 
 - `expressions` (List[MathExpression]): List of detected mathematical expressions.
 - `full_text` (str): Combined LaTeX string of all expressions.
@@ -115,7 +115,7 @@ The standardized output format for mathematical expression extraction results.
 
 - `save_json(output_path)`: Save results to a JSON file.
 
-#### Attributes
+### Attributes
 
 - `latex` (str): The extracted LaTeX string.
 - `bbox` (List[float]): Bounding box coordinates [x1, y1, x2, y2].
@@ -138,7 +138,7 @@ The abstract base class for all mathematical expression extractors.
 
 ## Related Resources
 
-- [Math Expression Overview](../tasks/math_extraction/overview.md)
+- [Math Expression Overview](../../tasks/math_extraction/overview.md)
 - [Donut Tutorial](../../tasks/math_extraction/tutorials/donut.ipynb)
 - [Nougat Tutorial](../../tasks/math_extraction/tutorials/nougat.ipynb)
 - [SuryaMath Tutorial](../../tasks/math_extraction/tutorials/suryamath.ipynb)
