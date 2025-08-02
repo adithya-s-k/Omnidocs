@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Union, List, Dict, Any, Optional
 import time
 from PIL import Image
-import numpy as np
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.text_extraction.base import BaseTextExtractor, BaseTextMapper, TextOutput, TextBlock
 from omnidocs.utils.model_config import setup_model_environment

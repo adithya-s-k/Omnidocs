@@ -137,9 +137,9 @@ pip install tableformer torch pandas
 
 1. **Choose the Right Extractor:**
    - Use Camelot for vector PDFs with clear table lines.
-   - Use PDFPlumber for lightweight, fast extraction.
-   - Use SuryaTable, TableTransformer, or TableFormer for complex or scanned tables.
-   - Use Tabula if you need Java-based extraction.
+   - PDFPlumber works well for lightweight, fast extraction.
+   - SuryaTable, TableTransformer, or TableFormer handle complex or scanned tables effectively.
+   - Tabula is ideal when you need Java-based extraction.
 
 2. **Optimize Performance:**
    - Batch process files and initialize extractors once.

@@ -36,7 +36,7 @@ for i, table in enumerate(result.tables):
 
 A lightweight and fast PDF table extraction library.
 
-::: omnidocs.tasks.table_extraction.extractors.pdfplumber.PDFPlumberTableExtractor
+::: omnidocs.tasks.table_extraction.extractors.pdfplumber.PDFPlumberExtractor
     options:
       show_root_heading: true
       show_source: false
@@ -47,9 +47,9 @@ A lightweight and fast PDF table extraction library.
 #### Usage Example
 
 ```python
-from omnidocs.tasks.table_extraction.extractors.pdfplumber import PDFPlumberTableExtractor
+from omnidocs.tasks.table_extraction.extractors.pdfplumber import PDFPlumberExtractor
 
-extractor = PDFPlumberTableExtractor()
+extractor = PDFPlumberExtractor()
 result = extractor.extract("document.pdf")
 for i, table in enumerate(result.tables):
     print(f"Table {i+1} shape: {table.df.shape}")
@@ -59,7 +59,7 @@ for i, table in enumerate(result.tables):
 
 An OCR tool that supports multiple languages and provides table recognition capabilities.
 
-::: omnidocs.tasks.table_extraction.extractors.ppstructure.PPStructureTableExtractor
+::: omnidocs.tasks.table_extraction.extractors.ppstructure.PPStructureExtractor
     options:
       show_root_heading: true
       show_source: false
@@ -70,9 +70,9 @@ An OCR tool that supports multiple languages and provides table recognition capa
 #### Usage Example
 
 ```python
-from omnidocs.tasks.table_extraction.extractors.ppstructure import PPStructureTableExtractor
+from omnidocs.tasks.table_extraction.extractors.ppstructure import PPStructureExtractor
 
-extractor = PPStructureTableExtractor()
+extractor = PPStructureExtractor()
 result = extractor.extract("image.png")
 for i, table in enumerate(result.tables):
     print(f"Table {i+1} shape: {table.df.shape}")
@@ -105,7 +105,7 @@ for i, table in enumerate(result.tables):
 
 A transformer-based model for table detection and extraction.
 
-::: omnidocs.tasks.table_extraction.extractors.table_transfomer.TableTransformerExtractor
+::: omnidocs.tasks.table_extraction.extractors.table_transformer.TableTransformerExtractor
     options:
       show_root_heading: true
       show_source: false
@@ -116,7 +116,7 @@ A transformer-based model for table detection and extraction.
 #### Usage Example
 
 ```python
-from omnidocs.tasks.table_extraction.extractors.table_transfomer import TableTransformerExtractor
+from omnidocs.tasks.table_extraction.extractors.table_transformer import TableTransformerExtractor
 
 extractor = TableTransformerExtractor()
 result = extractor.extract("image.png")
@@ -231,7 +231,7 @@ The abstract base class for all table extraction extractors.
 
 Handles mapping of table-related labels and normalization of bounding boxes.
 
-::: omnidocs.tasks.table_extraction.base.TableMapper
+::: omnidocs.tasks.table_extraction.base.BaseTableMapper
     options:
       show_root_heading: true
       show_source: false

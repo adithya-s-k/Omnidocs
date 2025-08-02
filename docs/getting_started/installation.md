@@ -50,15 +50,6 @@ It's recommended to use a virtual environment to avoid dependency conflicts:
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
-
-## 5. (Optional) Install with Conda (if available)
-
-If you use conda, you can try:
-
-```bash
-conda install -c conda-forge omnidocs
-```
-
 ---
 
 For more details, see the [GitHub repository](https://github.com/adithya-s-k/OmniDocs) or the [Getting Started guide](getting_started.md).

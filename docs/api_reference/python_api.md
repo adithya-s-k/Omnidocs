@@ -50,8 +50,8 @@ OmniDocs organizes all document AI into modular tasks. Each task has its own ext
 ::: omnidocs.tasks.math_expression_extraction
 ::: omnidocs.tasks.math_expression_extraction.extractors.donut
 ::: omnidocs.tasks.math_expression_extraction.extractors.nougat
-::: omnidocs.tasks.math_expression_extraction.extractors.suryamath
-::: omnidocs.tasks.math_expression_extraction.extractors.unimernet_ocr
+::: omnidocs.tasks.math_expression_extraction.extractors.surya_math
+::: omnidocs.tasks.math_expression_extraction.extractors.unimernet
 
 ---
 
@@ -59,11 +59,11 @@ OmniDocs organizes all document AI into modular tasks. Each task has its own ext
 
 **Extract text from scanned documents and images using OCR models.**
 
-::: omnidocs.tasks.ocr
-::: omnidocs.tasks.ocr.extractors.paddle
-::: omnidocs.tasks.ocr.extractors.tesseract
-::: omnidocs.tasks.ocr.extractors.easyocr
-::: omnidocs.tasks.ocr.extractors.suryaocr
+<!-- ::: omnidocs.tasks.ocr -->
+::: omnidocs.tasks.ocr_extraction.extractors.paddle
+::: omnidocs.tasks.ocr_extraction.extractors.tesseract_ocr
+::: omnidocs.tasks.ocr_extraction.extractors.easy_ocr
+::: omnidocs.tasks.ocr_extraction.extractors.surya_ocr
 
 ---
 
@@ -76,7 +76,7 @@ OmniDocs organizes all document AI into modular tasks. Each task has its own ext
 ::: omnidocs.tasks.table_extraction.extractors.pdfplumber
 ::: omnidocs.tasks.table_extraction.extractors.surya_table
 ::: omnidocs.tasks.table_extraction.extractors.tabula
-::: omnidocs.tasks.table_extraction.extractors.tabletransformer
+::: omnidocs.tasks.table_extraction.extractors.table_transformer
 ::: omnidocs.tasks.table_extraction.extractors.tableformer
 
 ---
@@ -103,3 +103,4 @@ Common utility functions, data structures, and helpers used throughout OmniDocs.
 - [Project README](../../README.md)
 - [All Tutorials](../getting_started/)
 - [Open an Issue](https://github.com/adithya-s-k/OmniDocs/issues)
+

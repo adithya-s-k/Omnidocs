@@ -259,4 +259,4 @@ print(f"Extracted {len(document_data['text'])} characters of text")
 print(f"Found {len(document_data['tables'])} tables")
 ```
 
-Ready to build amazing document AI applications with OmniDocs! 🚀
+You’re now ready to build document-AI applications with OmniDocs.

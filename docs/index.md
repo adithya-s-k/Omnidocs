@@ -55,57 +55,56 @@ See the [**Quick Start Guide**](./getting_started/quickstart.md) for a comprehen
 <details>
 <summary><strong>Layout Analysis Models (Click to Expand)</strong></summary>
 
-* DocLayout YOLO
-* PPStructure (Paddle OCR)
-* RT DETR (Docling)
-* Florence-2-DocLayNet
-* Surya Layout
+- DocLayout YOLO
+- PPStructure (Paddle OCR)
+- RT DETR (Docling)
+- Florence-2-DocLayNet
+- Surya Layout
 
 </details>
 
 <details>
 <summary><strong>Text Extraction Libraries (Click to Expand)</strong></summary>
 
-* **PyPDF2** — Pure Python PDF text extraction, supports encrypted PDFs and form fields.
-* **PyMuPDF** — Fast, multi-format text extraction with layout and font info.
-* **pdfplumber** — PDF text and table extraction with layout details.
-* **docling_parse** — Unified parsing for PDF, DOCX, PPTX, HTML, MD, with OCR and structure.
-* **pdftext** — Simple, fast PDF text extraction with layout options.
-* **surya_text** — Surya-based text extraction for images and documents.
+- PyPDF2
+- PyMuPDF
+- pdfplumber
+- docling_parse
+- pdftext
+- surya_text
 
 </details>
 
 <details>
 <summary><strong>OCR Models (Click to Expand)</strong></summary>
 
-* Paddle OCR
-* Tesseract
-* EasyOCR
-* Surya OCR
+- Paddle OCR
+- Tesseract
+- EasyOCR
+- Surya OCR
 
 </details>
-
 
 <details>
 <summary><strong>Math Expression Extraction Models (Click to Expand)</strong></summary>
 
-* **Donut** — NAVER CLOVA Donut model for math/LaTeX extraction.
-* **Nougat** — Facebook's Nougat model for LaTeX from academic documents.
-* **Surya Math** — Surya-based mathematical expression extraction.
-* **UniMERNet** — Universal Mathematical Expression Recognition Network.
+- Donut
+- Nougat
+- Surya Math
+- UniMERNet
 
 </details>
 
 <details>
 <summary><strong>Table Extraction Models (Click to Expand)</strong></summary>
 
-* PPStructure (Paddle OCR)
-* Camelot
-* Tabula
-* PDFPlumber
-* Table Transformer
-* TableFormer
-* Surya Table
+- PPStructure (Paddle OCR)
+- Camelot
+- Tabula
+- PDFPlumber
+- Table Transformer
+- TableFormer
+- Surya Table
 
 </details>
 

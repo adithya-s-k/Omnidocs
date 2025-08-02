@@ -8,7 +8,6 @@ import numpy as np
 import torch
 import torchvision.transforms as T
 from huggingface_hub import snapshot_download
-from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
 from PIL import Image , ImageDraw
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.layout_analysis.base import BaseLayoutDetector, BaseLayoutMapper

@@ -67,12 +67,12 @@ nav:
       - Tutorials:
         - Text Extractors: tasks/text_extraction/tutorials/text_extractors.ipynb
     - Math Expression:
-      - Overview: tasks/math_expression_extraction/overview.md
+      - Overview: tasks/math_extraction/overview.md
       - Tutorials:
-        - UniMERNet: tasks/math_expression_extraction/tutorials/unimernet.ipynb
-        - SuryaMath: tasks/math_expression_extraction/tutorials/suryamath.ipynb
-        - Nougat: tasks/math_expression_extraction/tutorials/nougat.ipynb
-        - Donut: tasks/math_expression_extraction/tutorials/donut.ipynb
+        - UniMERNet: tasks/math_extraction/tutorials/unimernet.ipynb
+        - SuryaMath: tasks/math_extraction/tutorials/suryamath.ipynb
+        - Nougat: tasks/math_extraction/tutorials/nougat.ipynb
+        - Donut: tasks/math_extraction/tutorials/donut.ipynb
     - OCR:
       - Overview: tasks/ocr/overview.md
       - Tutorials:
@@ -90,7 +90,8 @@ nav:
         - TableTransformer: tasks/table_extraction/tutorials/tabletransformer.ipynb
         - TableFormer: tasks/table_extraction/tutorials/tableformer.ipynb
   - API Reference:
-    - Overview: api_reference/index.md
+    - Overview: api_reference/overview.md
+    - Python API: api_reference/index.md
     - Core: api_reference/core.md
     - Tasks:
       - Layout Analysis: api_reference/tasks/layout_analysis.md
@@ -100,7 +101,6 @@ nav:
       - Math Expression: api_reference/tasks/math_expression.md
     - Utils: api_reference/utils.md
 
-  
 extra:
   social:
     - icon: fontawesome/brands/github

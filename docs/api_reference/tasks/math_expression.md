@@ -100,7 +100,7 @@ print(f"Extracted LaTeX: {result.full_text[:200]}...")
 
 The standardized output format for mathematical expression extraction results.
 
-::: omnidocs.tasks.math_expression_extraction.base.MathOutput
+::: omnidocs.tasks.math_expression_extraction.base.LatexOutput
     options:
       show_root_heading: true
       show_source: false
@@ -115,15 +115,6 @@ The standardized output format for mathematical expression extraction results.
 
 - `save_json(output_path)`: Save results to a JSON file.
 
-## MathExpression
-
-Represents a single extracted mathematical expression.
-
-::: omnidocs.tasks.math_expression_extraction.base.MathExpression
-    options:
-      show_root_heading: true
-      show_source: false
-
 #### Attributes
 
 - `latex` (str): The extracted LaTeX string.
@@ -135,7 +126,7 @@ Represents a single extracted mathematical expression.
 
 The abstract base class for all mathematical expression extractors.
 
-::: omnidocs.tasks.math_expression_extraction.base.BaseMathExtractor
+::: omnidocs.tasks.math_expression_extraction.base.BaseLatexExtractor
     options:
       show_root_heading: true
       show_source: false

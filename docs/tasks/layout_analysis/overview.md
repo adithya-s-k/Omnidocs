@@ -2,7 +2,7 @@
 
 Layout analysis is the process of detecting and classifying regions (text, tables, images, etc.) in documents or images. OmniDocs provides a unified interface to several state-of-the-art layout detection backends, making it easy to experiment, compare, and integrate them into your workflows.
 
-## 🚀 What is Layout Analysis?
+## Layout Analysis?
 
 Layout analysis breaks a document page into its logical components—like paragraphs, tables, figures, and headers—by predicting bounding boxes and labels for each region. This is a crucial first step for downstream tasks like OCR, table extraction, and document understanding.
 

@@ -1,8 +1,6 @@
 from pathlib import Path
-from typing import Union, List, Dict, Any, Optional
-import torch
+from typing import Union,  Optional
 from PIL import Image
-import numpy as np
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.math_expression_extraction.base import BaseLatexExtractor, BaseLatexMapper, LatexOutput
 from omnidocs.utils.model_config import setup_model_environment

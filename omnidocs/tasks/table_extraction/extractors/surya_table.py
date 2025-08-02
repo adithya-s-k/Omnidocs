@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import Union, List, Dict, Any, Optional, Tuple
-import torch
 from PIL import Image
-import numpy as np
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.table_extraction.base import BaseTableExtractor, BaseTableMapper, TableOutput, Table, TableCell
 from omnidocs.utils.model_config import setup_model_environment
@@ -331,29 +329,7 @@ class SuryaTableExtractor(BaseTableExtractor):
         if not text_lines:
             return cells
 
-        # Sort text lines by position (top to bottom, left to right)
-        sorted_lines = sorted(text_lines, key=lambda x: (x.bbox[1], x.bbox[0]))
-
-        # Group lines into rows based on y-coordinate proximity
-        rows = []
-        current_row = []
-        current_y = None
-        y_tolerance = 10  # pixels
-
-        for line in sorted_lines:
-            line_y = (line.bbox[1] + line.bbox[3]) / 2  # center y
-
-            if current_y is None or abs(line_y - current_y) <= y_tolerance:
-                current_row.append(line)
-                current_y = line_y if current_y is None else (current_y + line_y) / 2
-            else:
-                if current_row:
-                    rows.append(sorted(current_row, key=lambda x: x.bbox[0]))  # sort by x
-                current_row = [line]
-                current_y = line_y
-
-        if current_row:
-            rows.append(sorted(current_row, key=lambda x: x.bbox[0]))
+        rows = self._group_lines_into_rows(text_lines)
 
         # Convert rows to cells with row/column indices
         for row_idx, row in enumerate(rows):

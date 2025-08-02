@@ -75,10 +75,8 @@ class SuryaLayoutDetector(BaseLayoutDetector):
             
         try:
             # Initialize detection and layout models using new API
-            from surya.detection import DetectionPredictor
             from surya.layout import LayoutPredictor
 
-            self.det_predictor = DetectionPredictor()
             self.layout_predictor = LayoutPredictor()
 
             if self.show_log:

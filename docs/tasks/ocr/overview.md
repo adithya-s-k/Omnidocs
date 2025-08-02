@@ -49,10 +49,10 @@ extractor.visualize(result, "path/to/image.png", output_path="ocr_vis.png", show
 
 ## 📖 Tutorials & Further Reading
 
-- [EasyOCR Tutorial](../tutorials/easyocr.ipynb)
-- [Tesseract Tutorial](../tutorials/tesseract.ipynb)
-- [PaddleOCR Tutorial](../tutorials/paddle.ipynb)
-- [Surya OCR Tutorial](../tutorials/surya.ipynb)
+- [EasyOCR Tutorial](tutorials/easyocr.ipynb)
+- [Tesseract Tutorial](tutorials/tesseract.ipynb)
+- [PaddleOCR Tutorial](tutorials/paddle.ipynb)
+- [Surya OCR Tutorial](tutorials/surya.ipynb)
 - [Visual Comparison OCR Test Notebook](../../getting_started/ocr_test.ipynb)
 - [API Reference](../../api_reference/overview.md)
 

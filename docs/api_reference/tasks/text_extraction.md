@@ -12,7 +12,7 @@ Text extraction in OmniDocs focuses on accurately pulling out text from differen
 
 A unified parsing library for PDF, DOCX, PPTX, HTML, and MD, with OCR and structure capabilities.
 
-::: omnidocs.tasks.text_extraction.extractors.docling_parse.DoclingParseExtractor
+::: omnidocs.tasks.text_extraction.extractors.docling_parse.DoclingTextExtractor
     options:
       show_root_heading: true
       show_source: false
@@ -23,9 +23,9 @@ A unified parsing library for PDF, DOCX, PPTX, HTML, and MD, with OCR and struct
 #### Usage Example
 
 ```python
-from omnidocs.tasks.text_extraction.extractors.docling_parse import DoclingParseExtractor
+from omnidocs.tasks.text_extraction.extractors.docling_parse import DoclingTextExtractor
 
-extractor = DoclingParseExtractor()
+extractor = DoclingTextExtractor()
 result = extractor.extract("document.pdf")
 print(f"Extracted text: {result.full_text[:200]}...")
 ```
@@ -34,7 +34,7 @@ print(f"Extracted text: {result.full_text[:200]}...")
 
 A library for extracting text and tables from PDFs with layout details.
 
-::: omnidocs.tasks.text_extraction.extractors.pdfplumber.PDFPlumberTextExtractor
+::: omnidocs.tasks.text_extraction.extractors.pdfplumber.PdfplumberTextExtractor
     options:
       show_root_heading: true
       show_source: false
@@ -45,9 +45,9 @@ A library for extracting text and tables from PDFs with layout details.
 #### Usage Example
 
 ```python
-from omnidocs.tasks.text_extraction.extractors.pdfplumber import PDFPlumberTextExtractor
+from omnidocs.tasks.text_extraction.extractors.pdfplumber import PdfplumberTextExtractor
 
-extractor = PDFPlumberTextExtractor()
+extractor = PdfplumberTextExtractor()
 result = extractor.extract("document.pdf")
 print(f"Extracted text: {result.full_text[:200]}...")
 ```
@@ -56,7 +56,7 @@ print(f"Extracted text: {result.full_text[:200]}...")
 
 A simple, fast PDF text extraction with layout options.
 
-::: omnidocs.tasks.text_extraction.extractors.pdftext.PDFTextExtractor
+::: omnidocs.tasks.text_extraction.extractors.pdftext.PdftextTextExtractor
     options:
       show_root_heading: true
       show_source: false
@@ -67,9 +67,9 @@ A simple, fast PDF text extraction with layout options.
 #### Usage Example
 
 ```python
-from omnidocs.tasks.text_extraction.extractors.pdftext import PDFTextExtractor
+from omnidocs.tasks.text_extraction.extractors.pdftext import PdftextTextExtractor
 
-extractor = PDFTextExtractor()
+extractor = PdftextTextExtractor()
 result = extractor.extract("document.pdf")
 print(f"Extracted text: {result.full_text[:200]}...")
 ```

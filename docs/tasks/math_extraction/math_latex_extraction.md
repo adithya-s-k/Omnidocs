@@ -105,23 +105,6 @@ img_array = np.array(img)
 result3 = extractor.extract(img_array)
 
 print("All methods produce LaTeX:", result1.expressions[0])
-```
-#!/usr/bin/env python3
-
-from omnidocs.tasks.math_expression_extraction.extractors.unimernet_ocr import UniMERNetExtractor
-import torch
-
-print('Testing UniMERNet functionality...')
-try:
-    extractor = UniMERNetExtractor()
-    print('✓ UniMERNet extractor initialized successfully')
-    print(f'✓ Device: {extractor.device}')
-    print(f'✓ Model: {type(extractor.model)}')
-    print('UniMERNet is ready to use!')
-except Exception as e:
-    print(f'✗ Error: {e}')
-    import traceback
-    traceback.print_exc()
 
 ## Extractor Comparison
 

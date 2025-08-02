@@ -21,7 +21,7 @@ print(result.expressions[0])  # Prints LaTeX code
 ```
 
 
-### 4. NougatExtractor
+### 2. NougatExtractor
 Neural Optical Understanding for Academic Documents.
 
 ```python

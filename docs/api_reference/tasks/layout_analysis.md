@@ -12,7 +12,7 @@ Layout analysis in OmniDocs focuses on identifying and categorizing different re
 
 A layout detection model based on YOLO-v10, designed for diverse document types.
 
-::: omnidocs.tasks.layout_analysis.extractors.doc_layout_yolo.DocLayoutYOLOExtractor
+::: omnidocs.tasks.layout_analysis.extractors.doc_layout_yolo.YOLOLayoutDetector
     options:
       show_root_heading: true
       show_source: false
@@ -23,9 +23,9 @@ A layout detection model based on YOLO-v10, designed for diverse document types.
 #### Usage Example
 
 ```python
-from omnidocs.tasks.layout_analysis.extractors.doc_layout_yolo import DocLayoutYOLOExtractor
+from omnidocs.tasks.layout_analysis.extractors.doc_layout_yolo import YOLOLayoutDetector
 
-extractor = DocLayoutYOLOExtractor()
+extractor = YOLOLayoutDetector()
 result = extractor.extract("document.pdf")
 print(f"Detected {len(result.layouts)} layout elements.")
 ```
@@ -34,7 +34,7 @@ print(f"Detected {len(result.layouts)} layout elements.")
 
 A fine-tuned model for document layout analysis, improving bounding box accuracy in document images.
 
-::: omnidocs.tasks.layout_analysis.extractors.florence.FlorenceLayoutExtractor
+::: omnidocs.tasks.layout_analysis.extractors.florence.FlorenceLayoutDetector
     options:
       show_root_heading: true
       show_source: false
@@ -45,9 +45,9 @@ A fine-tuned model for document layout analysis, improving bounding box accuracy
 #### Usage Example
 
 ```python
-from omnidocs.tasks.layout_analysis.extractors.florence import FlorenceLayoutExtractor
+from omnidocs.tasks.layout_analysis.extractors.florence import FlorenceLayoutDetector
 
-extractor = FlorenceLayoutExtractor()
+extractor = FlorenceLayoutDetector()
 result = extractor.extract("image.png")
 print(f"Detected {len(result.layouts)} layout elements.")
 ```
@@ -56,7 +56,7 @@ print(f"Detected {len(result.layouts)} layout elements.")
 
 An OCR tool that supports multiple languages and provides layout detection capabilities.
 
-::: omnidocs.tasks.layout_analysis.extractors.paddle.PaddleLayoutExtractor
+::: omnidocs.tasks.layout_analysis.extractors.paddle.PaddleLayoutDetector
     options:
       show_root_heading: true
       show_source: false
@@ -67,9 +67,9 @@ An OCR tool that supports multiple languages and provides layout detection capab
 #### Usage Example
 
 ```python
-from omnidocs.tasks.layout_analysis.extractors.paddle import PaddleLayoutExtractor
+from omnidocs.tasks.layout_analysis.extractors.paddle import PaddleLayoutDetector
 
-extractor = PaddleLayoutExtractor()
+extractor = PaddleLayoutDetector()
 result = extractor.extract("image.png")
 print(f"Detected {len(result.layouts)} layout elements.")
 ```
@@ -78,7 +78,7 @@ print(f"Detected {len(result.layouts)} layout elements.")
 
 Implementation of RT-DETR, a real-time detection transformer focusing on object detection tasks.
 
-::: omnidocs.tasks.layout_analysis.extractors.rtdetr.RTDETRLayoutExtractor
+::: omnidocs.tasks.layout_analysis.extractors.rtdetr.RTDETRLayoutDetector
     options:
       show_root_heading: true
       show_source: false
@@ -89,9 +89,9 @@ Implementation of RT-DETR, a real-time detection transformer focusing on object 
 #### Usage Example
 
 ```python
-from omnidocs.tasks.layout_analysis.extractors.rtdetr import RTDETRLayoutExtractor
+from omnidocs.tasks.layout_analysis.extractors.rtdetr import RTDETRLayoutDetector
 
-extractor = RTDETRLayoutExtractor()
+extractor = RTDETRLayoutDetector()
 result = extractor.extract("image.png")
 print(f"Detected {len(result.layouts)} layout elements.")
 ```
@@ -100,7 +100,7 @@ print(f"Detected {len(result.layouts)} layout elements.")
 
 OCR and layout analysis tool supporting 90+ languages, including reading order and table recognition.
 
-::: omnidocs.tasks.layout_analysis.extractors.surya.SuryaLayoutExtractor
+::: omnidocs.tasks.layout_analysis.extractors.surya.SuryaLayoutDetector
     options:
       show_root_heading: true
       show_source: false
@@ -111,9 +111,9 @@ OCR and layout analysis tool supporting 90+ languages, including reading order a
 #### Usage Example
 
 ```python
-from omnidocs.tasks.layout_analysis.extractors.surya import SuryaLayoutExtractor
+from omnidocs.tasks.layout_analysis.extractors.surya import SuryaLayoutDetector
 
-extractor = SuryaLayoutExtractor()
+extractor = SuryaLayoutDetector()
 result = extractor.extract("document.pdf")
 print(f"Detected {len(result.layouts)} layout elements.")
 ```
@@ -142,7 +142,7 @@ The standardized output format for layout analysis results.
 
 Represents a single detected layout element.
 
-::: omnidocs.tasks.layout_analysis.base.LayoutElement
+::: omnidocs.tasks.layout_analysis.base.BaseLayoutMapper
     options:
       show_root_heading: true
       show_source: false
@@ -158,7 +158,7 @@ Represents a single detected layout element.
 
 The abstract base class for all layout analysis extractors.
 
-::: omnidocs.tasks.layout_analysis.base.BaseLayoutExtractor
+::: omnidocs.tasks.layout_analysis.base.BaseLayoutDetector
     options:
       show_root_heading: true
       show_source: false
@@ -173,7 +173,7 @@ The abstract base class for all layout analysis extractors.
 
 Handles mapping of layout labels and normalization of bounding boxes.
 
-::: omnidocs.tasks.layout_analysis.base.LayoutMapper
+::: omnidocs.tasks.layout_analysis.base.BaseLayoutMapper
     options:
       show_root_heading: true
       show_source: false
