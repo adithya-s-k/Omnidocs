@@ -40,7 +40,35 @@ dependencies = [
     "albumentations",
     "webdataset",
     "ftfy",
-    "hf_xet"
+    "hf_xet",
+    "mkdocs>=1.6.1",
+]
+
+[dependency-groups]
+docs = [
+    "jinja2",
+    "markdown",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocs-material-extensions",
+    "pygments",
+    "pymdown-extensions",
+    "mkdocstrings[python]",
+    "mkdocs-minify-plugin",
+    "mkdocs-material[imaging]",
+    "mkdocs-redirects",
+    "mkdocs-jupyter",
+    "mkdocs-video",
+    "babel~=2.10",
+    "colorama~=0.4",
+    "paginate~=0.5",
+    "regex>=2022.4",
+    "requests~=2.26",
+    "openai",
+    "typer",
+    "instructor",
+    "python-dotenv",
+    "mkdocs-git-revision-date-localized-plugin",
 ]
 
 [build-system]
