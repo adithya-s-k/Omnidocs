@@ -23,6 +23,13 @@ theme:
 
 plugins:
   - search
+  - mkdocs-jupyter:
+      include_source: true
+      ignore_h1_titles: true
+      execute: false
+      allow_errors: true
+      ignore_patterns:
+        - "archives/*"
   - mkdocstrings:
       handlers:
         python:
@@ -104,8 +111,10 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/adithya-s-k/AI-Engineering.academy
+      link: https://github.com/adithya-s-k/OmniDocs
     - icon: fontawesome/brands/twitter
       link: https://x.com/adithya_s_k
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/adithya-s-kolavi/
 
 copyright: "&copy; 2025 OmniDocs. All rights reserved."

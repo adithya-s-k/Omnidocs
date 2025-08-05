@@ -10,7 +10,12 @@ import numpy as np
 from omnidocs.tasks.layout_analysis.enums import LayoutLabel
 from omnidocs.tasks.layout_analysis.models import LayoutBox, LayoutOutput
 from omnidocs.utils.logging import get_logger
-from pdf2image import convert_from_path
+
+try:
+    import fitz  # PyMuPDF
+except ImportError:
+    fitz = None
+    print("Warning: PyMuPDF (fitz) not installed. PDF processing might be limited.")
 
 
 
@@ -192,15 +197,39 @@ class BaseLayoutDetector(ABC):
         input_path = Path(input_path)
 
         if input_path.suffix.lower() == ".pdf":
-            # Convert PDF to images
-            images = convert_from_path(input_path)
-            return [cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR) for img in images]
+            if fitz is None:
+                raise ImportError("PyMuPDF (fitz) is required for PDF processing. Please install it with: pip install PyMuPDF")
+            return self._convert_pdf_to_images_pymupdf(input_path)
         else:
             # Load single image
             image = cv2.imread(str(input_path))
             if image is None:
                 raise ValueError(f"Failed to load image from {input_path}")
             return [image]
+
+    def _convert_pdf_to_images_pymupdf(self, pdf_path: Union[str, Path]) -> List[np.ndarray]:
+        """
+        Convert PDF pages to a list of numpy arrays (images) using PyMuPDF.
+        """
+        images = []
+        try:
+            doc = fitz.open(pdf_path)
+            for page_num in range(doc.page_count):
+                page = doc.load_page(page_num)
+                pix = page.get_pixmap()
+                img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
+                # Convert to BGR for OpenCV compatibility if needed by detect method
+                if pix.n == 3: # RGB
+                    images.append(cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR))
+                elif pix.n == 4: # RGBA
+                    images.append(cv2.cvtColor(img_array, cv2.COLOR_RGBA2BGR))
+                else: # Grayscale or other
+                    images.append(img_array)
+            doc.close()
+        except Exception as e:
+            self.log(logging.ERROR, f"Error converting PDF with PyMuPDF: {e}")
+            raise
+        return images
 
     @property
     def label_mapper(self) -> BaseLayoutMapper:
