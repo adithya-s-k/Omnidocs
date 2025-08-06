@@ -1,17 +1,13 @@
-import os
+
 from omnidocs.tasks.layout_analysis.extractors.surya import SuryaLayoutDetector
 from omnidocs.tasks.text_extraction.extractors.surya_text import SuryaTextExtractor
 from omnidocs.tasks.math_expression_extraction.extractors.surya_math import SuryaMathExtractor
 from omnidocs.tasks.table_extraction.extractors.surya_table import SuryaTableExtractor
 
-from omnidocs.tasks.layout_analysis.models import LayoutOutput
-from omnidocs.tasks.text_extraction.base import TextOutput, TextBlock
-from omnidocs.tasks.math_expression_extraction.base import LatexOutput
-from omnidocs.tasks.table_extraction.base import TableOutput
 
 from PIL import Image
 from pathlib import Path
-from typing import Union, List, Tuple
+from typing import Union
 
 class SuryaPDFtoMarkdownConverter:
     def __init__(self):
