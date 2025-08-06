@@ -113,7 +113,7 @@ class SuryaPDFtoMarkdownConverter:
         if not pdf_path.exists():
             raise FileNotFoundError(f"Input PDF file not found: {pdf_path}")
         
-        if not pdf_path.suffix.lower() == '.pdf':
+        if not pdf_path.suffix.lower() != '.pdf':
             raise ValueError(f"Input file must be a PDF: {pdf_path}")
         
         # Step 1: Run Surya layout detection on all pages
@@ -245,7 +245,7 @@ if __name__ == "__main__":
     converter = SuryaPDFtoMarkdownConverter()
     
     # Update these paths
-    pdf_input = "omnidocs\\workflows\\assets\\llama.pdf"
+    pdf_input = "omnidocs/workflows/assets/sample_doc.pdf"
     markdown_output = "output_surya_doc.md"
     
     try:
