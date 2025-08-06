@@ -109,7 +109,7 @@ class SuryaPDFtoMarkdownConverter:
         if not pdf_path.exists():
             raise FileNotFoundError(f"Input PDF file not found: {pdf_path}")
         
-        if not pdf_path.suffix.lower() != '.pdf':
+        if pdf_path.suffix.lower() != '.pdf':
             raise ValueError(f"Input file must be a PDF: {pdf_path}")
         
         # Step 1: Run Surya layout detection on all pages
