@@ -6,11 +6,11 @@ import json
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from omnidocs.tasks.text_extraction.extractors import (
-    PyMuPDFExtractor,
-    PyPDF2Extractor,
-    PDFPlumberTextExtractor,
-    PDFTextExtractor,
-    DoclingExtractor,
+    PyMuPDFTextExtractor,
+    PyPDF2TextExtractor,
+    PdfplumberTextExtractor,
+    PdftextTextExtractor,
+    DoclingTextExtractor,
     SuryaTextExtractor
 )
 
@@ -43,11 +43,11 @@ def save_text_to_json(text_output, extractor_name, filetype):
 def test_text_extraction():
     # All text extractors work with PDF files
     pdf_extractors = [
-        PyMuPDFExtractor,
-        PyPDF2Extractor,
-        PDFPlumberTextExtractor,
-        PDFTextExtractor,
-        DoclingExtractor,
+       PyMuPDFTextExtractor,
+        PyPDF2TextExtractor,
+        PdfplumberTextExtractor,
+        PdftextTextExtractor,
+        DoclingTextExtractor,
         SuryaTextExtractor
         
     ]

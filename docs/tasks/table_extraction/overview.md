@@ -121,25 +121,25 @@ pip install tableformer torch pandas
 ## Troubleshooting
 
 **1. Java Not Found (TabulaExtractor):**
-- Ensure Java is installed and added to your system PATH.
+  - Ensure Java is installed and added to your system PATH.
 
 **2. No Tables Detected:**
-- Try a different extractor or adjust parameters (e.g., lattice/stream mode for Camelot).
-- Check PDF quality and ensure tables are not scanned images (use OCR if needed).
+  - Try a different extractor or adjust parameters (e.g., lattice/stream mode for Camelot).
+  - Check PDF quality and ensure tables are not scanned images (use OCR if needed).
 
 **3. Import Errors:**
-- Install missing dependencies as shown above.
+  - Install missing dependencies as shown above.
 
 **4. Output Not as Expected:**
-- Inspect the DataFrame output and adjust extraction settings.
+  - Inspect the DataFrame output and adjust extraction settings.
 
 ## Best Practices
 
 1. **Choose the Right Extractor:**
    - Use Camelot for vector PDFs with clear table lines.
-   - PDFPlumber works well for lightweight, fast extraction.
-   - SuryaTable, TableTransformer, or TableFormer handle complex or scanned tables effectively.
-   - Tabula is ideal when you need Java-based extraction.
+   - Use PDFPlumber for lightweight, fast extraction.
+   - Use SuryaTable, TableTransformer, or TableFormer for complex or scanned tables.
+   - Use Tabula if you need Java-based extraction.
 
 2. **Optimize Performance:**
    - Batch process files and initialize extractors once.
