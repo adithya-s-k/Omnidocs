@@ -9,10 +9,11 @@ import torch
 from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.table_extraction.base import BaseTableExtractor, BaseTableMapper, TableOutput, Table, TableCell
 from omnidocs.utils.model_config import setup_model_environment
+from omnidocs.core import ModelRegistry, ModelLoader, HuggingFaceModelConfig
 
 
 
-# Setup model environment 
+# Setup model environment
 _MODELS_DIR = setup_model_environment()
 
 
@@ -20,27 +21,34 @@ logger = get_logger(__name__)
 
 class TableFormerMapper(BaseTableMapper):
     """Label mapper for TableFormer model output."""
-    
+
     def __init__(self):
         super().__init__('tableformer')
         self._setup_mapping()
-    
+
     def _setup_mapping(self):
         """Setup model and class mappings for TableFormer."""
+        # Get model configurations from registry
+        detection_config = ModelRegistry.get('tableformer-detection')
+        structure_config = ModelRegistry.get('tableformer-structure')
+
         self._model_configs = {
             'detection': {
-                'model_name': 'microsoft/table-transformer-detection',
-                'confidence_threshold': 0.7,
-                'classes': ['table']
+                'model_name': detection_config.hf_model_id if detection_config else 'microsoft/table-transformer-detection',
+                'confidence_threshold': detection_config.confidence_threshold if detection_config else 0.7,
+                'classes': detection_config.extra_config.get('classes', ['table']) if detection_config else ['table']
             },
             'structure': {
-                'model_name': 'microsoft/table-structure-recognition-v1.1-all',
-                'confidence_threshold': 0.7,
-                'classes': ['table', 'table column', 'table row', 'table column header', 
+                'model_name': structure_config.hf_model_id if structure_config else 'microsoft/table-structure-recognition-v1.1-all',
+                'confidence_threshold': structure_config.confidence_threshold if structure_config else 0.7,
+                'classes': structure_config.extra_config.get('classes', [
+                    'table', 'table column', 'table row', 'table column header',
+                    'table projected row header', 'table spanning cell'
+                ]) if structure_config else ['table', 'table column', 'table row', 'table column header',
                           'table projected row header', 'table spanning cell']
             }
         }
-        
+
         self._class_mapping = {
             'table': 'table',
             'table column': 'column',

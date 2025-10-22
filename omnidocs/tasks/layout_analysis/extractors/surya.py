@@ -10,6 +10,7 @@ from omnidocs.utils.logging import get_logger, log_execution_time
 from omnidocs.tasks.layout_analysis.base import BaseLayoutDetector, BaseLayoutMapper
 from omnidocs.tasks.layout_analysis.enums import LayoutLabel
 from omnidocs.tasks.layout_analysis.models import LayoutBox, LayoutOutput
+from omnidocs.core import ModelRegistry, ModelLoader
 
 
 logger = get_logger(__name__)
@@ -38,7 +39,10 @@ class SuryaLayoutMapper(BaseLayoutMapper):
 
 class SuryaLayoutDetector(BaseLayoutDetector):
     """Surya-based layout detection implementation."""
-    
+
+    # Model ID in the registry
+    MODEL_ID = "surya-layout"
+
     def __init__(
         self,
         device: Optional[str] = None,
@@ -47,20 +51,25 @@ class SuryaLayoutDetector(BaseLayoutDetector):
     ):
         """Initialize Surya Layout Detector."""
         super().__init__(show_log=show_log)
-        
+
+        # Get model configuration from registry
+        self.model_config = ModelRegistry.get(self.MODEL_ID)
+        if not self.model_config:
+            raise ValueError(f"Model '{self.MODEL_ID}' not found in registry")
+
         # Initialize label mapper
         self._label_mapper = SuryaLayoutMapper()
-        
+
         if self.show_log:
-            logger.info("Initializing SuryaLayoutDetector")
-        
+            logger.info(f"Initializing SuryaLayoutDetector with model: {self.model_config.name}")
+
         # Set device if specified, otherwise use default from parent
         if device:
             self.device = device
-            
+
         if self.show_log:
             logger.info(f"Using device: {self.device}")
-            
+
         try:
             # Import required libraries - use new API
             import surya
@@ -72,7 +81,7 @@ class SuryaLayoutDetector(BaseLayoutDetector):
             raise ImportError(
                 "surya is not available. Please install it with: pip install surya-ocr"
             ) from ex
-            
+
         try:
             # Initialize detection and layout models using new API
             from surya.layout import LayoutPredictor
@@ -80,7 +89,7 @@ class SuryaLayoutDetector(BaseLayoutDetector):
             self.layout_predictor = LayoutPredictor()
 
             if self.show_log:
-                logger.success("Models initialized successfully")
+                logger.success(f"Models initialized successfully: {self.model_config.description}")
 
         except Exception as e:
             if self.show_log:

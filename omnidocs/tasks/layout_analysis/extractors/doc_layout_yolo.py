@@ -11,6 +11,7 @@ from omnidocs.tasks.layout_analysis.base import BaseLayoutDetector, BaseLayoutMa
 from omnidocs.tasks.layout_analysis.enums import LayoutLabel
 from omnidocs.tasks.layout_analysis.models import LayoutBox, LayoutOutput
 from omnidocs.utils.model_config import setup_model_environment
+from omnidocs.core import ModelRegistry, ModelLoader, YOLOModelConfig
 
 logger = get_logger(__name__)
 
@@ -35,9 +36,8 @@ class YOLOLayoutMapper(BaseLayoutMapper):
 class YOLOLayoutDetector(BaseLayoutDetector):
     """YOLO-based layout detection implementation."""
 
-    MODEL_REPO = "juliozhao/DocLayout-YOLO-DocStructBench"
-    MODEL_FILENAME = "doclayout_yolo_docstructbench_imgsz1024.pt"
-    DEFAULT_LOCAL_DIR = "./models/DocLayout-YOLO-DocStructBench"
+    # Model ID in the registry
+    MODEL_ID = "doclayout-yolo-docstructbench"
 
     def __init__(
         self,
@@ -48,25 +48,35 @@ class YOLOLayoutDetector(BaseLayoutDetector):
         """Initialize YOLO Layout Detector."""
         super().__init__(show_log=show_log)
 
+        # Get model configuration from registry
+        self.model_config = ModelRegistry.get(self.MODEL_ID)
+        if not self.model_config:
+            raise ValueError(f"Model '{self.MODEL_ID}' not found in registry")
+
+        if not isinstance(self.model_config, YOLOModelConfig):
+            raise TypeError(f"Expected YOLOModelConfig, got {type(self.model_config)}")
+
         self._label_mapper = YOLOLayoutMapper()
         if self.show_log:
-            logger.info(f"Initializing YOLOLayoutDetector")
+            logger.info(f"Initializing YOLOLayoutDetector with model: {self.model_config.name}")
 
         if device:
             self.device = device
         if self.show_log:
             logger.info(f"Using device: {self.device}")
 
-        # Set default paths
+        # Set model path from config or override
         if model_path is None:
-            model_path = _MODELS_DIR / "yolo_layout" / self.MODEL_REPO.replace("/", "_")
+            self.model_path = ModelLoader.get_model_path(self.model_config)
+        else:
+            self.model_path = Path(model_path)
 
-        self.model_path = Path(model_path)
         if self.show_log:
             logger.info(f"Model directory: {self.model_path}")
 
-        self.conf_threshold = 0.2
-        self.img_size = 1024
+        # Use configuration values
+        self.conf_threshold = self.model_config.confidence_threshold
+        self.img_size = self.model_config.imgsz
 
         # Check dependencies
         self._check_dependencies()
@@ -81,7 +91,7 @@ class YOLOLayoutDetector(BaseLayoutDetector):
         try:
             self._load_model()
             if self.show_log:
-                logger.success("Model initialized successfully")
+                logger.success(f"Model initialized successfully: {self.model_config.description}")
         except Exception as e:
             if self.show_log:
                 logger.error("Failed to initialize model", exc_info=True)
@@ -99,27 +109,21 @@ class YOLOLayoutDetector(BaseLayoutDetector):
 
     def _model_exists(self) -> bool:
         """Check if model files exist locally."""
-        model_file = self.model_path / self.MODEL_FILENAME
+        model_file = self.model_path / self.model_config.model_filename
         return model_file.exists()
 
     def _download_model(self) -> Path:
         """Download model from HuggingFace Hub."""
         try:
             if self.show_log:
-                logger.info(f"Downloading YOLO model from {self.MODEL_REPO}...")
+                logger.info(f"Downloading YOLO model from {self.model_config.model_repo}...")
                 logger.info(f"Saving to: {self.model_path}")
 
-            # Create model directory
-            self.model_path.mkdir(parents=True, exist_ok=True)
-
-            # Download model file
-            model_dir = snapshot_download(
-                self.MODEL_REPO,
-                local_dir=str(self.model_path)
-            )
+            # Use ModelLoader for consistent downloading
+            model_file = ModelLoader.download_yolo_model(self.model_config)
 
             if self.show_log:
-                logger.success(f"Model downloaded successfully to {self.model_path}")
+                logger.success(f"Model downloaded successfully to {model_file}")
 
             return self.model_path
 
@@ -136,7 +140,7 @@ class YOLOLayoutDetector(BaseLayoutDetector):
         try:
             from doclayout_yolo import YOLOv10
 
-            model_file = self.model_path / self.MODEL_FILENAME
+            model_file = self.model_path / self.model_config.model_filename
             if self.show_log:
                 logger.info(f"Loading YOLO model from {model_file}")
 
