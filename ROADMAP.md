@@ -956,6 +956,226 @@ result = pipeline.run(doc)
 
 ---
 
+## CI/CD & Automation
+
+### GitHub Actions Workflows
+
+Omnidocs uses comprehensive GitHub Actions for continuous integration, testing, and deployment.
+
+#### 1. **Test Workflow** (`.github/workflows/test.yml`)
+
+**Triggers:**
+- Push to `main` or `develop` branches
+- Pull requests to `main` or `develop`
+- Manual dispatch
+
+**Jobs:**
+- **Unit Tests:** Python 3.9, 3.10, 3.11 on Ubuntu, macOS, Windows
+- **GPU Tests:** CUDA-enabled tests on push to main
+- **Integration Tests:** End-to-end workflow tests
+- **Coverage:** Upload to Codecov (>80% target)
+
+**Matrix Strategy:**
+```yaml
+os: [ubuntu-latest, macos-latest, windows-latest]
+python-version: ["3.9", "3.10", "3.11"]
+```
+
+#### 2. **Lint & Code Quality** (`.github/workflows/lint.yml`)
+
+**Triggers:**
+- Push to `main` or `develop`
+- Pull requests
+- Manual dispatch
+
+**Jobs:**
+- **Ruff:** Linting and formatting checks
+- **mypy:** Strict type checking
+- **Bandit:** Security vulnerability scanning
+- **Safety:** Dependency vulnerability checks
+- **Radon:** Code complexity analysis
+
+**Quality Gates:**
+- All linting must pass
+- Type checking must pass (strict mode)
+- No high-severity security issues
+
+#### 3. **Documentation** (`.github/workflows/docs.yml` & `deploy-mkdocs.yml`)
+
+**Triggers:**
+- Push to `main` (for deployment)
+- Pull requests (for validation)
+- Changes to `docs/**`, `mkdocs.yml`
+- Manual dispatch
+
+**Jobs:**
+- **Build Docs:** MkDocs Material build with strict mode
+- **Deploy:** Deploy to GitHub Pages on main branch
+- **Link Validation:** Check for broken links
+
+**Features:**
+- Auto-generated API docs with mkdocstrings
+- Git revision dates
+- Jupyter notebook support
+- Material theme with imaging
+
+#### 4. **Release & Publish** (`.github/workflows/release.yml`)
+
+**Triggers:**
+- GitHub release published
+- Push to version tags (`v*`)
+- Manual dispatch (for testing)
+
+**Jobs:**
+- **Build:** Create wheel and source distributions
+- **Test Install:** Verify installation on multiple platforms
+- **Publish TestPyPI:** For testing (manual workflow only)
+- **Publish PyPI:** Production release
+- **Create Release:** Generate GitHub release with changelog
+
+**Release Process:**
+```bash
+# 1. Tag version
+git tag v1.0.0
+git push origin v1.0.0
+
+# 2. Workflow automatically:
+#    - Builds package
+#    - Tests installation
+#    - Publishes to PyPI
+#    - Creates GitHub release
+```
+
+#### 5. **Pre-commit Checks** (`.github/workflows/pre-commit.yml`)
+
+**Triggers:**
+- Pull requests
+- Push to main/develop
+
+**Jobs:**
+- Run pre-commit hooks on all files
+- Auto-fix formatting issues
+- Commit fixes automatically (if needed)
+
+**Hooks:**
+- Code formatting (ruff)
+- Import sorting
+- Trailing whitespace
+- YAML/JSON validation
+
+---
+
+### Workflow Dependencies
+
+```
+┌─────────────┐
+│   PR/Push   │
+└──────┬──────┘
+       │
+       ├──────────────┬──────────────┬─────────────┐
+       │              │              │             │
+       ▼              ▼              ▼             ▼
+┌──────────┐   ┌──────────┐  ┌──────────┐  ┌──────────┐
+│   Test   │   │   Lint   │  │Pre-commit│  │  Docs    │
+└──────────┘   └──────────┘  └──────────┘  └──────────┘
+       │              │              │             │
+       └──────────────┴──────────────┴─────────────┘
+                      │
+                      ▼
+              ┌───────────────┐
+              │ All Checks OK │
+              └───────┬───────┘
+                      │
+                      ▼
+              ┌───────────────┐
+              │  Ready to     │
+              │  Merge/Deploy │
+              └───────────────┘
+
+On Release:
+┌─────────────┐
+│  Tag v1.0.0 │
+└──────┬──────┘
+       │
+       ▼
+┌──────────────┐
+│Build Package │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│Test Install  │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│Publish PyPI  │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│Create Release│
+└──────────────┘
+```
+
+---
+
+### Local Development Setup
+
+**Install pre-commit hooks:**
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+**Run checks locally:**
+```bash
+# Run all tests
+uv run pytest tests/ -v
+
+# Run linting
+ruff check omnidocs/
+ruff format omnidocs/
+
+# Type checking
+mypy omnidocs/ --strict
+
+# Build docs locally
+mkdocs serve
+```
+
+**Test installation:**
+```bash
+# Build package
+python -m build
+
+# Install locally
+pip install dist/*.whl
+```
+
+---
+
+### Continuous Deployment Strategy
+
+**Branch Protection:**
+- `main` branch requires:
+  - All status checks passing
+  - At least 1 approval
+  - Up-to-date with base branch
+
+**Release Strategy:**
+1. **Development:** Work on feature branches
+2. **Integration:** Merge to `develop` branch for testing
+3. **Staging:** Tag release candidates (`v1.0.0-rc1`)
+4. **Production:** Tag stable releases (`v1.0.0`)
+
+**Version Numbering:**
+- Follow Semantic Versioning (SemVer)
+- `MAJOR.MINOR.PATCH` (e.g., `1.0.0`)
+- Pre-releases: `1.0.0-rc1`, `1.0.0-alpha1`
+
+---
+
 ## Contributing
 
 This roadmap is a living document. Contributions and feedback are welcome:
@@ -971,6 +1191,7 @@ This roadmap is a living document. Contributions and feedback are welcome:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.1 | 2026-01-03 | Added comprehensive CI/CD & GitHub Actions documentation |
 | 1.0 | 2026-01-02 | Initial roadmap based on FINAL_DESIGN.md analysis |
 
 ---
@@ -980,8 +1201,9 @@ This roadmap is a living document. Contributions and feedback are welcome:
 - [FINAL_DESIGN.md](../Design/FINAL_DESIGN.md) - Target architecture specification
 - [Current Extractors](omnidocs/tasks/) - Existing implementations
 - [PyProject](pyproject.toml) - Current dependencies
+- [GitHub Actions](.github/workflows/) - CI/CD workflows
 
 ---
 
-**Last Updated:** 2026-01-02
-**Status:** Phase 0 Complete, Phase 1 Ready to Start
+**Last Updated:** 2026-01-03
+**Status:** Phase 0 Complete, CI/CD Infrastructure Ready, Phase 1 Ready to Start
