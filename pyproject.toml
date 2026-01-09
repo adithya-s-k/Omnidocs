@@ -17,7 +17,7 @@ dependencies = [
     "surya-ocr==0.14.6",
     "protobuf==3.20.2",
     "paddleocr==2.8.1",
-    "paddlepaddle==2.6.1",
+    "paddlepaddle>=2.6.2",
     "torch==2.7.1",
     "torchvision==0.22.1",
     "transformers==4.53.2",
