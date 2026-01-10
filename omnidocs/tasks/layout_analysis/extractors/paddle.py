@@ -95,7 +95,7 @@ class PaddleLayoutDetector(BaseLayoutDetector):
         self, 
         input_path: Union[str, Path], 
         **kwargs
-    ) -> Tuple[Image.Image, LayoutOutput]:
+    ) -> Tuple[Optional[Image.Image], LayoutOutput]:
         """Run layout detection with standardized labels."""
         try:
             # Load and preprocess input
