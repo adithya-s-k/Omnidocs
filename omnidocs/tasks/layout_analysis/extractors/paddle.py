@@ -68,6 +68,7 @@ class PaddleLayoutDetector(BaseLayoutDetector):
                 table=True,
                 ocr=True,
                 show_log=show_log,
+                use_gpu=(self.device == 'cuda'),
                 **kwargs
             )
             logger.success("Model initialized successfully")
@@ -101,51 +102,54 @@ class PaddleLayoutDetector(BaseLayoutDetector):
             # Load and preprocess input
             images = self.preprocess_input(input_path)
             
-            results = []
-            for img in images:
-                # Get detection results
-                det_result = self.model(img)
-                
-                # Convert to PIL Image if needed
-                if isinstance(img, np.ndarray):
-                    img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-                
-                # Create annotated image
-                annotated_img = img.copy()
-                draw = ImageDraw.Draw(annotated_img)
-                
-                # Convert detection results to LayoutBox objects with standardized labels
-                layout_boxes = []
-                
-                for block in det_result:
-                    # Extract coordinates and type
-                    x1, y1, x2, y2 = block['bbox']
-                    model_label = block['type']
-                    mapped_label = self.map_label(model_label)
-                    
-                    if mapped_label:  # Only include boxes with valid mapped labels
-                        layout_boxes.append(
-                            LayoutBox(
-                                label=mapped_label,
-                                bbox=[float(x1), float(y1), float(x2), float(y2)],
-                                confidence=block.get('confidence', None)
-                            )
-                        )
-                        
-                        # Draw with standardized colors
-                        color = self.color_map.get(mapped_label, 'gray')
-                        draw.rectangle([x1, y1, x2, y2], outline=color, width=3)
-                        draw.text((x1, y1-20), mapped_label, fill=color)
-                
-                results.append((
-                    annotated_img,
-                    LayoutOutput(bboxes=layout_boxes)
-                ))
-
-            if not results:
-                logger.warning("No results returned from model")
+            if not images:
+                logger.warning("No images to process")
                 return None, LayoutOutput(bboxes=[])
-            return results[0]
+            
+            # Process only the first image/page
+            img = images[0]
+            
+            # Get detection results
+            # Convert BGR to RGB before model inference if needed
+            if isinstance(img, np.ndarray):
+                img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            else:
+                img_rgb = img
+
+            # Pass RGB image to PPStructure
+            det_result = self.model(img_rgb)
+
+            # Convert to PIL Image for visualization
+            img = Image.fromarray(img_rgb)
+            
+            # Create annotated image
+            annotated_img = img.copy()
+            draw = ImageDraw.Draw(annotated_img)
+            
+            # Convert detection results to LayoutBox objects with standardized labels
+            layout_boxes = []
+            
+            for block in det_result:
+                # Extract coordinates and type
+                x1, y1, x2, y2 = block['bbox']
+                model_label = block['type']
+                mapped_label = self.map_label(model_label)
+                
+                if mapped_label:  # Only include boxes with valid mapped labels
+                    layout_boxes.append(
+                        LayoutBox(
+                            label=mapped_label,
+                            bbox=[float(x1), float(y1), float(x2), float(y2)],
+                            confidence=block.get('confidence', None)
+                        )
+                    )
+                    
+                    # Draw with standardized colors
+                    color = self.color_map.get(mapped_label, 'gray')
+                    draw.rectangle([x1, y1, x2, y2], outline=color, width=3)
+                    draw.text((x1, y1-20), mapped_label, fill=color)
+            
+            return annotated_img, LayoutOutput(bboxes=layout_boxes)
 
         except Exception as e:
             logger.error("Error during prediction", exc_info=True)
