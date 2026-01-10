@@ -101,6 +101,6 @@ Common utility functions, data structures, and helpers used throughout OmniDocs.
 ## 📚 More Resources
 
 - [Project README](../../README.md)
-- [All Tutorials](../getting_started/)
+- [Getting Started](../getting_started/getting_started.md)
 - [Open an Issue](https://github.com/adithya-s-k/OmniDocs/issues)
 
