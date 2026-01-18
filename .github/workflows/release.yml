@@ -1,35 +1,39 @@
-name: Release and Publish
+name: Release and Publish to PyPI
 
 on:
   push:
     tags:
-      - 'v*'  # Trigger on version tags
+      - 'v*'  # Trigger on version tags (e.g., v0.2.0, v0.2.1)
 
 jobs:
   release:
+    name: Build and Publish to PyPI
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write  # Required for trusted publishing
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11'
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
 
       - name: Build package
-        run: poetry build
+        run: uv build
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           files: dist/*
           generate_release_notes: true
@@ -37,6 +41,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to PyPI
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-        run: poetry publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
