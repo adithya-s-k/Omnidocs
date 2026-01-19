@@ -28,9 +28,9 @@ def test_version_format():
 def test_version_consistency():
     """Test that version is consistent across imports."""
     # All these should be the same
+    import omnidocs as od
     from omnidocs import __version__ as v1
     from omnidocs._version import __version__ as v2
-    import omnidocs as od
 
     assert v1 == v2, "Version mismatch between omnidocs and omnidocs._version"
     assert v1 == od.__version__, "Version mismatch in omnidocs module"
