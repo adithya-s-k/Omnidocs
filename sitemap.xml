@@ -1,3 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://adithya-s-k.github.io/OmniDocs/</loc>
+         <lastmod>2026-01-19</lastmod>
+    </url>
+    <url>
+         <loc>https://adithya-s-k.github.io/OmniDocs/CONTRIBUTING/</loc>
+         <lastmod>2026-01-19</lastmod>
+    </url>
+    <url>
+         <loc>https://adithya-s-k.github.io/OmniDocs/LICENSE/</loc>
+         <lastmod>2026-01-19</lastmod>
+    </url>
+    <url>
+         <loc>https://adithya-s-k.github.io/OmniDocs/architecture/</loc>
+         <lastmod>2026-01-19</lastmod>
+    </url>
+    <url>
+         <loc>https://adithya-s-k.github.io/OmniDocs/developer-guide/</loc>
+         <lastmod>2026-01-19</lastmod>
+    </url>
 </urlset>
