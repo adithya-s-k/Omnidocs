@@ -45,8 +45,7 @@ class DocLayoutYOLOConfig(BaseModel):
     )
     model_path: Optional[str] = Field(
         default=None,
-        description="Custom path to model weights. "
-        "If None, uses OMNIDOCS_MODELS_DIR env var or ~/.omnidocs/models/",
+        description="Custom path to model weights. If None, uses OMNIDOCS_MODELS_DIR env var or ~/.omnidocs/models/",
     )
     img_size: int = Field(
         default=1024,
@@ -139,8 +138,7 @@ class DocLayoutYOLO(BaseLayoutExtractor):
             from huggingface_hub import hf_hub_download
         except ImportError:
             raise ImportError(
-                "huggingface_hub is required for model download. "
-                "Install with: pip install huggingface_hub"
+                "huggingface_hub is required for model download. Install with: pip install huggingface_hub"
             )
 
         model_file = self._model_path / MODEL_FILENAME
@@ -165,9 +163,7 @@ class DocLayoutYOLO(BaseLayoutExtractor):
         try:
             from doclayout_yolo import YOLOv10
         except ImportError:
-            raise ImportError(
-                "doclayout-yolo is required for DocLayoutYOLO. " "Install with: pip install doclayout-yolo"
-            )
+            raise ImportError("doclayout-yolo is required for DocLayoutYOLO. Install with: pip install doclayout-yolo")
 
         # Download if needed
         model_file = self._model_path / MODEL_FILENAME

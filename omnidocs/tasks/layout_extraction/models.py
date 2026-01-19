@@ -298,9 +298,7 @@ class LayoutBox(BaseModel):
     bbox: BoundingBox = Field(..., description="Bounding box coordinates")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Detection confidence")
     class_id: Optional[int] = Field(default=None, description="Model-specific class ID")
-    original_label: Optional[str] = Field(
-        default=None, description="Original model-specific label before mapping"
-    )
+    original_label: Optional[str] = Field(default=None, description="Original model-specific label before mapping")
 
     model_config = ConfigDict(extra="forbid")
 
@@ -331,18 +329,18 @@ class LayoutBox(BaseModel):
 # ============= Visualization Colors =============
 
 LABEL_COLORS: Dict[LayoutLabel, str] = {
-    LayoutLabel.TITLE: "#E74C3C",       # Red
-    LayoutLabel.TEXT: "#3498DB",        # Blue
-    LayoutLabel.LIST: "#2ECC71",        # Green
-    LayoutLabel.FIGURE: "#9B59B6",      # Purple
-    LayoutLabel.TABLE: "#F39C12",       # Orange
-    LayoutLabel.CAPTION: "#1ABC9C",     # Teal
-    LayoutLabel.FORMULA: "#E91E63",     # Pink
-    LayoutLabel.FOOTNOTE: "#607D8B",    # Gray
-    LayoutLabel.PAGE_HEADER: "#795548", # Brown
-    LayoutLabel.PAGE_FOOTER: "#795548", # Brown
-    LayoutLabel.ABANDON: "#BDC3C7",     # Light Gray
-    LayoutLabel.UNKNOWN: "#95A5A6",     # Gray
+    LayoutLabel.TITLE: "#E74C3C",  # Red
+    LayoutLabel.TEXT: "#3498DB",  # Blue
+    LayoutLabel.LIST: "#2ECC71",  # Green
+    LayoutLabel.FIGURE: "#9B59B6",  # Purple
+    LayoutLabel.TABLE: "#F39C12",  # Orange
+    LayoutLabel.CAPTION: "#1ABC9C",  # Teal
+    LayoutLabel.FORMULA: "#E91E63",  # Pink
+    LayoutLabel.FOOTNOTE: "#607D8B",  # Gray
+    LayoutLabel.PAGE_HEADER: "#795548",  # Brown
+    LayoutLabel.PAGE_FOOTER: "#795548",  # Brown
+    LayoutLabel.ABANDON: "#BDC3C7",  # Light Gray
+    LayoutLabel.UNKNOWN: "#95A5A6",  # Gray
 }
 
 
@@ -421,13 +419,15 @@ class LayoutOutput(BaseModel):
         normalized = []
         for box in self.bboxes:
             norm_bbox = box.bbox.to_normalized(self.image_width, self.image_height)
-            normalized.append({
-                "label": box.label.value,
-                "bbox": norm_bbox.to_list(),
-                "confidence": box.confidence,
-                "class_id": box.class_id,
-                "original_label": box.original_label,
-            })
+            normalized.append(
+                {
+                    "label": box.label.value,
+                    "bbox": norm_bbox.to_list(),
+                    "confidence": box.confidence,
+                    "class_id": box.class_id,
+                    "original_label": box.original_label,
+                }
+            )
         return normalized
 
     def visualize(

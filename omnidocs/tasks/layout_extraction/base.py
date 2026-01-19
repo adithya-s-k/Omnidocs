@@ -98,4 +98,4 @@ class BaseLayoutExtractor(ABC):
                 raise FileNotFoundError(f"Image not found: {path}")
             return Image.open(path).convert("RGB")
 
-        raise ValueError(f"Unsupported image type: {type(image)}. " "Expected PIL.Image, numpy array, or file path.")
+        raise ValueError(f"Unsupported image type: {type(image)}. Expected PIL.Image, numpy array, or file path.")
