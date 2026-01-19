@@ -88,7 +88,7 @@ OmniDocs follows a clean, stateless design:
 - **Tasks** = Analysis operations (layout, OCR, text extraction)
 - **Backends** = Inference engines (PyTorch, VLLM, MLX, API)
 
-See [Design Documents](docs/) for full architecture details.
+See Design Documents for full architecture details.
 
 ## Development
 
@@ -117,7 +117,7 @@ uv run mkdocs serve
 
 ## License
 
-Apache 2.0 - See [LICENSE](LICENSE) for details
+Apache 2.0 - See [LICENSE](LICENSE.md) for details
 
 ## Contributing
 
