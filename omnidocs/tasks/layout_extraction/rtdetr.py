@@ -44,8 +44,7 @@ class RTDETRConfig(BaseModel):
     )
     model_path: Optional[str] = Field(
         default=None,
-        description="Custom path to model. "
-        "If None, uses OMNIDOCS_MODELS_DIR env var or ~/.omnidocs/models/",
+        description="Custom path to model. If None, uses OMNIDOCS_MODELS_DIR env var or ~/.omnidocs/models/",
     )
     model_name: str = Field(
         default="HuggingPanda/docling-layout",
@@ -137,8 +136,7 @@ class RTDETRLayoutExtractor(BaseLayoutExtractor):
             from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
         except ImportError:
             raise ImportError(
-                "transformers is required for RTDETRLayoutExtractor. "
-                "Install with: pip install transformers torch timm"
+                "transformers is required for RTDETRLayoutExtractor. Install with: pip install transformers torch timm"
             )
 
         # Check if model is cached locally
