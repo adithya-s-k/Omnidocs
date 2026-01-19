@@ -19,10 +19,18 @@ classifiers = [
     "Topic :: Text Processing",
 ]
 dependencies = [
+    "doclayout-yolo>=0.0.4",
+    "huggingface-hub>=0.36.0",
+    "numpy>=2.2.6",
     "pdfplumber>=0.11.9",
+    "pillow>=12.1.0",
     "pydantic>=2.12.5",
     "pypdfium2>=5.3.0",
     "requests>=2.32.5",
+    "timm>=1.0.24",
+    "torch>=2.9.1",
+    "torchvision>=0.24.1",
+    "transformers>=4.57.6",
 ]
 
 [project.urls]
