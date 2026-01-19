@@ -2,19 +2,19 @@
 Tests for Document loading functionality.
 """
 
-import pytest
 import tempfile
 from pathlib import Path
+
+import pytest
 from PIL import Image
 
 from omnidocs import (
     Document,
-    DocumentMetadata,
     DocumentLoadError,
+    DocumentMetadata,
     PageRangeError,
     UnsupportedFormatError,
 )
-
 
 # ============= Test Fixtures Paths =============
 
@@ -29,8 +29,8 @@ IMAGES_DIR = FIXTURES_DIR / "images"
 def create_test_pdf() -> Path:
     """Create a simple test PDF using reportlab."""
     try:
-        from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import letter
+        from reportlab.pdfgen import canvas
     except ImportError:
         pytest.skip("reportlab not installed")
 
@@ -325,8 +325,8 @@ def test_clear_cache(test_pdf):
     doc = Document.from_pdf(str(test_pdf))
 
     # Render pages
-    page0 = doc.get_page(0)
-    page1 = doc.get_page(1)
+    _page0 = doc.get_page(0)
+    _page1 = doc.get_page(1)
 
     # Clear specific page
     doc.clear_cache(0)
@@ -394,7 +394,7 @@ def test_context_manager(test_pdf):
 def test_close(test_pdf):
     """Test close method."""
     doc = Document.from_pdf(str(test_pdf))
-    page = doc.get_page(0)
+    _page = doc.get_page(0)
 
     doc.close()
 
@@ -455,15 +455,17 @@ def test_full_workflow(test_pdf):
     # Process each page
     results = []
     for i in range(doc.page_count):
-        page = doc.get_page(i)
+        _page = doc.get_page(i)
         size = doc.get_page_size(i)
         text = doc.get_page_text(i + 1)  # 1-indexed
 
-        results.append({
-            "page_num": i,
-            "size": size,
-            "has_text": len(text) > 0,
-        })
+        results.append(
+            {
+                "page_num": i,
+                "size": size,
+                "has_text": len(text) > 0,
+            }
+        )
 
     assert len(results) == 3
 

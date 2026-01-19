@@ -36,6 +36,7 @@ Changelog = "https://github.com/adithya-s-k/OmniDocs/releases"
 dev = [
     "pytest>=8.0",
     "reportlab>=4.4.9",
+    "ruff>=0.14.13",
 ]
 docs = [
     "mkdocs>=1.6.1",
@@ -56,3 +57,13 @@ testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow (requiring network, large files, etc.)",
 ]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]

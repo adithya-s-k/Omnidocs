@@ -5,15 +5,16 @@ Core exports:
 - Document: Stateless document container for loading PDFs and images
 """
 
-from ._version import __version__
 from omnidocs.document import (
     Document,
-    DocumentMetadata,
     DocumentLoadError,
-    URLDownloadError,
+    DocumentMetadata,
     PageRangeError,
     UnsupportedFormatError,
+    URLDownloadError,
 )
+
+from ._version import __version__
 
 __all__ = [
     "__version__",

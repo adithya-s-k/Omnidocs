@@ -5,21 +5,18 @@ Stateless document container for loading and accessing PDF/image data.
 Uses pypdfium2 (Apache 2.0) for PDF rendering and pdfplumber (MIT) for text extraction.
 """
 
-from typing import List, Dict, Any, Optional, Iterator
-from pathlib import Path
-from datetime import datetime
 import io
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional
 
-from pydantic import BaseModel, Field, ConfigDict
 from PIL import Image
+from pydantic import BaseModel, ConfigDict, Field
 
 try:
     import pypdfium2 as pdfium
 except ImportError:
-    raise ImportError(
-        "pypdfium2 is required for document loading. "
-        "Install with: pip install pypdfium2"
-    )
+    raise ImportError("pypdfium2 is required for document loading. Install with: pip install pypdfium2")
 
 try:
     import pdfplumber
@@ -32,21 +29,25 @@ except ImportError:
 
 class DocumentLoadError(Exception):
     """Failed to load document."""
+
     pass
 
 
 class URLDownloadError(Exception):
     """Failed to download from URL."""
+
     pass
 
 
 class PageRangeError(Exception):
     """Invalid page range."""
+
     pass
 
 
 class UnsupportedFormatError(Exception):
     """Unsupported file format."""
+
     pass
 
 
@@ -63,10 +64,7 @@ class DocumentMetadata(BaseModel):
     file_size: Optional[int] = Field(default=None, description="File size in bytes")
 
     # PDF metadata
-    pdf_metadata: Optional[Dict[str, Any]] = Field(
-        default=None,
-        description="PDF document metadata"
-    )
+    pdf_metadata: Optional[Dict[str, Any]] = Field(default=None, description="PDF document metadata")
 
     # Document properties
     page_count: int = Field(..., description="Number of pages", ge=0)
@@ -77,15 +75,11 @@ class DocumentMetadata(BaseModel):
     image_format: str = Field(default="RGB", description="Image color format")
 
     # Text extraction info
-    text_extraction_engine: Optional[str] = Field(
-        default=None,
-        description="Engine used for text extraction"
-    )
+    text_extraction_engine: Optional[str] = Field(default=None, description="Engine used for text extraction")
 
     # Timestamps
     loaded_at: str = Field(
-        default_factory=lambda: datetime.now().isoformat(),
-        description="ISO timestamp of when document was loaded"
+        default_factory=lambda: datetime.now().isoformat(), description="ISO timestamp of when document was loaded"
     )
 
     model_config = ConfigDict(extra="forbid")
@@ -194,10 +188,7 @@ class Document:
         if pdf_doc is not None:
             start = page_range[0] if page_range else 0
             end = page_range[1] if page_range else len(pdf_doc) - 1
-            self._lazy_pages = [
-                LazyPage(pdf_doc, i, dpi)
-                for i in range(start, end + 1)
-            ]
+            self._lazy_pages = [LazyPage(pdf_doc, i, dpi) for i in range(start, end + 1)]
 
         # Full text cache
         self._full_text_cache: Optional[str] = None
@@ -249,9 +240,7 @@ class Document:
         if page_range:
             start, end = page_range
             if start < 0 or end >= total_pages or start > end:
-                raise PageRangeError(
-                    f"Invalid page range ({start}, {end}) for {total_pages} pages"
-                )
+                raise PageRangeError(f"Invalid page range ({start}, {end}) for {total_pages} pages")
 
         # Extract metadata (fast, no rendering)
         pdf_meta = {}
@@ -314,10 +303,7 @@ class Document:
         try:
             import requests
         except ImportError:
-            raise ImportError(
-                "requests is required for URL downloads. "
-                "Install with: pip install requests"
-            )
+            raise ImportError("requests is required for URL downloads. Install with: pip install requests")
 
         try:
             response = requests.get(url, timeout=timeout)
@@ -332,7 +318,7 @@ class Document:
         if page_range:
             start, end = page_range
             if start < 0 or end >= total_pages or start > end:
-                raise PageRangeError(f"Invalid page range")
+                raise PageRangeError("Invalid page range")
 
         pdf_meta = {}
         try:
@@ -400,7 +386,7 @@ class Document:
         if page_range:
             start, end = page_range
             if start < 0 or end >= total_pages or start > end:
-                raise PageRangeError(f"Invalid page range")
+                raise PageRangeError("Invalid page range")
 
         pdf_meta = {}
         try:
@@ -614,12 +600,12 @@ class Document:
         """
         if self._preloaded_images:
             if page_num < 0 or page_num >= len(self._preloaded_images):
-                raise PageRangeError(f"Page {page_num} out of range (0-{len(self._preloaded_images)-1})")
+                raise PageRangeError(f"Page {page_num} out of range (0-{len(self._preloaded_images) - 1})")
             return self._preloaded_images[page_num]
 
         if self._lazy_pages:
             if page_num < 0 or page_num >= len(self._lazy_pages):
-                raise PageRangeError(f"Page {page_num} out of range (0-{len(self._lazy_pages)-1})")
+                raise PageRangeError(f"Page {page_num} out of range (0-{len(self._lazy_pages) - 1})")
             return self._lazy_pages[page_num].image
 
         raise PageRangeError("No pages available")
@@ -735,7 +721,7 @@ class Document:
         saved = []
         for i in range(self.page_count):
             img = self.get_page(i)
-            file_path = output_path / f"{prefix}_{i+1:03d}.{format.lower()}"
+            file_path = output_path / f"{prefix}_{i + 1:03d}.{format.lower()}"
             img.save(file_path, format=format)
             saved.append(file_path)
 
@@ -778,7 +764,5 @@ class Document:
     def __repr__(self) -> str:
         """String representation."""
         return (
-            f"Document(pages={self.page_count}, "
-            f"source={self._metadata.source_type}, "
-            f"file={self._metadata.file_name})"
+            f"Document(pages={self.page_count}, source={self._metadata.source_type}, file={self._metadata.file_name})"
         )
