@@ -334,7 +334,97 @@ class TestLayoutOutput:
         assert d["element_count"] == 1
         assert len(d["bboxes"]) == 1
         assert d["labels_found"] == ["title"]
+    def test_layout_save_json(self):
+        boxes = [
+            LayoutBox(
+                label=LayoutLabel.TITLE,
+                bbox=BoundingBox(x1=0, y1=0, x2=100, y2=50),
+                confidence=0.9,
+            ),
+        ]
+        output = LayoutOutput(
+            bboxes=boxes,
+            image_width=800,
+            image_height=600,
+            model_name="TestModel",
+        )
+        json_path = "test_layout_output.json"
+        output.save_json(json_path)
 
+        # Read back the file and check contents
+        with open(json_path, "r") as f:
+            content = f.read()
+            assert "image_width" in content
+            assert "image_height" in content
+            assert "model_name" in content
+            assert "bboxes" in content
+    def test_layout_to_json(self):
+        boxes = [
+            LayoutBox(
+                label=LayoutLabel.TITLE,
+                bbox=BoundingBox(x1=0, y1=0, x2=100, y2=50),
+                confidence=0.9,
+            ),
+        ]
+        output = LayoutOutput(
+            bboxes=boxes,
+            image_width=800,
+            image_height=600,
+            model_name="TestModel",
+        )
+        json_str = output.to_json()
+
+        assert json_str is not None
+        assert "image_width" in json_str
+        assert "image_height" in json_str
+        assert "model_name" in json_str
+        assert "bboxes" in json_str
+    def test_layout_from_json(self):
+        boxes = [
+            LayoutBox(
+                label=LayoutLabel.TITLE,
+                bbox=BoundingBox(x1=0, y1=0, x2=100, y2=50),
+                confidence=0.9,
+            ),
+        ]
+        output = LayoutOutput(
+            bboxes=boxes,
+            image_width=800,
+            image_height=600,
+            model_name="TestModel",
+        )
+        json_str = output.to_json()
+        new_output = LayoutOutput.from_json(json_str)
+
+        assert new_output.image_width == output.image_width
+        assert new_output.image_height == output.image_height
+        assert new_output.model_name == output.model_name
+        assert new_output.element_count == output.element_count
+        assert len(new_output.bboxes) == len(output.bboxes)
+    def test_layout_load_json(self):
+        boxes = [
+            LayoutBox(
+                label=LayoutLabel.TITLE,
+                bbox=BoundingBox(x1=0, y1=0, x2=100, y2=50),
+                confidence=0.9,
+            ),
+        ]
+        output = LayoutOutput(
+            bboxes=boxes,
+            image_width=800,
+            image_height=600,
+            model_name="TestModel",
+        )
+        json_path = "test_layout_output.json"
+        output.save_json(json_path)
+
+        new_output = LayoutOutput.load_json(json_path)
+
+        assert new_output.image_width == output.image_width
+        assert new_output.image_height == output.image_height
+        assert new_output.model_name == output.model_name
+        assert new_output.element_count == output.element_count
+        assert len(new_output.bboxes) == len(output.bboxes)
 
 class TestDocLayoutYOLOClassNames:
     """Tests for DocLayout-YOLO class names mapping."""
