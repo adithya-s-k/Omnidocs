@@ -503,72 +503,28 @@ class LayoutOutput(BaseModel):
 
         return viz_image
 
-    def save_json(self, output_path: Union[str, Path]) -> None:
-        """
-        Save layout output to a JSON file.
-
-        Args:
-            output_path: Path to save the JSON file
-        """
-        import json
-
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with output_path.open("w", encoding="utf-8") as f:
-            json.dump(self.to_dict(), f, indent=4)
-    
-    def to_json(self) -> str:
-        """
-        Convert layout output to a JSON string.
-
-        Returns:
-            JSON string representation of the layout output
-        """
-        import json
-
-        return json.dumps(self.to_dict(), indent=4)
-    
-    def load_json(self, json_str: str) -> "LayoutOutput":
-        """
-        Load layout output from a JSON string.
-
-        Args:
-            json_str: JSON string representation of the layout output
-        """
-        import json
-
-        data = json.loads(json_str)
-        bboxes = [LayoutBox(**box) for box in data.get("bboxes", [])]
-        image_width = data.get("image_width", 0)
-        image_height = data.get("image_height", 0)
-        model_name = data.get("model_name", None)
-        
-        return LayoutOutput(
-            bboxes=bboxes,
-            image_height=image_height,
-            image_width=image_width,
-            model_name=model_name
-        )
-    
-    def from_json(self, json_str: str) -> "LayoutOutput":
+    @classmethod
+    def from_json(cls, json_str: str) -> "LayoutOutput":
         """
         Create layout output from a JSON string.
+        Pydantic's model_validate_json handles the nested LayoutBox
+        and BoundingBox conversion automatically.
+        """
+        return cls.model_validate_json(json_str)
 
-        Args:
-            json_str: JSON string representation of the layout output"""
-            
-        import json
+    @classmethod
+    def load_json(cls, file_path: Union[str, Path]) -> "LayoutOutput":
+        """
+        Load layout output from a JSON file.
+        """
+        path = Path(file_path)
+        return cls.from_json(path.read_text(encoding="utf-8"))
 
-        data = json.loads(json_str)
-        bboxes = [LayoutBox(**box) for box in data.get("bboxes", [])]
-        image_width = data.get("image_width", 0)
-        image_height = data.get("image_height", 0)
-        model_name = data.get("model_name", None)
+    def to_json(self) -> str:
+        """Helper to match your test: converts object to JSON string."""
+        return self.model_dump_json()
 
-        return LayoutOutput(
-            bboxes=bboxes,
-            image_height=image_height,
-            image_width=image_width,
-            model_name=model_name
-        )
+    def save_json(self, file_path: Union[str, Path]):
+        """Helper to match your test: saves object to JSON file."""
+        path = Path(file_path)
+        path.write_text(self.to_json(), encoding="utf-8")
