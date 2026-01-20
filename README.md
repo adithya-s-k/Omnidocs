@@ -1,131 +1,198 @@
 # OmniDocs
 
-> **Unified Python toolkit for visual document processing** - Think Transformers for document AI
+![OmniDocs Banner](./assets/omnidocs_banner.png)
 
-[![PyPI version](https://badge.fury.io/py/omnidocs.svg)](https://badge.fury.io/py/omnidocs)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+<p align="center">
+  <b>Unified toolkit for visual document understanding</b><br>
+  <a href="https://pypi.org/project/omnidocs/"><img src="https://img.shields.io/pypi/v/omnidocs.svg" alt="PyPI version"></a>
+  <a href="https://github.com/adithya-s-k/OmniDocs/blob/main/LICENSE"><img src="https://img.shields.io/github/license/adithya-s-k/OmniDocs" alt="License"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
+</p>
 
-**Status**: 🚧 v0.2 - Document Loading Complete | Task Extractors In Progress
+**OmniDocs** is your all-in-one Python toolkit for extracting layout, tables, text, math, and OCR from PDFs and images, powered by classic libraries and state-of-the-art deep learning models. Build robust document workflows with a single, consistent API.
 
-## Overview
+- Unified, production-ready API for all tasks
+- Fast, GPU-accelerated, and easy to extend
+- Type-safe with Pydantic models
 
-OmniDocs provides a consistent, type-safe API across multiple document processing models and tasks:
-- ✅ **Document Loading** - Lazy-loaded PDFs and images with metadata (v0.2)
-- 🚧 **Layout Analysis** - Coming soon
-- 🚧 **OCR Extraction** - Coming soon
-- 🚧 **Text Extraction** - Coming soon
-- 🚧 **Table Extraction** - Coming soon
-
-## Installation
-
-```bash
-pip install omnidocs
-```
-
-Or for development:
-
-```bash
-git clone https://github.com/adithya-s-k/OmniDocs.git
-cd OmniDocs/Omnidocs
-uv sync
-```
+---
 
 ## Quick Start
 
 ```python
 from omnidocs import Document
+from omnidocs.tasks.layout_extraction import DocLayoutYOLO, DocLayoutYOLOConfig
 
-# Load PDF with lazy rendering
-doc = Document.from_pdf("paper.pdf", dpi=150)
+# Load a PDF document
+doc = Document.from_pdf("paper.pdf")
 
-# Access pages (rendered on demand)
-page = doc.get_page(0)  # PIL Image
-text = doc.get_page_text(1)  # 1-indexed
+# Initialize layout detector
+layout = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
 
-# Memory efficient iteration
-for page in doc.iter_pages():
-    # Process each page
-    pass
+# Extract layout from a page
+result = layout.extract(doc.get_page(0))
 
-# Full document text (cached)
-full_text = doc.text
+# Access detected elements
+for box in result.bboxes:
+    print(f"{box.label.value}: {box.confidence:.2f}")
 
-# Metadata
-print(f"Pages: {doc.page_count}")
-print(f"Size: {doc.metadata.file_size}")
+# Visualize results
+result.visualize(doc.get_page(0), output_path="layout.png")
 ```
+
+---
+
+## Installation
+
+Choose your preferred method:
+
+- **PyPI (Recommended):**
+  ```bash
+  pip install omnidocs
+  ```
+
+- **uv (Fastest):**
+  ```bash
+  uv pip install omnidocs
+  ```
+
+- **From Source:**
+  ```bash
+  git clone https://github.com/adithya-s-k/Omnidocs.git
+  cd Omnidocs
+  uv sync
+  ```
+
+---
 
 ## Features
 
-### Document Loading ✅
-
+### Document Loading
 - **Multiple Sources**: PDF files, URLs, bytes, images
 - **Lazy Loading**: Pages rendered only when accessed
-- **MIT/Apache Licensed**: pypdfium2 (Apache 2.0) + pdfplumber (MIT)
-- **Type-Safe**: Pydantic models for configs and outputs
 - **Memory Efficient**: Page caching with manual control
 
 ```python
+from omnidocs import Document
+
 # From file
 doc = Document.from_pdf("file.pdf", page_range=(0, 9))
 
 # From URL
 doc = Document.from_url("https://arxiv.org/pdf/1706.03762")
 
-# From bytes
-doc = Document.from_bytes(pdf_bytes)
-
 # From images
-doc = Document.from_image("page.png")
 doc = Document.from_images(["p1.png", "p2.png"])
 ```
 
+### Layout Extraction
+Detect document structure with multiple backends:
+
+| Model | Description | Classes |
+|-------|-------------|---------|
+| **DocLayoutYOLO** | YOLO-based detector (fast, accurate) | 10 |
+| **RT-DETR** | Transformer-based detector | 17+ |
+
+```python
+from omnidocs.tasks.layout_extraction import DocLayoutYOLO, RTDETRLayoutExtractor
+
+# DocLayoutYOLO (fast)
+layout = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
+
+# RT-DETR (more categories)
+layout = RTDETRLayoutExtractor(config=RTDETRConfig(device="cuda"))
+
+result = layout.extract(image)
+
+# Filter by label
+tables = result.filter_by_label(LayoutLabel.TABLE)
+figures = result.filter_by_label(LayoutLabel.FIGURE)
+
+# Get normalized coordinates (0-1024 range)
+normalized = result.get_normalized_bboxes()
+```
+
+### Coming Soon
+- OCR Extraction (PaddleOCR, Tesseract, EasyOCR, SuryaOCR)
+- Text Extraction (PyMuPDF, PDFPlumber, Surya)
+- Table Extraction (TableTransformer, Camelot, Tabula)
+- Math Extraction (UniMERNet, SuryaMath)
+
+---
+
+## How It Works
+
+**OmniDocs** organizes document processing tasks into modular components:
+
+1. **Unified Interface**: Consistent `.extract()` method across all tasks
+2. **Model Independence**: Switch between models effortlessly
+3. **Pipeline Flexibility**: Combine components to create custom workflows
+4. **Type Safety**: Pydantic models for all configs and outputs
+
 ## Architecture
 
-OmniDocs follows a clean, stateless design:
-- **Document** = Source data only (doesn't store task results)
-- **Tasks** = Analysis operations (layout, OCR, text extraction)
-- **Backends** = Inference engines (PyTorch, VLLM, MLX, API)
+```
+Document (source data) → Task Extractor → Structured Output
+                              ↓
+                    Backend (PyTorch/VLLM/MLX/API)
+```
 
 See [Design Documents](docs/) for full architecture details.
 
+---
+
 ## Development
 
-Run tests:
-
 ```bash
+# Run tests
 uv run pytest tests/ -v
-```
 
-Run fast tests only:
-
-```bash
+# Run fast tests only
 uv run pytest tests/ -v -m "not slow"
-```
 
-Build docs:
+# Lint and format
+uv run ruff check .
+uv run ruff format .
 
-```bash
+# Build docs
 uv run mkdocs serve
 ```
 
-## Requirements
+---
 
-- Python 3.10 - 3.11
-- Dependencies managed with [uv](https://github.com/astral-sh/uv)
+## Roadmap
 
-## License
+- [ ] OCR Extraction module
+- [ ] Text Extraction module
+- [ ] Table Extraction module
+- [ ] Math Expression Extraction module
+- [ ] Reading Order Detection
+- [ ] Structured Output Extraction (Pydantic schemas)
+- [ ] CLI support for batch processing
 
-Apache 2.0 - See [LICENSE](LICENSE) for details
+---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+We welcome contributions to **OmniDocs**! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Links
+For a complete example of the contribution workflow, see:
+- [Issue #18](https://github.com/adithya-s-k/Omnidocs/issues/18) - Feature request
+- [PR #19](https://github.com/adithya-s-k/Omnidocs/pull/19) - Implementation
 
-- 📚 [Documentation](https://adithya-s-k.github.io/OmniDocs/)
-- 🐛 [Issues](https://github.com/adithya-s-k/OmniDocs/issues)
-- 📦 [PyPI](https://pypi.org/project/omnidocs/)
-- 📝 [Changelog](https://github.com/adithya-s-k/OmniDocs/releases)
+---
+
+## License
+
+Apache 2.0 - See [LICENSE](LICENSE) for details.
+
+---
+
+## Support
+
+If you find **OmniDocs** helpful, please give us a star on GitHub!
+
+- [Documentation](https://adithya-s-k.github.io/OmniDocs/)
+- [Issues](https://github.com/adithya-s-k/OmniDocs/issues)
+- [PyPI](https://pypi.org/project/omnidocs/)
+- Email: adithyaskolavi@gmail.com

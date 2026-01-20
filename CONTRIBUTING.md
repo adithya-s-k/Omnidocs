@@ -221,6 +221,22 @@ docs: update architecture guide
 test: add fixture-based PDF tests
 ```
 
+## Reference: End-to-End Contribution Example
+
+For a complete example of how to contribute a new feature to OmniDocs, see:
+
+- **Issue**: [#18 - Layout Extraction Module](https://github.com/adithya-s-k/Omnidocs/issues/18)
+- **Pull Request**: [#19 - feat: Add layout extraction module](https://github.com/adithya-s-k/Omnidocs/pull/19)
+
+This contribution demonstrates:
+1. Creating a feature request issue with proper description
+2. Implementing a new task module (`layout_extraction`)
+3. Following the config pattern with Pydantic models
+4. Adding comprehensive tests (71 tests)
+5. Creating an end-to-end example script
+6. Proper commit messages and PR description
+7. Version bump workflow
+
 ## Need Help?
 
 - 📖 Read the [design documents](docs/)
