@@ -334,7 +334,7 @@ class TestLayoutOutput:
         assert d["element_count"] == 1
         assert len(d["bboxes"]) == 1
         assert d["labels_found"] == ["title"]
-    def test_layout_save_json(self):
+    def test_layout_save_json(self, tmp_path):
         boxes = [
             LayoutBox(
                 label=LayoutLabel.TITLE,
@@ -348,7 +348,7 @@ class TestLayoutOutput:
             image_height=600,
             model_name="TestModel",
         )
-        json_path = "test_layout_output.json"
+        json_path = tmp_path / "test_layout_output.json"
         output.save_json(json_path)
 
         # Read back the file and check contents
@@ -401,7 +401,7 @@ class TestLayoutOutput:
         assert new_output.model_name == output.model_name
         assert new_output.element_count == output.element_count
         assert len(new_output.bboxes) == len(output.bboxes)
-    def test_layout_load_json(self):
+    def test_layout_load_json(self, tmp_path):
         boxes = [
             LayoutBox(
                 label=LayoutLabel.TITLE,
@@ -415,7 +415,7 @@ class TestLayoutOutput:
             image_height=600,
             model_name="TestModel",
         )
-        json_path = "test_layout_output.json"
+        json_path = tmp_path / "test_layout_output.json"
         output.save_json(json_path)
 
         new_output = LayoutOutput.load_json(json_path)
