@@ -336,6 +336,7 @@ class TestLayoutOutput:
         assert d["labels_found"] == ["title"]
 
     def test_layout_save_json(self, tmp_path):
+        """Test saving LayoutOutput to JSON file."""
         boxes = [
             LayoutBox(
                 label=LayoutLabel.TITLE,
@@ -361,6 +362,7 @@ class TestLayoutOutput:
             assert "bboxes" in content
 
     def test_layout_to_json(self):
+        """Test converting LayoutOutput to JSON string."""
         boxes = [
             LayoutBox(
                 label=LayoutLabel.TITLE,
@@ -383,6 +385,7 @@ class TestLayoutOutput:
         assert "bboxes" in json_str
 
     def test_layout_from_json(self):
+        """Test creating LayoutOutput from JSON string."""
         boxes = [
             LayoutBox(
                 label=LayoutLabel.TITLE,
@@ -406,6 +409,7 @@ class TestLayoutOutput:
         assert len(new_output.bboxes) == len(output.bboxes)
 
     def test_layout_load_json(self, tmp_path):
+        """Test loading LayoutOutput from JSON file."""
         boxes = [
             LayoutBox(
                 label=LayoutLabel.TITLE,

@@ -506,26 +506,108 @@ class LayoutOutput(BaseModel):
     @classmethod
     def from_json(cls, json_str: str) -> "LayoutOutput":
         """
-        Create layout output from a JSON string.
-        Pydantic's model_validate_json handles the nested LayoutBox
-        and BoundingBox conversion automatically.
+        Create a LayoutOutput instance from a JSON string.
+
+        Deserializes a JSON string back into a LayoutOutput object with all
+        nested LayoutBox and BoundingBox objects properly reconstructed.
+        Pydantic's model_validate_json handles the nested object conversion
+        automatically.
+
+        Args:
+            json_str: JSON string representation of a LayoutOutput object.
+
+        Returns:
+            LayoutOutput: Deserialized layout output instance.
+
+        Raises:
+            ValueError: If JSON string is invalid or doesn't match expected schema.
+            ValidationError: If deserialized data fails model validation.
+
+        Example:
+            >>> json_data = '{"bboxes": [], "image_width": 800, "image_height": 600}'
+            >>> output = LayoutOutput.from_json(json_data)
+            >>> print(output.image_width)
+            800
         """
         return cls.model_validate_json(json_str)
 
     @classmethod
     def load_json(cls, file_path: Union[str, Path]) -> "LayoutOutput":
         """
-        Load layout output from a JSON file.
+        Load a LayoutOutput instance from a JSON file.
+
+        Reads a JSON file and deserializes its contents into a LayoutOutput object.
+        Handles file I/O with proper encoding and delegates deserialization to
+        the from_json method.
+
+        Args:
+            file_path: Path to JSON file containing serialized LayoutOutput data.
+                      Can be string or pathlib.Path object.
+
+        Returns:
+            LayoutOutput: Deserialized layout output instance from file.
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            UnicodeDecodeError: If file cannot be decoded as UTF-8.
+            ValueError: If file contents are not valid JSON.
+            ValidationError: If JSON data doesn't match LayoutOutput schema.
+
+        Example:
+            >>> output = LayoutOutput.load_json('layout_results.json')
+            >>> print(f"Found {output.element_count} elements")
+            Found 5 elements
         """
         path = Path(file_path)
         return cls.from_json(path.read_text(encoding="utf-8"))
 
     def to_json(self) -> str:
-        """Helper to match your test: converts object to JSON string."""
+        """
+        Convert LayoutOutput instance to a JSON string.
+
+        Serializes the LayoutOutput object and all nested LayoutBox and BoundingBox
+        objects into a JSON string representation. Uses Pydantic's model_dump_json
+        for reliable serialization with proper handling of enums and custom types.
+
+        Returns:
+            str: JSON string representation of the LayoutOutput object.
+
+        Example:
+            >>> output = LayoutOutput(bboxes=[], image_width=800, image_height=600)
+            >>> json_str = output.to_json()
+            >>> print(type(json_str))
+            <class 'str'>
+            >>> print('image_width' in json_str)
+            True
+        """
         return self.model_dump_json()
 
     def save_json(self, file_path: Union[str, Path]) -> None:
-        """Helper to match your test: saves object to JSON file."""
+        """
+        Save LayoutOutput instance to a JSON file.
+
+        Serializes the LayoutOutput object to JSON and writes it to a file.
+        Automatically creates parent directories if they don't exist. Uses UTF-8
+        encoding for compatibility and proper handling of special characters.
+
+        Args:
+            file_path: Path where JSON file should be saved. Can be string or
+                      pathlib.Path object. Parent directories will be created
+                      if they don't exist.
+
+        Returns:
+            None
+
+        Raises:
+            OSError: If file cannot be written due to permission or disk errors.
+            TypeError: If file_path is not a string or Path object.
+
+        Example:
+            >>> output = LayoutOutput(bboxes=[], image_width=800, image_height=600)
+            >>> output.save_json('results/layout_output.json')
+            >>> # File is created at results/layout_output.json
+            >>> # Parent 'results' directory is created if it didn't exist
+        """
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(self.to_json(), encoding="utf-8")
