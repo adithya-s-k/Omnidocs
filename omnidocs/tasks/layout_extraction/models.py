@@ -524,7 +524,8 @@ class LayoutOutput(BaseModel):
         """Helper to match your test: converts object to JSON string."""
         return self.model_dump_json()
 
-    def save_json(self, file_path: Union[str, Path]):
+    def save_json(self, file_path: Union[str, Path]) -> None:
         """Helper to match your test: saves object to JSON file."""
         path = Path(file_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(self.to_json(), encoding="utf-8")
