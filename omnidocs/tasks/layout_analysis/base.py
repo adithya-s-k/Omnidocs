@@ -1,3 +1,8 @@
+"""Base classes for layout detection models.
+
+This module provides abstract base classes that define the common interface
+for all layout detection implementations in OmniDocs.
+"""
 
 from abc import ABC, abstractmethod
 import logging
@@ -20,29 +25,97 @@ except ImportError:
 
 
 class BaseLayoutMapper:
-    """Base class for layout label mapping."""
-    
+    """Base class for mapping model-specific labels to standardized labels.
+
+    This class provides a bidirectional mapping between model-specific label
+    strings and the standardized LayoutLabel enum values. Subclasses should
+    override `_setup_mapping` to define their specific mappings.
+
+    Attributes:
+        _mapping: Dictionary mapping model labels (lowercase) to LayoutLabel.
+        _reverse_mapping: Dictionary mapping LayoutLabel to model labels.
+
+    Example:
+        >>> class MyModelMapper(BaseLayoutMapper):
+        ...     def _setup_mapping(self):
+        ...         self._mapping = {"paragraph": LayoutLabel.TEXT}
+        ...         self._reverse_mapping = {LayoutLabel.TEXT: "paragraph"}
+        >>> mapper = MyModelMapper()
+        >>> mapper.to_standard("paragraph")
+        <LayoutLabel.TEXT: 'text'>
+    """
+
     def __init__(self):
         self._mapping: Dict[str, LayoutLabel] = {}
         self._reverse_mapping: Dict[LayoutLabel, str] = {}
         self._setup_mapping()
         
     def _setup_mapping(self):
-        """Setup the mapping dictionary. Should be implemented by child classes."""
+        """Set up the mapping dictionaries.
+
+        This method should be overridden by subclasses to define the
+        model-specific label mappings.
+
+        Raises:
+            NotImplementedError: If not overridden by subclass.
+        """
         raise NotImplementedError
         
     def to_standard(self, model_label: str) -> Optional[LayoutLabel]:
-        """Convert model-specific label to standardized LayoutLabel."""
+        """Convert a model-specific label to a standardized LayoutLabel.
+
+        Args:
+            model_label: The model-specific label string to convert.
+                Case-insensitive.
+
+        Returns:
+            The corresponding LayoutLabel enum value, or None if no mapping
+            exists for the given label.
+
+        Example:
+            >>> mapper.to_standard("Plain Text")
+            <LayoutLabel.TEXT: 'text'>
+        """
         return self._mapping.get(model_label.lower())
         
     def from_standard(self, layout_label: LayoutLabel) -> Optional[str]:
-        """Convert standardized LayoutLabel to model-specific label."""
+        """Convert a standardized LayoutLabel to a model-specific label.
+
+        Args:
+            layout_label: The LayoutLabel enum value to convert.
+
+        Returns:
+            The corresponding model-specific label string, or None if no
+            mapping exists.
+
+        Example:
+            >>> mapper.from_standard(LayoutLabel.TEXT)
+            'plain text'
+        """
         return self._reverse_mapping.get(layout_label)
 
 
 class BaseLayoutDetector(ABC):
-    """Base class for all layout detection models."""
-    
+    """Abstract base class for all layout detection models.
+
+    This class defines the common interface and shared functionality for
+    layout detection implementations. Subclasses must implement the abstract
+    methods `_download_model`, `_load_model`, and `detect`.
+
+    Attributes:
+        device: The device to run inference on ("cuda" or "cpu").
+        model: The loaded model instance (set by subclasses).
+        model_path: Path to the model files.
+        show_log: Whether to show informational logs.
+        color_map: Dictionary mapping label names to visualization colors.
+
+    Example:
+        >>> from omnidocs.tasks.layout_analysis import YOLOLayoutDetector
+        >>> detector = YOLOLayoutDetector(device="cuda", show_log=True)
+        >>> image, output = detector.detect("document.png")
+        >>> print(f"Found {len(output.bboxes)} elements")
+    """
+
     def __init__(self, show_log: bool = False):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = None
@@ -68,49 +141,97 @@ class BaseLayoutDetector(ABC):
             self._logger.setLevel(logging.INFO)  # Show all logs when show_log is True
             
     def log(self, level: int, msg: str, *args, **kwargs):
-        """Wrapper for logging that respects show_log setting."""
-        if self.show_log or level >= logging.ERROR:  # Always show errors
+        """Log a message respecting the show_log setting.
+
+        Error messages (level >= ERROR) are always logged regardless of
+        the show_log setting.
+
+        Args:
+            level: The logging level (e.g., logging.INFO, logging.ERROR).
+            msg: The message format string.
+            *args: Arguments for the message format string.
+            **kwargs: Keyword arguments passed to the logger.
+        """
+        if self.show_log or level >= logging.ERROR:
             self._logger.log(level, msg, *args, **kwargs)
 
 
     @abstractmethod
     def _download_model(self) -> Path:
-        """Download model from a remote source."""
+        """Download the model from a remote source.
+
+        This method should download model weights and any required
+        configuration files to the local filesystem.
+
+        Returns:
+            Path to the downloaded model directory.
+
+        Raises:
+            Exception: If the download fails.
+        """
         pass
 
     @abstractmethod
     def _load_model(self) -> None:
-        """Load the model into memory."""
+        """Load the model into memory.
+
+        This method should load the model weights and prepare the model
+        for inference. After calling this method, `self.model` should
+        be set to the loaded model instance.
+
+        Raises:
+            RuntimeError: If model loading fails.
+            ImportError: If required dependencies are missing.
+        """
         pass
 
     @abstractmethod
     def detect(self, input_path: Union[str, Path], **kwargs) -> Tuple[Image.Image, LayoutOutput]:
-        """
-        Run layout detection on a single image/page.
-        
+        """Run layout detection on a single image or first page of a PDF.
+
         Args:
-            input_path: Path to input image or PDF
-            **kwargs: Additional model-specific parameters
-            
+            input_path: Path to the input image file or PDF document.
+            **kwargs: Additional model-specific parameters (e.g.,
+                confidence threshold, image size).
+
         Returns:
-            Tuple containing:
-                - Annotated PIL Image
-                - LayoutOutput object with detection results
+            A tuple containing:
+                - Annotated PIL Image with detected regions visualized.
+                - LayoutOutput object containing all detected boxes.
+
+        Raises:
+            RuntimeError: If the model is not loaded.
+            ValueError: If the input file cannot be read.
+
+        Example:
+            >>> detector = YOLOLayoutDetector()
+            >>> annotated_img, layout = detector.detect("page.png", conf_threshold=0.5)
+            >>> for box in layout.bboxes:
+            ...     print(f"{box.label}: {box.confidence:.2f}")
         """
         pass
 
     def detect_all(self, input_path: Union[str, Path], **kwargs) -> List[Tuple[Image.Image, LayoutOutput]]:
-        """
-        Run layout detection on all pages of a document.
-        
+        """Run layout detection on all pages of a document.
+
+        For single images, this returns a list with one result. For PDFs,
+        it processes all pages and returns results for each.
+
         Args:
-            input_path: Path to input image or PDF
-            **kwargs: Additional model-specific parameters
-            
+            input_path: Path to the input image file or PDF document.
+            **kwargs: Additional model-specific parameters passed to
+                the `detect` method.
+
         Returns:
-            List of tuples, each containing:
-                - Annotated PIL Image
-                - LayoutOutput object with detection results
+            List of tuples, where each tuple contains:
+                - Annotated PIL Image for that page.
+                - LayoutOutput object with detection results and page number.
+
+        Example:
+            >>> detector = YOLOLayoutDetector()
+            >>> results = detector.detect_all("document.pdf")
+            >>> for img, layout in results:
+            ...     print(f"Page {layout.page_number}: {len(layout.bboxes)} elements")
         """
         images = self.preprocess_input(input_path)
         results = []
@@ -135,12 +256,23 @@ class BaseLayoutDetector(ABC):
         detection_result: Tuple[Image.Image, LayoutOutput],
         output_path: Union[str, Path],
     ) -> None:
-        """
-        Save annotated image to file.
-        
+        """Save an annotated image and its layout data to files.
+
+        Saves the annotated image to the specified path and automatically
+        saves the corresponding layout data as a JSON file with the same
+        name but .json extension.
+
         Args:
-            detection_result: Tuple containing (PIL Image, LayoutOutput)
-            output_path: Path to save visualization
+            detection_result: Tuple containing the annotated PIL Image
+                and its corresponding LayoutOutput.
+            output_path: Path where the annotated image will be saved.
+                A JSON file will be saved alongside with .json extension.
+
+        Example:
+            >>> detector = YOLOLayoutDetector()
+            >>> result = detector.detect("document.png")
+            >>> detector.visualize(result, "output/annotated.png")
+            # Creates: output/annotated.png and output/annotated.json
         """
         annotated_image, layout_output = detection_result
         
@@ -166,13 +298,23 @@ class BaseLayoutDetector(ABC):
         output_dir: Union[str, Path],
         prefix: str = "page"
     ) -> None:
-        """
-        Save all annotated images and their layout data to files.
-        
+        """Save all annotated images and their layout data to a directory.
+
+        Each page is saved with a numbered filename using the specified
+        prefix (e.g., page_1.png, page_2.png).
+
         Args:
             detection_results: List of (PIL Image, LayoutOutput) tuples
-            output_dir: Directory to save visualizations
-            prefix: Prefix for output filenames
+                as returned by `detect_all`.
+            output_dir: Directory where all files will be saved. Created
+                if it doesn't exist.
+            prefix: Prefix for output filenames. Defaults to "page".
+
+        Example:
+            >>> detector = YOLOLayoutDetector()
+            >>> results = detector.detect_all("document.pdf")
+            >>> detector.visualize_all(results, "output/", prefix="doc")
+            # Creates: output/doc_1.png, output/doc_1.json, ...
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -185,14 +327,26 @@ class BaseLayoutDetector(ABC):
             self.visualize(result, image_path)
 
     def preprocess_input(self, input_path: Union[str, Path]) -> List[np.ndarray]:
-        """
-        Convert input to processable format.
-        
+        """Convert input file to a list of processable images.
+
+        Handles both single images and multi-page PDF documents. Images
+        are returned as BGR numpy arrays for OpenCV compatibility.
+
         Args:
-            input_path: Path to input image or PDF
-            
+            input_path: Path to the input image file or PDF document.
+
         Returns:
-            List of preprocessed images as numpy arrays
+            List of images as numpy arrays in BGR format. For single
+            images, returns a list with one element. For PDFs, returns
+            one array per page.
+
+        Raises:
+            ImportError: If input is a PDF and PyMuPDF is not installed.
+            ValueError: If the image file cannot be loaded.
+
+        Example:
+            >>> images = detector.preprocess_input("document.pdf")
+            >>> print(f"Document has {len(images)} pages")
         """
         input_path = Path(input_path)
 
@@ -208,8 +362,16 @@ class BaseLayoutDetector(ABC):
             return [image]
 
     def _convert_pdf_to_images_pymupdf(self, pdf_path: Union[str, Path]) -> List[np.ndarray]:
-        """
-        Convert PDF pages to a list of numpy arrays (images) using PyMuPDF.
+        """Convert PDF pages to a list of numpy arrays using PyMuPDF.
+
+        Args:
+            pdf_path: Path to the PDF file.
+
+        Returns:
+            List of page images as numpy arrays in BGR format.
+
+        Raises:
+            Exception: If PDF conversion fails.
         """
         images = []
         try:
@@ -233,18 +395,52 @@ class BaseLayoutDetector(ABC):
 
     @property
     def label_mapper(self) -> BaseLayoutMapper:
-        """Get the label mapper for this detector."""
+        """Get the label mapper for this detector.
+
+        Returns:
+            The BaseLayoutMapper instance used for label conversion.
+
+        Raises:
+            ValueError: If the label mapper has not been initialized.
+        """
         if self._label_mapper is None:
             raise ValueError("Label mapper not initialized")
         return self._label_mapper
         
     def map_label(self, model_label: str) -> Optional[str]:
-        """Map model-specific label to standardized label."""
+        """Map a model-specific label to a standardized label string.
+
+        Args:
+            model_label: The model-specific label to convert.
+
+        Returns:
+            The standardized label string, or None if no mapping exists.
+
+        Example:
+            >>> detector.map_label("Plain Text")
+            'text'
+        """
         standard_label = self.label_mapper.to_standard(model_label)
         return str(standard_label) if standard_label else None
 
     def map_box(self, layout_box: LayoutBox) -> LayoutBox:
-        """Map LayoutBox label to standardized label."""
+        """Map the label of a LayoutBox to its standardized form.
+
+        Modifies the LayoutBox in place, replacing its label with the
+        standardized version if a mapping exists.
+
+        Args:
+            layout_box: The LayoutBox whose label should be mapped.
+
+        Returns:
+            The same LayoutBox instance with its label updated.
+
+        Example:
+            >>> box = LayoutBox(label="Plain Text", bbox=[0, 0, 100, 50])
+            >>> mapped = detector.map_box(box)
+            >>> print(mapped.label)
+            'text'
+        """
         mapped_label = self.map_label(layout_box.label)
         if mapped_label:
             layout_box.label = mapped_label
