@@ -334,6 +334,7 @@ class TestLayoutOutput:
         assert d["element_count"] == 1
         assert len(d["bboxes"]) == 1
         assert d["labels_found"] == ["title"]
+
     def test_layout_save_json(self, tmp_path):
         boxes = [
             LayoutBox(
@@ -358,6 +359,7 @@ class TestLayoutOutput:
             assert "image_height" in content
             assert "model_name" in content
             assert "bboxes" in content
+
     def test_layout_to_json(self):
         boxes = [
             LayoutBox(
@@ -379,6 +381,7 @@ class TestLayoutOutput:
         assert "image_height" in json_str
         assert "model_name" in json_str
         assert "bboxes" in json_str
+
     def test_layout_from_json(self):
         boxes = [
             LayoutBox(
@@ -401,6 +404,7 @@ class TestLayoutOutput:
         assert new_output.model_name == output.model_name
         assert new_output.element_count == output.element_count
         assert len(new_output.bboxes) == len(output.bboxes)
+
     def test_layout_load_json(self, tmp_path):
         boxes = [
             LayoutBox(
@@ -425,6 +429,7 @@ class TestLayoutOutput:
         assert new_output.model_name == output.model_name
         assert new_output.element_count == output.element_count
         assert len(new_output.bboxes) == len(output.bboxes)
+
 
 class TestDocLayoutYOLOClassNames:
     """Tests for DocLayout-YOLO class names mapping."""
