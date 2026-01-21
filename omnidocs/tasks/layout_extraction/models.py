@@ -504,41 +504,12 @@ class LayoutOutput(BaseModel):
         return viz_image
 
     @classmethod
-    def from_json(cls, json_str: str) -> "LayoutOutput":
-        """
-        Create a LayoutOutput instance from a JSON string.
-
-        Deserializes a JSON string back into a LayoutOutput object with all
-        nested LayoutBox and BoundingBox objects properly reconstructed.
-        Pydantic's model_validate_json handles the nested object conversion
-        automatically.
-
-        Args:
-            json_str: JSON string representation of a LayoutOutput object.
-
-        Returns:
-            LayoutOutput: Deserialized layout output instance.
-
-        Raises:
-            ValueError: If JSON string is invalid or doesn't match expected schema.
-            ValidationError: If deserialized data fails model validation.
-
-        Example:
-            >>> json_data = '{"bboxes": [], "image_width": 800, "image_height": 600}'
-            >>> output = LayoutOutput.from_json(json_data)
-            >>> print(output.image_width)
-            800
-        """
-        return cls.model_validate_json(json_str)
-
-    @classmethod
     def load_json(cls, file_path: Union[str, Path]) -> "LayoutOutput":
         """
         Load a LayoutOutput instance from a JSON file.
 
         Reads a JSON file and deserializes its contents into a LayoutOutput object.
-        Handles file I/O with proper encoding and delegates deserialization to
-        the from_json method.
+        Uses Pydantic's model_validate_json for proper handling of nested objects.
 
         Args:
             file_path: Path to JSON file containing serialized LayoutOutput data.
@@ -559,28 +530,7 @@ class LayoutOutput(BaseModel):
             Found 5 elements
         """
         path = Path(file_path)
-        return cls.from_json(path.read_text(encoding="utf-8"))
-
-    def to_json(self) -> str:
-        """
-        Convert LayoutOutput instance to a JSON string.
-
-        Serializes the LayoutOutput object and all nested LayoutBox and BoundingBox
-        objects into a JSON string representation. Uses Pydantic's model_dump_json
-        for reliable serialization with proper handling of enums and custom types.
-
-        Returns:
-            str: JSON string representation of the LayoutOutput object.
-
-        Example:
-            >>> output = LayoutOutput(bboxes=[], image_width=800, image_height=600)
-            >>> json_str = output.to_json()
-            >>> print(type(json_str))
-            <class 'str'>
-            >>> print('image_width' in json_str)
-            True
-        """
-        return self.model_dump_json()
+        return cls.model_validate_json(path.read_text(encoding="utf-8"))
 
     def save_json(self, file_path: Union[str, Path]) -> None:
         """
@@ -610,4 +560,4 @@ class LayoutOutput(BaseModel):
         """
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(self.to_json(), encoding="utf-8")
+        path.write_text(self.model_dump_json(), encoding="utf-8")

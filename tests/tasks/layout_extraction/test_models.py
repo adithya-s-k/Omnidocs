@@ -361,53 +361,6 @@ class TestLayoutOutput:
             assert "model_name" in content
             assert "bboxes" in content
 
-    def test_layout_to_json(self):
-        """Test converting LayoutOutput to JSON string."""
-        boxes = [
-            LayoutBox(
-                label=LayoutLabel.TITLE,
-                bbox=BoundingBox(x1=0, y1=0, x2=100, y2=50),
-                confidence=0.9,
-            ),
-        ]
-        output = LayoutOutput(
-            bboxes=boxes,
-            image_width=800,
-            image_height=600,
-            model_name="TestModel",
-        )
-        json_str = output.to_json()
-
-        assert json_str is not None
-        assert "image_width" in json_str
-        assert "image_height" in json_str
-        assert "model_name" in json_str
-        assert "bboxes" in json_str
-
-    def test_layout_from_json(self):
-        """Test creating LayoutOutput from JSON string."""
-        boxes = [
-            LayoutBox(
-                label=LayoutLabel.TITLE,
-                bbox=BoundingBox(x1=0, y1=0, x2=100, y2=50),
-                confidence=0.9,
-            ),
-        ]
-        output = LayoutOutput(
-            bboxes=boxes,
-            image_width=800,
-            image_height=600,
-            model_name="TestModel",
-        )
-        json_str = output.to_json()
-        new_output = LayoutOutput.from_json(json_str)
-
-        assert new_output.image_width == output.image_width
-        assert new_output.image_height == output.image_height
-        assert new_output.model_name == output.model_name
-        assert new_output.element_count == output.element_count
-        assert len(new_output.bboxes) == len(output.bboxes)
-
     def test_layout_load_json(self, tmp_path):
         """Test loading LayoutOutput from JSON file."""
         boxes = [
