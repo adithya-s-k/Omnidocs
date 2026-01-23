@@ -267,6 +267,29 @@ def test_iter_pages(test_pdf):
     assert all(isinstance(p, Image.Image) for p in pages)
 
 
+def test_iter_pages_with_progress(test_pdf):
+    """Test iter_pages with progress bar."""
+    doc = Document.from_pdf(str(test_pdf))
+
+    # Test with progress=True (requires tqdm)
+    try:
+        import tqdm  # noqa: F401
+
+        pages = list(doc.iter_pages(progress=True))
+        assert len(pages) == 3
+        assert all(isinstance(p, Image.Image) for p in pages)
+    except ImportError:
+        # If tqdm not installed, should still work without progress
+        pages = list(doc.iter_pages(progress=True))
+        assert len(pages) == 3
+        assert all(isinstance(p, Image.Image) for p in pages)
+
+    # Test with progress=False (default)
+    pages = list(doc.iter_pages(progress=False))
+    assert len(pages) == 3
+    assert all(isinstance(p, Image.Image) for p in pages)
+
+
 # ============= Text Extraction Tests =============
 
 
