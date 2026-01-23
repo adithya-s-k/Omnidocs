@@ -29,10 +29,6 @@ page_results = []
 for page in doc.iter_pages(progress=True):
     # You can do any processing here
     width, height = page.size
-    page_results.append({
-        "width": width,
-        "height": height,
-        "mode": page.mode
-    })
+    page_results.append({"width": width, "height": height, "mode": page.mode})
 
 print(f"Processed {len(page_results)} pages")
