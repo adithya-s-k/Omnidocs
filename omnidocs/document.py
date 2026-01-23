@@ -660,20 +660,34 @@ class Document:
 
         raise PageRangeError("No pages available")
 
-    def iter_pages(self) -> Iterator[Image.Image]:
+    def iter_pages(self, progress: bool = False) -> Iterator[Image.Image]:
         """
         Iterate over pages one at a time (memory efficient).
 
         Use this for large documents instead of .pages property.
 
+        Args:
+            progress: Whether to show a progress bar (requires tqdm)
+
         Yields:
             PIL Images
 
         Examples:
-            >>> for page in doc.iter_pages():
+            >>> for page in doc.iter_pages(progress=True):
             ...     result = layout.extract(page)
         """
-        for i in range(self.page_count):
+        pages = range(self.page_count)
+
+        if progress:
+            try:
+                from tqdm import tqdm
+
+                pages = tqdm(pages, desc="Processing pages")
+            except ImportError:
+                # tqdm not installed, continue without progress
+                pass
+
+        for i in pages:
             yield self.get_page(i)
 
     def clear_cache(self, page_num: Optional[int] = None):
