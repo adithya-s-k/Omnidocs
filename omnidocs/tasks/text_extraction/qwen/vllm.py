@@ -31,15 +31,13 @@ class QwenTextVLLMConfig(BaseModel):
     tensor_parallel_size: int = Field(
         default=1,
         ge=1,
-        description="Number of GPUs for tensor parallelism. "
-        "Use higher values for larger models.",
+        description="Number of GPUs for tensor parallelism. Use higher values for larger models.",
     )
     gpu_memory_utilization: float = Field(
         default=0.85,
         ge=0.1,
         le=1.0,
-        description="Fraction of GPU memory to use (0.0-1.0). "
-        "Lower values leave headroom for other processes.",
+        description="Fraction of GPU memory to use (0.0-1.0). Lower values leave headroom for other processes.",
     )
     max_model_len: int = Field(
         default=32768,
@@ -70,8 +68,7 @@ class QwenTextVLLMConfig(BaseModel):
     )
     download_dir: Optional[str] = Field(
         default=None,
-        description="Directory to download model weights. "
-        "If None, uses OMNIDOCS_MODEL_CACHE env var or default cache.",
+        description="Directory to download model weights. If None, uses OMNIDOCS_MODEL_CACHE env var or default cache.",
     )
 
     model_config = ConfigDict(extra="forbid")

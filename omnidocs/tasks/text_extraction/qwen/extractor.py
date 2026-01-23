@@ -56,9 +56,7 @@ def _get_model_cache_dir() -> Path:
     Checks OMNIDOCS_MODEL_CACHE environment variable first,
     falls back to ~/.omnidocs/models.
     """
-    cache_dir = os.environ.get(
-        "OMNIDOCS_MODEL_CACHE", os.path.expanduser("~/.omnidocs/models")
-    )
+    cache_dir = os.environ.get("OMNIDOCS_MODEL_CACHE", os.path.expanduser("~/.omnidocs/models"))
     path = Path(cache_dir)
     path.mkdir(parents=True, exist_ok=True)
     return path
@@ -197,9 +195,7 @@ class QwenTextExtractor(BaseTextExtractor):
         device = self._resolve_device(config.device)
 
         model_kwargs: Dict[str, Any] = {
-            "torch_dtype": config.torch_dtype
-            if config.torch_dtype != "auto"
-            else "auto",
+            "torch_dtype": config.torch_dtype if config.torch_dtype != "auto" else "auto",
             "device_map": config.device_map,
             "trust_remote_code": config.trust_remote_code,
             "cache_dir": str(cache_dir),
@@ -207,9 +203,7 @@ class QwenTextExtractor(BaseTextExtractor):
         if config.use_flash_attention:
             model_kwargs["attn_implementation"] = "flash_attention_2"
 
-        self._backend = AutoModelForImageTextToText.from_pretrained(
-            config.model, **model_kwargs
-        )
+        self._backend = AutoModelForImageTextToText.from_pretrained(config.model, **model_kwargs)
         self._processor = AutoProcessor.from_pretrained(
             config.model,
             trust_remote_code=config.trust_remote_code,
@@ -245,9 +239,7 @@ class QwenTextExtractor(BaseTextExtractor):
             enforce_eager=config.enforce_eager,
             download_dir=download_dir,
         )
-        self._processor = AutoProcessor.from_pretrained(
-            config.model, cache_dir=str(cache_dir)
-        )
+        self._processor = AutoProcessor.from_pretrained(config.model, cache_dir=str(cache_dir))
         self._process_vision_info = process_vision_info
         self._sampling_params_class = SamplingParams
 
@@ -258,10 +250,7 @@ class QwenTextExtractor(BaseTextExtractor):
             from mlx_vlm.prompt_utils import apply_chat_template
             from mlx_vlm.utils import load_config
         except ImportError as e:
-            raise ImportError(
-                "MLX backend requires mlx and mlx-vlm. "
-                "Install with: uv add mlx mlx-vlm"
-            ) from e
+            raise ImportError("MLX backend requires mlx and mlx-vlm. Install with: uv add mlx mlx-vlm") from e
 
         config = self.backend_config
 
@@ -275,9 +264,7 @@ class QwenTextExtractor(BaseTextExtractor):
         try:
             from openai import OpenAI
         except ImportError as e:
-            raise ImportError(
-                "API backend requires openai. " "Install with: uv add openai"
-            ) from e
+            raise ImportError("API backend requires openai. Install with: uv add openai") from e
 
         config = self.backend_config
 
@@ -334,10 +321,7 @@ class QwenTextExtractor(BaseTextExtractor):
             raise RuntimeError("Model not loaded. Call _load_model() first.")
 
         if output_format not in ("html", "markdown"):
-            raise ValueError(
-                f"Invalid output_format: {output_format}. "
-                f"Expected 'html' or 'markdown'."
-            )
+            raise ValueError(f"Invalid output_format: {output_format}. Expected 'html' or 'markdown'.")
 
         # Prepare image
         pil_image = self._prepare_image(image)
@@ -399,9 +383,7 @@ class QwenTextExtractor(BaseTextExtractor):
                 }
             ]
 
-            text = self._processor.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
+            text = self._processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             image_inputs, video_inputs = self._process_vision_info(messages)
 
             inputs = self._processor(
@@ -421,10 +403,7 @@ class QwenTextExtractor(BaseTextExtractor):
             )
 
             # Trim to only new tokens
-            generated_ids_trimmed = [
-                out_ids[len(in_ids) :]
-                for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-            ]
+            generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
 
             return self._processor.batch_decode(
                 generated_ids_trimmed,
@@ -448,13 +427,9 @@ class QwenTextExtractor(BaseTextExtractor):
             }
         ]
 
-        text = self._processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
+        text = self._processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
-        image_inputs, _, _ = self._process_vision_info(
-            messages, return_video_kwargs=True
-        )
+        image_inputs, _, _ = self._process_vision_info(messages, return_video_kwargs=True)
         mm_data = {"image": image_inputs} if image_inputs else {}
 
         config = self.backend_config
@@ -479,9 +454,7 @@ class QwenTextExtractor(BaseTextExtractor):
             temp_path = f.name
 
         try:
-            formatted_prompt = self._apply_chat_template(
-                self._processor, self._mlx_config, prompt, num_images=1
-            )
+            formatted_prompt = self._apply_chat_template(self._processor, self._mlx_config, prompt, num_images=1)
 
             config = self.backend_config
             result = self._generate(

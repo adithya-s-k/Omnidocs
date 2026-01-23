@@ -74,9 +74,7 @@ def _get_model_cache_dir() -> Path:
     Checks OMNIDOCS_MODEL_CACHE environment variable first,
     falls back to ~/.omnidocs/models.
     """
-    cache_dir = os.environ.get(
-        "OMNIDOCS_MODEL_CACHE", os.path.expanduser("~/.omnidocs/models")
-    )
+    cache_dir = os.environ.get("OMNIDOCS_MODEL_CACHE", os.path.expanduser("~/.omnidocs/models"))
     path = Path(cache_dir)
     path.mkdir(parents=True, exist_ok=True)
     return path
@@ -188,9 +186,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
         if config.use_flash_attention:
             model_kwargs["attn_implementation"] = "flash_attention_2"
 
-        self._backend = AutoModelForImageTextToText.from_pretrained(
-            config.model, **model_kwargs
-        )
+        self._backend = AutoModelForImageTextToText.from_pretrained(config.model, **model_kwargs)
         self._processor = AutoProcessor.from_pretrained(
             config.model,
             trust_remote_code=config.trust_remote_code,
@@ -226,9 +222,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
             enforce_eager=config.enforce_eager,
             download_dir=download_dir,
         )
-        self._processor = AutoProcessor.from_pretrained(
-            config.model, cache_dir=str(cache_dir)
-        )
+        self._processor = AutoProcessor.from_pretrained(config.model, cache_dir=str(cache_dir))
         self._process_vision_info = process_vision_info
         self._sampling_params_class = SamplingParams
 
@@ -239,10 +233,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
             from mlx_vlm.prompt_utils import apply_chat_template
             from mlx_vlm.utils import load_config
         except ImportError as e:
-            raise ImportError(
-                "MLX backend requires mlx and mlx-vlm. "
-                "Install with: uv add mlx mlx-vlm"
-            ) from e
+            raise ImportError("MLX backend requires mlx and mlx-vlm. Install with: uv add mlx mlx-vlm") from e
 
         config = self.backend_config
 
@@ -256,9 +247,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
         try:
             from openai import OpenAI
         except ImportError as e:
-            raise ImportError(
-                "API backend requires openai. " "Install with: uv add openai"
-            ) from e
+            raise ImportError("API backend requires openai. Install with: uv add openai") from e
 
         config = self.backend_config
 
@@ -354,9 +343,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
             model_name=f"Qwen3-VL ({type(self.backend_config).__name__})",
         )
 
-    def _normalize_labels(
-        self, custom_labels: Optional[List[Union[str, CustomLabel]]]
-    ) -> List[str]:
+    def _normalize_labels(self, custom_labels: Optional[List[Union[str, CustomLabel]]]) -> List[str]:
         """Normalize labels to list of strings."""
         if custom_labels is None:
             return DEFAULT_LAYOUT_LABELS
@@ -368,9 +355,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
             elif isinstance(label, CustomLabel):
                 label_names.append(label.name)
             else:
-                raise TypeError(
-                    f"Expected str or CustomLabel, got {type(label).__name__}"
-                )
+                raise TypeError(f"Expected str or CustomLabel, got {type(label).__name__}")
 
         return label_names
 
@@ -418,9 +403,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
 
         return results
 
-    def _convert_relative_to_absolute(
-        self, bbox: List[int], width: int, height: int
-    ) -> List[float]:
+    def _convert_relative_to_absolute(self, bbox: List[int], width: int, height: int) -> List[float]:
         """Convert relative (0-999) to absolute pixel coordinates."""
         x1 = bbox[0] / QWEN_COORD_RANGE * width
         y1 = bbox[1] / QWEN_COORD_RANGE * height
@@ -435,9 +418,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
 
         return [round(x1, 2), round(y1, 2), round(x2, 2), round(y2, 2)]
 
-    def _build_layout_boxes(
-        self, detections: List[Dict[str, Any]], width: int, height: int
-    ) -> List[LayoutBox]:
+    def _build_layout_boxes(self, detections: List[Dict[str, Any]], width: int, height: int) -> List[LayoutBox]:
         """Convert parsed detections to LayoutBox objects."""
         layout_boxes = []
 
@@ -489,9 +470,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
                 }
             ]
 
-            text = self._processor.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
+            text = self._processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             image_inputs, video_inputs = self._process_vision_info(messages)
 
             inputs = self._processor(
@@ -511,10 +490,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
             )
 
             # Trim to only new tokens
-            generated_ids_trimmed = [
-                out_ids[len(in_ids) :]
-                for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-            ]
+            generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
 
             return self._processor.batch_decode(
                 generated_ids_trimmed,
@@ -538,13 +514,9 @@ class QwenLayoutDetector(BaseLayoutExtractor):
             }
         ]
 
-        text = self._processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
+        text = self._processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
-        image_inputs, _, _ = self._process_vision_info(
-            messages, return_video_kwargs=True
-        )
+        image_inputs, _, _ = self._process_vision_info(messages, return_video_kwargs=True)
         mm_data = {"image": image_inputs} if image_inputs else {}
 
         config = self.backend_config
@@ -569,9 +541,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
             temp_path = f.name
 
         try:
-            formatted_prompt = self._apply_chat_template(
-                self._processor, self._mlx_config, prompt, num_images=1
-            )
+            formatted_prompt = self._apply_chat_template(self._processor, self._mlx_config, prompt, num_images=1)
 
             config = self.backend_config
             result = self._generate(

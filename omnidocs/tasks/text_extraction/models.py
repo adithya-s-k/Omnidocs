@@ -47,13 +47,11 @@ class TextOutput(BaseModel):
     )
     raw_output: Optional[str] = Field(
         default=None,
-        description="Raw model output before cleaning. "
-        "Includes bounding box annotations and other artifacts.",
+        description="Raw model output before cleaning. Includes bounding box annotations and other artifacts.",
     )
     plain_text: Optional[str] = Field(
         default=None,
-        description="Plain text version without any formatting. "
-        "Useful for text analysis and comparison.",
+        description="Plain text version without any formatting. Useful for text analysis and comparison.",
     )
     image_width: Optional[int] = Field(
         default=None,

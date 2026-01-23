@@ -26,8 +26,7 @@ class QwenTextAPIConfig(BaseModel):
 
     model: str = Field(
         default="qwen/qwen3-vl-8b-instruct",
-        description="API model identifier. Format varies by provider. "
-        "OpenRouter: 'qwen/qwen3-vl-8b-instruct'",
+        description="API model identifier. Format varies by provider. OpenRouter: 'qwen/qwen3-vl-8b-instruct'",
     )
     api_key: str = Field(
         ...,
@@ -55,13 +54,11 @@ class QwenTextAPIConfig(BaseModel):
     timeout: int = Field(
         default=180,
         ge=10,
-        description="Request timeout in seconds. "
-        "Text extraction may need longer timeouts for complex documents.",
+        description="Request timeout in seconds. Text extraction may need longer timeouts for complex documents.",
     )
     extra_headers: Optional[dict] = Field(
         default=None,
-        description="Additional headers to send with requests. "
-        "Useful for provider-specific headers.",
+        description="Additional headers to send with requests. Useful for provider-specific headers.",
     )
 
     model_config = ConfigDict(extra="forbid")

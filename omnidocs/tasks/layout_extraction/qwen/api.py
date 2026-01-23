@@ -26,8 +26,7 @@ class QwenLayoutAPIConfig(BaseModel):
 
     model: str = Field(
         default="qwen/qwen3-vl-8b-instruct",
-        description="API model identifier. Format varies by provider. "
-        "OpenRouter: 'qwen/qwen3-vl-8b-instruct'",
+        description="API model identifier. Format varies by provider. OpenRouter: 'qwen/qwen3-vl-8b-instruct'",
     )
     api_key: str = Field(
         ...,
@@ -58,8 +57,7 @@ class QwenLayoutAPIConfig(BaseModel):
     )
     extra_headers: Optional[dict] = Field(
         default=None,
-        description="Additional headers to send with requests. "
-        "Useful for provider-specific headers.",
+        description="Additional headers to send with requests. Useful for provider-specific headers.",
     )
 
     model_config = ConfigDict(extra="forbid")

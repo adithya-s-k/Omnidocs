@@ -79,9 +79,7 @@ class BaseTextExtractor(ABC):
         """
         pass
 
-    def _prepare_image(
-        self, image: Union[Image.Image, np.ndarray, str, Path]
-    ) -> Image.Image:
+    def _prepare_image(self, image: Union[Image.Image, np.ndarray, str, Path]) -> Image.Image:
         """
         Convert various input formats to PIL Image.
 
@@ -107,7 +105,4 @@ class BaseTextExtractor(ABC):
                 raise FileNotFoundError(f"Image not found: {path}")
             return Image.open(path).convert("RGB")
 
-        raise ValueError(
-            f"Unsupported image type: {type(image)}. "
-            "Expected PIL.Image, numpy array, or file path."
-        )
+        raise ValueError(f"Unsupported image type: {type(image)}. Expected PIL.Image, numpy array, or file path.")

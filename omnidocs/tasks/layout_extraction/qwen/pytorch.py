@@ -38,8 +38,7 @@ class QwenLayoutPyTorchConfig(BaseModel):
     )
     device_map: Optional[str] = Field(
         default="auto",
-        description="Device map strategy for model parallelism. "
-        "Options: 'auto', 'balanced', 'sequential', or None.",
+        description="Device map strategy for model parallelism. Options: 'auto', 'balanced', 'sequential', or None.",
     )
     trust_remote_code: bool = Field(
         default=True,
@@ -47,8 +46,7 @@ class QwenLayoutPyTorchConfig(BaseModel):
     )
     use_flash_attention: bool = Field(
         default=False,
-        description="Use Flash Attention 2 for faster inference. "
-        "Requires flash-attn package to be installed.",
+        description="Use Flash Attention 2 for faster inference. Requires flash-attn package to be installed.",
     )
     max_new_tokens: int = Field(
         default=4096,

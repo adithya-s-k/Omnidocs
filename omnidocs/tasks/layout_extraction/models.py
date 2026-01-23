@@ -94,8 +94,7 @@ class CustomLabel(BaseModel):
         ...,
         min_length=1,
         max_length=50,
-        description="Label identifier (e.g., 'code_block', 'sidebar'). "
-        "Must be non-empty and reasonably short.",
+        description="Label identifier (e.g., 'code_block', 'sidebar'). Must be non-empty and reasonably short.",
     )
     description: Optional[str] = Field(
         default=None,
@@ -105,8 +104,7 @@ class CustomLabel(BaseModel):
     color: Optional[str] = Field(
         default=None,
         pattern=r"^#[0-9A-Fa-f]{6}$",
-        description="Visualization color as hex string (e.g., '#9B59B6'). "
-        "Used by visualize() method if provided.",
+        description="Visualization color as hex string (e.g., '#9B59B6'). Used by visualize() method if provided.",
     )
     detection_prompt: Optional[str] = Field(
         default=None,
