@@ -165,9 +165,8 @@ class QwenLayoutDetector(BaseLayoutExtractor):
     def _load_pytorch_backend(self) -> None:
         """Load PyTorch/HuggingFace backend."""
         try:
-            from transformers import AutoModelForImageTextToText, AutoProcessor
-
             from qwen_vl_utils import process_vision_info
+            from transformers import AutoModelForImageTextToText, AutoProcessor
         except ImportError as e:
             raise ImportError(
                 "PyTorch backend requires torch, transformers, and qwen-vl-utils. "
@@ -203,10 +202,9 @@ class QwenLayoutDetector(BaseLayoutExtractor):
     def _load_vllm_backend(self) -> None:
         """Load VLLM backend."""
         try:
-            from vllm import LLM, SamplingParams
-            from transformers import AutoProcessor
-
             from qwen_vl_utils import process_vision_info
+            from transformers import AutoProcessor
+            from vllm import LLM, SamplingParams
         except ImportError as e:
             raise ImportError(
                 "VLLM backend requires vllm, torch, transformers, and qwen-vl-utils. "

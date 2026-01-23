@@ -132,7 +132,7 @@ class TestCustomLabel:
 
         # Not equal to other types
         assert label1 != 123
-        assert label1 != None
+        assert label1 is not None
 
     def test_extra_forbid(self):
         """Test that extra parameters raise error."""
