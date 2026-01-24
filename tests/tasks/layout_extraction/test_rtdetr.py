@@ -11,6 +11,8 @@ from pydantic import ValidationError
 from omnidocs.tasks.layout_extraction import RTDETRConfig, RTDETRLayoutExtractor
 from omnidocs.tasks.layout_extraction.models import LayoutLabel, LayoutOutput
 
+from PIL import Image
+import numpy as np
 
 class TestRTDETRConfig:
     """Tests for RTDETRConfig."""
@@ -120,7 +122,6 @@ class TestRTDETRExtractor:
 
     def test_extract_from_numpy(self, extractor, sample_image):
         """Test extracting from numpy array."""
-        import numpy as np
 
         np_image = np.array(sample_image)
         result = extractor.extract(np_image)
@@ -190,3 +191,54 @@ class TestRTDETREdgeCases:
 
         with pytest.raises(ValueError):
             extractor.extract({"invalid": "type"})
+
+    def test_blank_image(self):
+        """Test extraction on a blank white image."""
+        config = RTDETRConfig(device="cpu")
+
+        # Skip if model not available
+        try:
+            extractor = RTDETRLayoutExtractor(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        blank = np.zeros((800, 600, 3), dtype=np.uint8)
+        result = extractor.extract(blank)
+
+        assert isinstance(result, LayoutOutput)
+        assert result.element_count == 0  # Or handle gracefully
+
+    def test_small_image(self):
+        """Test extraction on a very small image (10x10 pixels)."""
+        config = RTDETRConfig(device="cpu")
+
+        # Skip if model not available
+        try:
+            extractor = RTDETRLayoutExtractor(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        small = np.zeros((10, 10, 3), dtype=np.uint8)
+        result = extractor.extract(small)
+
+        assert isinstance(result, LayoutOutput)
+        assert result.element_count == 0
+
+    def test_large_image(self):
+        """Test extraction on a very large image (5000x5000 pixels)."""
+        config = RTDETRConfig(device="cpu")
+
+        # Skip if model not available
+        try:
+            extractor = RTDETRLayoutExtractor(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        # Skip test if machine memory is limited
+        try:
+            large = np.zeros((5000, 5000, 3), dtype=np.uint8)
+        except MemoryError:
+            pytest.skip("Skipping large image test due to memory constraints")
+
+        result = extractor.extract(large)
+        assert isinstance(result, LayoutOutput)
