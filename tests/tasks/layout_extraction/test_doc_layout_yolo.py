@@ -191,7 +191,7 @@ class TestDocLayoutYOLOEdgeCases:
 
         with pytest.raises(ValueError):
             extractor.extract({"invalid": "type"})
-            
+
     def test_grayscale_image(self):
         """Test extraction on grayscale image."""
         config = DocLayoutYOLOConfig(device="cpu")
