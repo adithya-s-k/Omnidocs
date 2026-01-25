@@ -5,6 +5,7 @@ Tests for DocLayoutYOLO layout extractor.
 import os
 import tempfile
 
+import numpy as np
 import pytest
 from pydantic import ValidationError
 
@@ -121,7 +122,6 @@ class TestDocLayoutYOLOExtractor:
 
     def test_extract_from_numpy(self, extractor, sample_image):
         """Test extracting from numpy array."""
-        import numpy as np
 
         np_image = np.array(sample_image)
         result = extractor.extract(np_image)
@@ -191,3 +191,61 @@ class TestDocLayoutYOLOEdgeCases:
 
         with pytest.raises(ValueError):
             extractor.extract({"invalid": "type"})
+            
+    def test_grayscale_image(self):
+        """Test extraction on grayscale image."""
+        config = DocLayoutYOLOConfig(device="cpu")
+
+        try:
+            extractor = DocLayoutYOLO(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        # Create grayscale image
+        gray = np.zeros((600, 800), dtype=np.uint8)
+
+        result = extractor.extract(gray)
+
+        assert isinstance(result, LayoutOutput)
+
+    def test_rgba_image(self):
+        """Test extraction on RGBA image with alpha channel."""
+        config = DocLayoutYOLOConfig(device="cpu")
+
+        try:
+            extractor = DocLayoutYOLO(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        # RGBA image
+        rgba = np.zeros((600, 800, 4), dtype=np.uint8)
+
+        result = extractor.extract(rgba)
+
+        assert isinstance(result, LayoutOutput)
+
+    def test_confidence_threshold_zero(self):
+        """Test confidence threshold at 0.0."""
+        config = DocLayoutYOLOConfig(device="cpu", confidence=0.0)
+
+        try:
+            extractor = DocLayoutYOLO(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        result = extractor.extract(np.zeros((600, 800, 3), dtype=np.uint8))
+
+        assert isinstance(result, LayoutOutput)
+
+    def test_confidence_threshold_one(self):
+        """Test confidence threshold at 1.0."""
+        config = DocLayoutYOLOConfig(device="cpu", confidence=1.0)
+
+        try:
+            extractor = DocLayoutYOLO(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        result = extractor.extract(np.zeros((600, 800, 3), dtype=np.uint8))
+
+        assert isinstance(result, LayoutOutput)
