@@ -269,7 +269,6 @@ class BoundingBox(BaseModel):
         )
 
     def to_absolute(self, image_width: int, image_height: int) -> "BoundingBox":
-
         """
         Convert from normalized (0-1024) to absolute pixel coordinates.
 
