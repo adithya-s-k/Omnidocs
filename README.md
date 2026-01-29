@@ -40,6 +40,29 @@ for box in result.bboxes:
 result.visualize(doc.get_page(0), output_path="layout.png")
 ```
 
+### Text Extraction with VLM
+
+```python
+from omnidocs import Document
+from omnidocs.tasks.text_extraction import QwenTextExtractor
+from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+
+# Load document
+doc = Document.from_pdf("report.pdf")
+
+# Initialize VLM text extractor
+extractor = QwenTextExtractor(
+    backend=QwenTextPyTorchConfig(
+        model="Qwen/Qwen3-VL-8B-Instruct",
+        device="cuda",
+    )
+)
+
+# Extract as markdown
+result = extractor.extract(doc.get_page(0), output_format="markdown")
+print(result.content)
+```
+
 ---
 
 ## Installation
@@ -88,35 +111,103 @@ doc = Document.from_images(["p1.png", "p2.png"])
 ### Layout Extraction
 Detect document structure with multiple backends:
 
-| Model | Description | Classes |
+| Model | Description | Backend |
 |-------|-------------|---------|
-| **DocLayoutYOLO** | YOLO-based detector (fast, accurate) | 10 |
-| **RT-DETR** | Transformer-based detector | 17+ |
+| **DocLayoutYOLO** | YOLO-based detector (fast, accurate) | PyTorch |
+| **RT-DETR** | Transformer-based detector | PyTorch |
+| **QwenLayoutDetector** | VLM-based with custom labels | PyTorch, VLLM, MLX, API |
 
 ```python
-from omnidocs.tasks.layout_extraction import DocLayoutYOLO, RTDETRLayoutExtractor
+from omnidocs.tasks.layout_extraction import DocLayoutYOLO, DocLayoutYOLOConfig
 
-# DocLayoutYOLO (fast)
+# DocLayoutYOLO (fast, fixed labels)
 layout = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
-
-# RT-DETR (more categories)
-layout = RTDETRLayoutExtractor(config=RTDETRConfig(device="cuda"))
-
 result = layout.extract(image)
 
 # Filter by label
 tables = result.filter_by_label(LayoutLabel.TABLE)
 figures = result.filter_by_label(LayoutLabel.FIGURE)
+```
 
-# Get normalized coordinates (0-1024 range)
-normalized = result.get_normalized_bboxes()
+#### Custom Labels with Qwen-VL
+Define your own document element categories:
+
+```python
+from omnidocs.tasks.layout_extraction import QwenLayoutDetector, CustomLabel
+from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
+
+# Initialize with PyTorch backend
+detector = QwenLayoutDetector(
+    backend=QwenLayoutPyTorchConfig(
+        model="Qwen/Qwen3-VL-8B-Instruct",
+        device="cuda",
+    )
+)
+
+# Define custom labels for your domain
+custom_labels = [
+    CustomLabel(name="chart", description="Bar charts, line charts, pie charts"),
+    CustomLabel(name="code_block", description="Source code snippets"),
+    CustomLabel(name="sidebar", description="Secondary content panels"),
+]
+
+# Detect with custom labels
+result = detector.extract(image, custom_labels=custom_labels)
+```
+
+### Text Extraction
+Convert document images to Markdown/HTML with VLM-powered extraction:
+
+| Model | Description | Backend |
+|-------|-------------|---------|
+| **QwenTextExtractor** | High-accuracy VLM text extraction | PyTorch, VLLM, MLX, API |
+
+```python
+from omnidocs.tasks.text_extraction import QwenTextExtractor
+from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+
+# Initialize extractor
+extractor = QwenTextExtractor(
+    backend=QwenTextPyTorchConfig(
+        model="Qwen/Qwen3-VL-8B-Instruct",
+        device="cuda",
+    )
+)
+
+# Extract text as markdown
+result = extractor.extract(image, output_format="markdown")
+print(result.content)  # Full markdown output
+
+# Or as HTML
+result = extractor.extract(image, output_format="html")
+```
+
+### Multi-Backend Support
+All VLM-based extractors support multiple inference backends:
+
+```python
+# PyTorch (default, local GPU)
+from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+config = QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct", device="cuda")
+
+# VLLM (high-throughput serving)
+from omnidocs.tasks.text_extraction.qwen import QwenTextVLLMConfig
+config = QwenTextVLLMConfig(model="Qwen/Qwen3-VL-8B-Instruct", tensor_parallel_size=2)
+
+# MLX (Apple Silicon)
+from omnidocs.tasks.text_extraction.qwen import QwenTextMLXConfig
+config = QwenTextMLXConfig(model="mlx-community/Qwen2.5-VL-7B-Instruct-8bit")
+
+# API (OpenRouter, etc.)
+from omnidocs.tasks.text_extraction.qwen import QwenTextAPIConfig
+config = QwenTextAPIConfig(model="qwen/qwen3-vl-8b-instruct", api_key="...")
 ```
 
 ### Coming Soon
 - OCR Extraction (PaddleOCR, Tesseract, EasyOCR, SuryaOCR)
-- Text Extraction (PyMuPDF, PDFPlumber, Surya)
 - Table Extraction (TableTransformer, Camelot, Tabula)
 - Math Extraction (UniMERNet, SuryaMath)
+- Structured Output Extraction (Pydantic schemas)
 
 ---
 
@@ -162,8 +253,11 @@ uv run mkdocs serve
 
 ## Roadmap
 
+- [x] Layout Extraction (DocLayoutYOLO, RT-DETR)
+- [x] VLM Layout Detection with Custom Labels (Qwen-VL)
+- [x] Text Extraction to Markdown/HTML (Qwen-VL)
+- [x] Multi-backend support (PyTorch, VLLM, MLX, API)
 - [ ] OCR Extraction module
-- [ ] Text Extraction module
 - [ ] Table Extraction module
 - [ ] Math Expression Extraction module
 - [ ] Reading Order Detection
