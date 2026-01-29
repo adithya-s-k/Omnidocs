@@ -580,8 +580,8 @@ class TestLayoutOutputVisualize:
 
     def test_visualize_does_not_modify_original(self):
         """Test that visualize doesn't modify the original image."""
-        from PIL import Image
         import numpy as np
+        from PIL import Image
 
         test_image = Image.new("RGB", (100, 100), color="white")
         original_pixels = np.array(test_image).copy()
