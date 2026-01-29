@@ -1020,7 +1020,7 @@ Integrate Qwen3-VL-8B-Instruct for flexible layout detection with custom label s
   - `torch`, `transformers`
   - `qwen-vl-utils` (model-specific utility)
 
-  **Reference Implementation**: [scripts/layout/modal_qwen3_vl_layout.py](../../scripts/layout/modal_qwen3_vl_layout.py)
+  **Reference Implementation**: See `scripts/layout/modal_qwen3_vl_layout.py` in the repository
 
   **Testing**:
   - Validate on synthetic document images
@@ -1269,9 +1269,9 @@ Additional task categories will be added after layout analysis is complete:
 
 ### Design Documents
 
-- [Backend Architecture](../../IMPLEMENTATION_PLAN/BACKEND_ARCHITECTURE.md) - Core design principles
-- [Developer Experience (DevEx)](../../IMPLEMENTATION_PLAN/DEVEX.md) - API design and patterns
-- [Claude Development Guide](../../CLAUDE.md) - Implementation standards
+- **Backend Architecture** - Core design principles (see `IMPLEMENTATION_PLAN/BACKEND_ARCHITECTURE.md`)
+- **Developer Experience (DevEx)** - API design and patterns (see `IMPLEMENTATION_PLAN/DEVEX.md`)
+- **Claude Development Guide** - Implementation standards (see `CLAUDE.md` in repo root)
 
 ### External Resources
 
