@@ -62,6 +62,75 @@ class LayoutLabel(str, Enum):
     UNKNOWN = "unknown"
 
 
+# ============= Custom Label Definition =============
+
+
+class CustomLabel(BaseModel):
+    """
+    Type-safe custom layout label definition for VLM-based models.
+
+    VLM models like Qwen3-VL support flexible custom labels beyond the
+    standard LayoutLabel enum. Use this class to define custom labels
+    with validation.
+
+    Example:
+        >>> from omnidocs.tasks.layout_extraction import CustomLabel
+        >>>
+        >>> # Simple custom label
+        >>> code_block = CustomLabel(name="code_block")
+        >>>
+        >>> # With metadata
+        >>> sidebar = CustomLabel(
+        ...     name="sidebar",
+        ...     description="Secondary content panel",
+        ...     color="#9B59B6",
+        ... )
+        >>>
+        >>> # Use with QwenLayoutDetector
+        >>> result = detector.extract(image, custom_labels=[code_block, sidebar])
+    """
+
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        description="Label identifier (e.g., 'code_block', 'sidebar'). Must be non-empty and reasonably short.",
+    )
+    description: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        description="Human-readable description of what this label represents.",
+    )
+    color: Optional[str] = Field(
+        default=None,
+        pattern=r"^#[0-9A-Fa-f]{6}$",
+        description="Visualization color as hex string (e.g., '#9B59B6'). Used by visualize() method if provided.",
+    )
+    detection_prompt: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Optional custom prompt hint to improve detection accuracy.",
+    )
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    def __str__(self) -> str:
+        """Return the label name as string."""
+        return self.name
+
+    def __hash__(self) -> int:
+        """Make hashable for use in sets."""
+        return hash(self.name)
+
+    def __eq__(self, other: object) -> bool:
+        """Compare by name."""
+        if isinstance(other, CustomLabel):
+            return self.name == other.name
+        if isinstance(other, str):
+            return self.name == other
+        return NotImplemented
+
+
 # ============= Label Mapping Definitions =============
 
 

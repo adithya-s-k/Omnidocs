@@ -580,10 +580,11 @@ class TestLayoutOutputVisualize:
 
     def test_visualize_does_not_modify_original(self):
         """Test that visualize doesn't modify the original image."""
+        import numpy as np
         from PIL import Image
 
         test_image = Image.new("RGB", (100, 100), color="white")
-        original_pixels = list(test_image.getdata())
+        original_pixels = np.array(test_image).copy()
 
         boxes = [
             LayoutBox(
@@ -597,7 +598,7 @@ class TestLayoutOutputVisualize:
         _ = output.visualize(test_image)
 
         # Original should be unchanged
-        assert list(test_image.getdata()) == original_pixels
+        assert np.array_equal(np.array(test_image), original_pixels)
 
     def test_visualize_saves_to_path(self, tmp_path):
         """Test that visualize can save to a file path."""

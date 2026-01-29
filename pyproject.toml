@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "Unified Python toolkit for visual document processing - think Transformers for document AI"
 authors = [{name = "adithya-s-kolavi", email = "adithyaskolavi@gmail.com"}]
 readme = "README.md"
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<3.13"
 license = {text = "Apache-2.0"}
 keywords = ["document-processing", "pdf", "ocr", "layout-analysis", "vision-language-models"]
 classifiers = [
@@ -15,6 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Text Processing",
 ]
@@ -40,7 +41,34 @@ Repository = "https://github.com/adithya-s-k/OmniDocs"
 Issues = "https://github.com/adithya-s-k/OmniDocs/issues"
 Changelog = "https://github.com/adithya-s-k/OmniDocs/releases"
 
+[project.optional-dependencies]
+# For pip install omnidocs[extra]
+pytorch = [
+    "accelerate>=1.0.0",
+    "qwen-vl-utils>=0.0.14",
+]
+vllm = [
+    "vllm>=0.6.0",
+    "accelerate>=1.0.0",
+    "qwen-vl-utils>=0.0.14",
+]
+mlx = [
+    "mlx>=0.20.0",
+    "mlx-vlm>=0.1.0",
+]
+api = [
+    "openai>=1.0.0",
+]
+all = [
+    "omnidocs[pytorch,vllm,api]",
+]
+
 [dependency-groups]
+# For uv sync --group <name>
+api = [
+    "openai>=2.15.0",
+    "python-dotenv>=1.2.1",
+]
 dev = [
     "pytest>=8.0",
     "reportlab>=4.4.9",
@@ -51,6 +79,20 @@ docs = [
     "mkdocs-git-revision-date-localized-plugin>=1.5.0",
     "mkdocs-material>=9.7.1",
     "mkdocstrings[python]>=1.0.1",
+]
+mlx = [
+    "mlx>=0.30.3",
+    "mlx-vlm>=0.3.9",
+]
+pytorch = [
+    "accelerate>=1.12.0",
+    "qwen-vl-utils>=0.0.14",
+    "torch>=2.9.1",
+    "transformers>=4.57.6",
+]
+vllm = [
+    {include-group = "pytorch"},
+    "vllm>=0.6.0",
 ]
 
 [build-system]
@@ -64,6 +106,10 @@ path = "omnidocs/_version.py"
 testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow (requiring network, large files, etc.)",
+]
+filterwarnings = [
+    # Ignore deprecation warning from thop (external dependency of doclayout-yolo)
+    "ignore:The distutils package is deprecated:DeprecationWarning",
 ]
 
 [tool.ruff]

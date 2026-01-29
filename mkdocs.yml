@@ -43,6 +43,7 @@ markdown_extensions:
 
 nav:
   - Home: README.md
+  - Roadmap: ROADMAP.md
   - Design Documents:
     - Architecture: architecture.md
     - Developer Guide: developer-guide.md
