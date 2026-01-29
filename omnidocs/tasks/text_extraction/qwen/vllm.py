@@ -70,5 +70,9 @@ class QwenTextVLLMConfig(BaseModel):
         default=None,
         description="Directory to download model weights. If None, uses OMNIDOCS_MODEL_CACHE env var or default cache.",
     )
+    disable_custom_all_reduce: bool = Field(
+        default=False,
+        description="Disable custom all-reduce for tensor parallelism. Set to False for best performance.",
+    )
 
     model_config = ConfigDict(extra="forbid")

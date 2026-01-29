@@ -238,6 +238,7 @@ class QwenTextExtractor(BaseTextExtractor):
             max_model_len=config.max_model_len,
             enforce_eager=config.enforce_eager,
             download_dir=download_dir,
+            disable_custom_all_reduce=config.disable_custom_all_reduce,
         )
         self._processor = AutoProcessor.from_pretrained(config.model, cache_dir=str(cache_dir))
         self._process_vision_info = process_vision_info
