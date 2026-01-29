@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "Unified Python toolkit for visual document processing - think Transformers for document AI"
 authors = [{name = "adithya-s-kolavi", email = "adithyaskolavi@gmail.com"}]
 readme = "README.md"
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<3.13"
 license = {text = "Apache-2.0"}
 keywords = ["document-processing", "pdf", "ocr", "layout-analysis", "vision-language-models"]
 classifiers = [
@@ -15,6 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Text Processing",
 ]
@@ -40,7 +41,30 @@ Repository = "https://github.com/adithya-s-k/OmniDocs"
 Issues = "https://github.com/adithya-s-k/OmniDocs/issues"
 Changelog = "https://github.com/adithya-s-k/OmniDocs/releases"
 
+[project.optional-dependencies]
+# For pip install omnidocs[extra]
+pytorch = [
+    "accelerate>=1.0.0",
+    "qwen-vl-utils>=0.0.14",
+]
+vllm = [
+    "vllm>=0.6.0",
+    "accelerate>=1.0.0",
+    "qwen-vl-utils>=0.0.14",
+]
+mlx = [
+    "mlx>=0.20.0",
+    "mlx-vlm>=0.1.0",
+]
+api = [
+    "openai>=1.0.0",
+]
+all = [
+    "omnidocs[pytorch,vllm,api]",
+]
+
 [dependency-groups]
+# For uv sync --group <name>
 api = [
     "openai>=2.15.0",
     "python-dotenv>=1.2.1",
@@ -65,6 +89,10 @@ pytorch = [
     "qwen-vl-utils>=0.0.14",
     "torch>=2.9.1",
     "transformers>=4.57.6",
+]
+vllm = [
+    {include-group = "pytorch"},
+    "vllm>=0.6.0",
 ]
 
 [build-system]
