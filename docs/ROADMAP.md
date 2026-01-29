@@ -966,8 +966,8 @@ extractor = ChandraTextExtractor(
 
 ### Flexible Custom Layouts (8B) - Qwen3-VL
 ```python
-from omnidocs.tasks.layout_analysis import QwenLayoutDetector
-from omnidocs.tasks.layout_analysis.qwen import QwenPyTorchConfig
+from omnidocs.tasks.layout_extraction import QwenLayoutDetector
+from omnidocs.tasks.layout_extraction.qwen import QwenPyTorchConfig
 
 layout = QwenLayoutDetector(
     backend=QwenPyTorchConfig(

@@ -55,7 +55,7 @@ class QwenLayoutAPIConfig(BaseModel):
         ge=10,
         description="Request timeout in seconds.",
     )
-    extra_headers: Optional[dict] = Field(
+    extra_headers: Optional[dict[str, str]] = Field(
         default=None,
         description="Additional headers to send with requests. Useful for provider-specific headers.",
     )

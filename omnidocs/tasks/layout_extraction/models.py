@@ -112,7 +112,7 @@ class CustomLabel(BaseModel):
         description="Optional custom prompt hint to improve detection accuracy.",
     )
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     def __str__(self) -> str:
         """Return the label name as string."""
@@ -128,7 +128,7 @@ class CustomLabel(BaseModel):
             return self.name == other.name
         if isinstance(other, str):
             return self.name == other
-        return False
+        return NotImplemented
 
 
 # ============= Label Mapping Definitions =============

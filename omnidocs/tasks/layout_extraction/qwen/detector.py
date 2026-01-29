@@ -428,6 +428,13 @@ class QwenLayoutDetector(BaseLayoutExtractor):
                 continue
 
             bbox = det["bbox_2d"]
+
+            # Validate bbox structure before accessing coordinates
+            if not isinstance(bbox, (list, tuple)) or len(bbox) != 4:
+                continue
+            if not all(isinstance(c, (int, float)) for c in bbox):
+                continue
+
             label_str = det["label"].lower()
 
             # Convert relative to absolute coordinates
@@ -456,11 +463,12 @@ class QwenLayoutDetector(BaseLayoutExtractor):
         """Run inference with PyTorch backend."""
         import tempfile
 
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
-            image.save(f, format="PNG")
-            temp_path = f.name
-
+        temp_path = None
         try:
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+                temp_path = f.name
+                image.save(f, format="PNG")
+
             messages = [
                 {
                     "role": "user",
@@ -498,7 +506,8 @@ class QwenLayoutDetector(BaseLayoutExtractor):
                 skip_special_tokens=True,
             )[0]
         finally:
-            os.unlink(temp_path)
+            if temp_path and os.path.exists(temp_path):
+                os.unlink(temp_path)
 
     def _infer_vllm(self, image: Image.Image, prompt: str) -> str:
         """Run inference with VLLM backend."""
@@ -537,11 +546,12 @@ class QwenLayoutDetector(BaseLayoutExtractor):
         """Run inference with MLX backend."""
         import tempfile
 
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
-            image.save(f, format="PNG")
-            temp_path = f.name
-
+        temp_path = None
         try:
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+                temp_path = f.name
+                image.save(f, format="PNG")
+
             formatted_prompt = self._apply_chat_template(self._processor, self._mlx_config, prompt, num_images=1)
 
             config = self.backend_config
@@ -557,7 +567,8 @@ class QwenLayoutDetector(BaseLayoutExtractor):
 
             return result.text if hasattr(result, "text") else str(result)
         finally:
-            os.unlink(temp_path)
+            if temp_path and os.path.exists(temp_path):
+                os.unlink(temp_path)
 
     def _infer_api(self, image: Image.Image, prompt: str) -> str:
         """Run inference with API backend."""

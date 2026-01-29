@@ -56,7 +56,7 @@ class QwenTextAPIConfig(BaseModel):
         ge=10,
         description="Request timeout in seconds. Text extraction may need longer timeouts for complex documents.",
     )
-    extra_headers: Optional[dict] = Field(
+    extra_headers: Optional[dict[str, str]] = Field(
         default=None,
         description="Additional headers to send with requests. Useful for provider-specific headers.",
     )
