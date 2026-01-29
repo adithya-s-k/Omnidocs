@@ -9,6 +9,151 @@
 
 ---
 
+## 🎯 Quick Reference: Model Capabilities & Backend Support
+
+### Comprehensive Model Comparison Table
+
+| Model | Size | PyTorch | VLLM | MLX | OpenAI API | Tasks | Release |
+|-------|------|---------|------|-----|------------|-------|---------|
+| **Granite-Docling-258M** | 258M | ✅ | ⚠️ | ✅ | ❌ | T, L, Tab, F | Dec 2024 |
+| **GOT-OCR2.0** | 700M | ✅ | ❌ | ❌ | ❌ | T, O, F, Tab | Sep 2024 |
+| **PaddleOCR-VL** | 900M | ✅ | ⚠️ | ❌ | ❌ | T, L, O, Tab, F | Oct 2025 |
+| **LightOnOCR-1B** | 1B | ✅ | ❌ | ❌ | ❌ | T, O | Oct 2025 |
+| **LightOnOCR-2-1B** | 1B | ✅ | ✅ | ❌ | ❌ | T, O | Jan 2025 |
+| **LightOnOCR-2-1B-bbox** | 1B | ✅ | ✅ | ❌ | ❌ | T, L, O | Jan 2025 |
+| **MinerU2.5-2509-1.2B** | 1.2B | ✅ | ✅ | ✅ | ❌ | T, L, Tab, F, O | Sep 2024 |
+| **dots.ocr** | 1.7B | ✅ | ✅ | ❌ | ❌ | T, L, Tab, F, O | Dec 2024 |
+| **Qwen3-VL-2B** | 2B | ✅ | ✅ | ✅ | ✅ | T, L, S, O, Tab | Oct 2025 |
+| **DeepSeek-OCR** | 3B | ✅ | ✅ | ✅ | ✅ | T, O, Tab | Oct 2024 |
+| **Qwen2.5-VL-3B** | 3B | ✅ | ✅ | ✅ | ✅ | T, L, S, O | 2024 |
+| **Nanonets-OCR2-3B** | 3B | ✅ | ✅ | ✅ | ❌ | T, F, O | 2024 |
+| **Qwen3-VL-4B** | 4B | ✅ | ✅ | ✅ | ❌ | T, L, S, O, Tab | Oct 2025 |
+| **Gemma-3-4B-IT** | 4B | ✅ | ❌ | ❌ | ✅ | T, S, O | 2025 |
+| **olmOCR-2-7B** | 7B | ✅ | ✅ | ❌ | ✅ | T, O, Tab, F | Oct 2025 |
+| **Qwen2.5-VL-7B** | 7B | ✅ | ✅ | ✅ | ✅ | T, L, S, O, Tab | 2024 |
+| **Qwen3-VL-8B** | 8B | ✅ | ✅ | ✅ | ✅ | T, L, S, O, Tab, F | Oct 2025 |
+| **Chandra** | 9B | ✅ | ✅ | ❌ | ❌ | T, L, O, Tab, F | 2024 |
+| **Qwen3-VL-32B** | 32B | ✅ | ✅ | ✅ | ✅ | T, L, S, O, Tab, F | Oct 2025 |
+| **Qwen2.5-VL-32B** | 32B | ✅ | ✅ | ✅ | ✅ | T, L, S, O, Tab | 2024 |
+
+**Legend:**
+- **Tasks**: T=Text Extract, L=Layout, O=OCR, S=Structured, Tab=Table, F=Formula
+- **✅** = Fully supported | **⚠️** = Limited/Partial support | **❌** = Not supported
+
+---
+
+### Backend Details
+
+#### PyTorch Support
+- **All models** support PyTorch via HuggingFace Transformers
+- Primary development backend for all models
+- Requirements: `transformers>=4.46`, `torch>=2.0`
+
+#### VLLM Support (High-Throughput Production)
+**Fully Supported** (✅):
+- Qwen3-VL Series (vllm>=0.11.0)
+- Qwen2.5-VL Series
+- DeepSeek-OCR (official upstream)
+- dots.ocr (recommended, vllm>=0.9.1)
+- MinerU2.5
+- olmOCR-2 (via olmOCR toolkit)
+- Chandra
+- LightOnOCR-2-1B (vllm>=0.11.1)
+- Nanonets-OCR2-3B
+
+**Limited Support** (⚠️):
+- Granite-Docling-258M (untied weights required)
+- PaddleOCR-VL (possible but not officially confirmed)
+
+**Not Supported** (❌):
+- GOT-OCR2.0
+- Gemma-3-4B-IT
+- LightOnOCR-1B (legacy)
+
+#### MLX Support (Apple Silicon M1/M2/M3+)
+**Fully Supported** via mlx-community (✅):
+- **Qwen3-VL Series** - [Collection](https://huggingface.co/collections/mlx-community/qwen3-vl)
+  - 2B, 4B, 8B, 32B (4-bit, 8-bit variants)
+- **Qwen2.5-VL Series** - [Collection](https://huggingface.co/collections/mlx-community/qwen25-vl)
+  - 3B, 7B, 32B, 72B (4-bit, 8-bit variants)
+- **DeepSeek-OCR** - [4-bit](https://huggingface.co/mlx-community/DeepSeek-OCR-4bit), [8-bit](https://huggingface.co/mlx-community/DeepSeek-OCR-8bit)
+- **Granite-Docling-258M** - [Official MLX](https://huggingface.co/ibm-granite/granite-docling-258M-mlx)
+- **MinerU2.5** - [bf16](https://huggingface.co/mlx-community/MinerU2.5-2509-1.2B-bf16)
+- **Nanonets-OCR2-3B** - [4-bit](https://huggingface.co/mlx-community/Nanonets-OCR2-3B-4bit)
+
+**Usage**:
+```bash
+pip install mlx-vlm
+python -m mlx_vlm.generate --model mlx-community/Qwen3-VL-8B-Instruct-4bit \
+  --prompt "Extract text from this document" --image doc.png
+```
+
+#### OpenAI-Compatible API Providers
+
+**OpenRouter** ([openrouter.ai](https://openrouter.ai)):
+- ✅ Qwen3-VL-235B-A22B ($0.45/$3.50 per M tokens)
+- ✅ Qwen3-VL-30B-A3B
+- ✅ Qwen2.5-VL-3B (SOTA visual understanding)
+- ✅ Qwen2.5-VL-32B (structured outputs, math)
+- ✅ Qwen2.5-VL-72B (best overall)
+
+**Novita AI** ([novita.ai](https://novita.ai)):
+- ✅ DeepSeek-OCR ([Model Page](https://novita.ai/models/model-detail/deepseek-deepseek-ocr))
+- ✅ Qwen2.5-VL-72B (OCR + scientific reasoning)
+- ✅ Qwen3-VL-8B ($0.08/$0.50 per M tokens)
+
+**Together AI** ([together.ai](https://www.together.ai/models)):
+- ✅ Various vision-language models
+- ✅ Lightweight models with multilingual support
+
+**Replicate** ([replicate.com](https://replicate.com/collections/vision-models)):
+- ✅ Vision models collection
+- ✅ Pay-per-use inference
+
+**Others**:
+- DeepInfra: olmOCR-2-7B
+- Parasail: olmOCR-2-7B
+- Cirrascale: olmOCR-2-7B
+
+**API Integration Example**:
+```python
+from omnidocs.tasks.text_extraction import QwenTextExtractor
+from omnidocs.tasks.text_extraction.qwen import QwenAPIConfig
+
+# OpenRouter
+extractor = QwenTextExtractor(
+    backend=QwenAPIConfig(
+        model="qwen/qwen3-vl-8b-instruct",
+        api_key="YOUR_OPENROUTER_KEY",
+        base_url="https://openrouter.ai/api/v1"
+    )
+)
+
+# Novita AI
+extractor = QwenTextExtractor(
+    backend=QwenAPIConfig(
+        model="novita/qwen3-vl-8b-instruct",
+        api_key="YOUR_NOVITA_KEY",
+        base_url="https://api.novita.ai/v3/openai"
+    )
+)
+```
+
+---
+
+### Task Capability Matrix
+
+| Task | Description | Model Count | Top Models |
+|------|-------------|-------------|------------|
+| **Text Extract** (T) | Document → Markdown/HTML | 18 | LightOnOCR-2, Chandra, Qwen3-VL-8B |
+| **Layout** (L) | Structure detection with bboxes | 8 | Qwen3-VL-8B, Chandra, MinerU2.5 |
+| **OCR** (O) | Text + bbox coordinates | 15 | LightOnOCR-2, olmOCR-2, Chandra |
+| **Structured** (S) | Schema-based extraction | 5 | Qwen3-VL (all), Qwen2.5-VL (all), Gemma-3 |
+| **Table** (Tab) | Table detection/extraction | 12 | Qwen3-VL-8B, DeepSeek-OCR, olmOCR-2 |
+| **Formula** (F) | Math expression recognition | 8 | Nanonets-OCR2, Qwen3-VL-8B, GOT-OCR2.0 |
+
+---
+
 ## Model Overview by Task Capability
 
 ### Task Categories
@@ -445,8 +590,7 @@ pip install docling  # Automatically downloads model
 
 **Best Usage**: Via olmOCR toolkit with VLLM for efficient inference at scale (millions of documents).
 
-**Dependencies**: `transformers`, `torch`, `vllm`, `olmocr` (toolkit)
-
+**Dependencies**: `transformers`, `torch`, `vllm`, `olmocr` (toolkit
 **Tasks**: `text_extract`, `ocr`, `table`, `formula`
 
 **Links**:
