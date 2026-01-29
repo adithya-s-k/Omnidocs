@@ -107,6 +107,10 @@ testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow (requiring network, large files, etc.)",
 ]
+filterwarnings = [
+    # Ignore deprecation warning from thop (external dependency of doclayout-yolo)
+    "ignore:The distutils package is deprecated:DeprecationWarning",
+]
 
 [tool.ruff]
 line-length = 120
