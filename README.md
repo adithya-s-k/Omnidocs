@@ -203,8 +203,38 @@ from omnidocs.tasks.text_extraction.qwen import QwenTextAPIConfig
 config = QwenTextAPIConfig(model="qwen/qwen3-vl-8b-instruct", api_key="...")
 ```
 
+### OCR Extraction
+Extract text with bounding boxes using multiple OCR engines:
+
+| Model | Description | Backend |
+|-------|-------------|---------|
+| **TesseractOCR** | Google's open-source OCR (100+ languages) | System |
+| **EasyOCR** | PyTorch-based OCR (80+ languages) | PyTorch |
+| **PaddleOCR** | PaddlePaddle OCR (CJK optimized) | PaddlePaddle |
+
+```python
+from omnidocs.tasks.ocr_extraction import TesseractOCR, TesseractOCRConfig
+from omnidocs.tasks.ocr_extraction import EasyOCR, EasyOCRConfig
+from omnidocs.tasks.ocr_extraction import PaddleOCR, PaddleOCRConfig
+
+# Tesseract OCR
+ocr = TesseractOCR(config=TesseractOCRConfig(languages=["eng"]))
+result = ocr.extract(image)
+
+# EasyOCR (GPU accelerated)
+ocr = EasyOCR(config=EasyOCRConfig(languages=["en"], gpu=True))
+result = ocr.extract(image)
+
+# PaddleOCR (excellent for Chinese/Japanese/Korean)
+ocr = PaddleOCR(config=PaddleOCRConfig(lang="ch", device="gpu"))
+result = ocr.extract(image)
+
+# Access results
+for block in result.text_blocks:
+    print(f"'{block.text}' @ {block.bbox.to_list()} (conf: {block.confidence:.2f})")
+```
+
 ### Coming Soon
-- OCR Extraction (PaddleOCR, Tesseract, EasyOCR, SuryaOCR)
 - Table Extraction (TableTransformer, Camelot, Tabula)
 - Math Extraction (UniMERNet, SuryaMath)
 - Structured Output Extraction (Pydantic schemas)
@@ -257,7 +287,7 @@ uv run mkdocs serve
 - [x] VLM Layout Detection with Custom Labels (Qwen-VL)
 - [x] Text Extraction to Markdown/HTML (Qwen-VL)
 - [x] Multi-backend support (PyTorch, VLLM, MLX, API)
-- [ ] OCR Extraction module
+- [x] OCR Extraction module (Tesseract, EasyOCR, PaddleOCR)
 - [ ] Table Extraction module
 - [ ] Math Expression Extraction module
 - [ ] Reading Order Detection
