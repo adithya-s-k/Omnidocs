@@ -20,7 +20,6 @@ from omnidocs.tasks.ocr_extraction import (
 )
 from omnidocs.tasks.ocr_extraction.models import OCRGranularity
 
-
 # ============= Fixtures =============
 
 

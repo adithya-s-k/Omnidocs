@@ -46,9 +46,7 @@ class TestTesseractOCRConfig:
 
     def test_config_params(self):
         """Test setting additional config parameters."""
-        config = TesseractOCRConfig(
-            config_params={"tessedit_char_whitelist": "0123456789"}
-        )
+        config = TesseractOCRConfig(config_params={"tessedit_char_whitelist": "0123456789"})
         assert config.config_params == {"tessedit_char_whitelist": "0123456789"}
 
     def test_oem_validation(self):
