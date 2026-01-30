@@ -96,6 +96,9 @@ class BaseOCRExtractor(ABC):
             path = Path(image)
             if not path.exists():
                 raise FileNotFoundError(f"Image not found: {path}")
-            return Image.open(path).convert("RGB")
+            # Use context manager to ensure file handle is properly closed
+            with Image.open(path) as img:
+                # Load image data into memory before closing the file
+                return img.convert("RGB").copy()
 
         raise ValueError(f"Unsupported image type: {type(image)}. Expected PIL.Image, numpy array, or file path.")

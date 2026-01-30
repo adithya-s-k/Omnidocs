@@ -24,7 +24,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from .base import BaseOCRExtractor
 from .models import BoundingBox, OCRGranularity, OCROutput, TextBlock
 
-
 # Language code mapping for common aliases
 LANG_CODES: Dict[str, str] = {
     "en": "en",
@@ -161,7 +160,6 @@ class PaddleOCR(BaseOCRExtractor):
 
         # Parse results
         text_blocks = []
-        full_text_parts = []
 
         # PaddleOCR may return None or empty results
         if results is None or len(results) == 0:
@@ -216,14 +214,15 @@ class PaddleOCR(BaseOCRExtractor):
                     )
                 )
 
-                full_text_parts.append(text)
-
-        # Sort by position
+        # Sort by position (top to bottom, left to right)
         text_blocks.sort(key=lambda b: (b.bbox.y1, b.bbox.x1))
+
+        # Build full_text from sorted blocks to ensure reading order
+        full_text = " ".join(block.text for block in text_blocks)
 
         return OCROutput(
             text_blocks=text_blocks,
-            full_text=" ".join(full_text_parts),
+            full_text=full_text,
             image_width=image_width,
             image_height=image_height,
             model_name=self.MODEL_NAME,

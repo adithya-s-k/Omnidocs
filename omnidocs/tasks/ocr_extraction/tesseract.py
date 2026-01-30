@@ -194,7 +194,11 @@ class TesseractOCR(BaseOCRExtractor):
         n_boxes = len(data["text"])
         for i in range(n_boxes):
             text = data["text"][i].strip()
-            conf = data["conf"][i]
+            # Safely convert conf to float (handles string values from some Tesseract versions)
+            try:
+                conf = float(data["conf"][i])
+            except (ValueError, TypeError):
+                conf = -1
 
             # Skip empty text or low confidence (-1 means no confidence)
             if not text or conf == -1:
@@ -259,8 +263,11 @@ class TesseractOCR(BaseOCRExtractor):
         pil_image = self._prepare_image(image)
         image_width, image_height = pil_image.size
 
-        # Build config string
+        # Build config string (including config_params like extract method)
         config = f"--oem {self.config.oem} --psm {self.config.psm}"
+        if self.config.config_params:
+            for key, value in self.config.config_params.items():
+                config += f" -c {key}={value}"
 
         # Language string
         lang_str = "+".join(self.config.languages)
@@ -279,7 +286,11 @@ class TesseractOCR(BaseOCRExtractor):
 
         for i in range(n_boxes):
             text = data["text"][i].strip()
-            conf = data["conf"][i]
+            # Safely convert conf to float (handles string values from some Tesseract versions)
+            try:
+                conf = float(data["conf"][i])
+            except (ValueError, TypeError):
+                conf = -1
 
             if not text or conf == -1:
                 continue

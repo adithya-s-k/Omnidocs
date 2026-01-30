@@ -295,6 +295,16 @@ class TestEasyOCR:
 
         assert result.average_confidence > 0.5
 
+    def test_easyocr_invalid_detail_parameter(self, simple_text_image: Image.Image):
+        """Test that invalid detail parameter raises ValueError."""
+        ocr = EasyOCR(config=EasyOCRConfig(languages=["en"], gpu=False))
+
+        with pytest.raises(ValueError, match="detail must be 0 or 1"):
+            ocr.extract(simple_text_image, detail=2)
+
+        with pytest.raises(ValueError, match="detail must be 0 or 1"):
+            ocr.extract(simple_text_image, detail=-1)
+
 
 # ============= PaddleOCR Tests =============
 

@@ -153,9 +153,17 @@ class EasyOCR(BaseOCRExtractor):
 
         Returns:
             OCROutput with detected text blocks
+
+        Raises:
+            ValueError: If detail is not 0 or 1
+            RuntimeError: If EasyOCR is not initialized
         """
         if self._reader is None:
             raise RuntimeError("EasyOCR not initialized. Call _load_model() first.")
+
+        # Validate detail parameter
+        if detail not in (0, 1):
+            raise ValueError(f"detail must be 0 or 1, got {detail}")
 
         # Prepare image
         pil_image = self._prepare_image(image)
