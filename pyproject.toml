@@ -84,6 +84,12 @@ mlx = [
     "mlx>=0.30.3",
     "mlx-vlm>=0.3.9",
 ]
+ocr = [
+    "easyocr>=1.7.2",
+    "paddleocr>=3.4.0",
+    "paddlepaddle>=3.3.0",
+    "pytesseract>=0.3.13",
+]
 pytorch = [
     "accelerate>=1.12.0",
     "qwen-vl-utils>=0.0.14",
