@@ -5,6 +5,7 @@ Tests for RT-DETR layout extractor.
 import os
 import tempfile
 
+import numpy as np
 import pytest
 from pydantic import ValidationError
 
@@ -120,7 +121,6 @@ class TestRTDETRExtractor:
 
     def test_extract_from_numpy(self, extractor, sample_image):
         """Test extracting from numpy array."""
-        import numpy as np
 
         np_image = np.array(sample_image)
         result = extractor.extract(np_image)
@@ -190,3 +190,63 @@ class TestRTDETREdgeCases:
 
         with pytest.raises(ValueError):
             extractor.extract({"invalid": "type"})
+
+    def test_grayscale_image(self):
+        """Test extraction on grayscale image."""
+        config = RTDETRConfig(device="cpu")
+
+        try:
+            extractor = RTDETRLayoutExtractor(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        # Grayscale image (H, W)
+        gray = np.zeros((600, 800), dtype=np.uint8)
+
+        result = extractor.extract(gray)
+
+        assert isinstance(result, LayoutOutput)
+
+    def test_rgba_image(self):
+        """Test extraction on RGBA image with alpha channel."""
+        config = RTDETRConfig(device="cpu")
+
+        try:
+            extractor = RTDETRLayoutExtractor(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        # RGBA image (H, W, 4)
+        rgba = np.zeros((600, 800, 4), dtype=np.uint8)
+
+        result = extractor.extract(rgba)
+
+        assert isinstance(result, LayoutOutput)
+
+    def test_confidence_threshold_zero(self):
+        """Test confidence threshold at 0.0."""
+        config = RTDETRConfig(device="cpu", confidence=0.0)
+
+        try:
+            extractor = RTDETRLayoutExtractor(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        image = np.zeros((600, 800, 3), dtype=np.uint8)
+        result = extractor.extract(image)
+
+        assert isinstance(result, LayoutOutput)
+
+    def test_confidence_threshold_one(self):
+        """Test confidence threshold at 1.0."""
+        config = RTDETRConfig(device="cpu", confidence=1.0)
+
+        try:
+            extractor = RTDETRLayoutExtractor(config=config)
+        except Exception:
+            pytest.skip("Model not available for testing")
+
+        image = np.zeros((600, 800, 3), dtype=np.uint8)
+        result = extractor.extract(image)
+
+        assert isinstance(result, LayoutOutput)
