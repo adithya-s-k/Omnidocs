@@ -8,6 +8,8 @@ edit_uri: blob/main/
 theme:
   name: material
   custom_dir: docs/overrides  # Custom templates with GitHub source links
+  logo: assets/logo.png
+  favicon: assets/logo.png
   palette:
     scheme: slate
     primary: teal
@@ -34,16 +36,15 @@ plugins:
       enable_creation_date: true
 
   # ==========================================
-  # AUTO API REFERENCE GENERATION (Magic!)
+  # AUTO API REFERENCE GENERATION
   # ==========================================
   - gen-files:
       scripts:
-        - scripts/gen_ref_pages.py  # Runs at build time
+        - scripts/gen_ref_pages.py
 
-  - literate-nav:
-      nav_file: SUMMARY.md  # Uses generated nav
+  - literate-nav
 
-  - section-index  # Makes index pages work
+  - section-index
 
   - mkdocstrings:
       handlers:
@@ -98,18 +99,56 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.magiclink  # Auto-link URLs
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 nav:
-  - Home: README.md
-  # ==========================================
-  # AUTO-GENERATED API REFERENCE
-  # ==========================================
-  - API Reference: reference/  # ← Everything auto-generated!
-  - Design Documents:
-    - Architecture: architecture.md
-    - Developer Guide: developer-guide.md
+  - Home: index.md
+
+  - Getting Started:
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - First Document: getting-started/first-document.md
+    - Choosing Backends: getting-started/choosing-backends.md
+
+  - Guides:
+    - guides/index.md
+    - Text Extraction: guides/text-extraction.md
+    - Layout Analysis: guides/layout-analysis.md
+    - OCR Extraction: guides/ocr-extraction.md
+    - Batch Processing: guides/batch-processing.md
+    - Modal Deployment: guides/deployment-modal.md
+
+  - Concepts:
+    - concepts/index.md
+    - Architecture: concepts/architecture-overview.md
+    - Document Model: concepts/document-model.md
+    - Backend System: concepts/backend-system.md
+    - Config Pattern: concepts/config-pattern.md
+
+  - Models:
+    - models/index.md
+    - Comparison: models/comparison.md
+    - Text Extraction:
+      - Qwen: models/text-extraction/qwen.md
+      - DotsOCR: models/text-extraction/dotsocr.md
+    - Layout Analysis:
+      - DocLayoutYOLO: models/layout-analysis/doclayout-yolo.md
+      - Qwen: models/layout-analysis/qwen-layout.md
+    - OCR:
+      - Tesseract: models/ocr-extraction/tesseract.md
+
+  - API Reference: reference/
+
+  - Contributing:
+    - contributing/index.md
+    - Development Workflow: contributing/workflow.md
+    - Adding Models: contributing/adding-models.md
+    - Style Guide: contributing/style-guide.md
+
   - Roadmap: ROADMAP.md
-  - Contributing: CONTRIBUTING.md
   - License: LICENSE.md
 
 extra:
