@@ -6,12 +6,15 @@ Defines the abstract interface that all layout extractors must implement.
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 import numpy as np
 from PIL import Image
 
 from .models import LayoutOutput
+
+if TYPE_CHECKING:
+    from omnidocs.document import Document
 
 
 class BaseLayoutExtractor(ABC):
@@ -101,3 +104,72 @@ class BaseLayoutExtractor(ABC):
             return Image.open(path).convert("RGB")
 
         raise ValueError(f"Unsupported image type: {type(image)}. Expected PIL.Image, numpy array, or file path.")
+
+    def batch_extract(
+        self,
+        images: List[Union[Image.Image, np.ndarray, str, Path]],
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> List[LayoutOutput]:
+        """
+        Run layout extraction on multiple images.
+
+        Default implementation loops over extract(). Subclasses can override
+        for optimized batching.
+
+        Args:
+            images: List of images in any supported format
+            progress_callback: Optional function(current, total) for progress
+
+        Returns:
+            List of LayoutOutput in same order as input
+
+        Examples:
+            ```python
+            images = [doc.get_page(i) for i in range(doc.page_count)]
+            results = extractor.batch_extract(images)
+            ```
+        """
+        results = []
+        total = len(images)
+
+        for i, image in enumerate(images):
+            if progress_callback:
+                progress_callback(i + 1, total)
+
+            result = self.extract(image)
+            results.append(result)
+
+        return results
+
+    def extract_document(
+        self,
+        document: "Document",
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> List[LayoutOutput]:
+        """
+        Run layout extraction on all pages of a document.
+
+        Args:
+            document: Document instance
+            progress_callback: Optional function(current, total) for progress
+
+        Returns:
+            List of LayoutOutput, one per page
+
+        Examples:
+            ```python
+            doc = Document.from_pdf("paper.pdf")
+            results = extractor.extract_document(doc)
+            ```
+        """
+        results = []
+        total = document.page_count
+
+        for i, page in enumerate(document.iter_pages()):
+            if progress_callback:
+                progress_callback(i + 1, total)
+
+            result = self.extract(page)
+            results.append(result)
+
+        return results
