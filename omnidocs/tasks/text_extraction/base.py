@@ -6,12 +6,15 @@ Defines the abstract interface that all text extractors must implement.
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Literal, Union
+from typing import TYPE_CHECKING, Callable, List, Literal, Optional, Union
 
 import numpy as np
 from PIL import Image
 
 from .models import TextOutput
+
+if TYPE_CHECKING:
+    from omnidocs.document import Document
 
 
 class BaseTextExtractor(ABC):
@@ -108,3 +111,76 @@ class BaseTextExtractor(ABC):
             return Image.open(path).convert("RGB")
 
         raise ValueError(f"Unsupported image type: {type(image)}. Expected PIL.Image, numpy array, or file path.")
+
+    def batch_extract(
+        self,
+        images: List[Union[Image.Image, np.ndarray, str, Path]],
+        output_format: Literal["html", "markdown"] = "markdown",
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> List[TextOutput]:
+        """
+        Extract text from multiple images.
+
+        Default implementation loops over extract(). Subclasses can override
+        for optimized batching (e.g., VLLM).
+
+        Args:
+            images: List of images in any supported format
+            output_format: Desired output format
+            progress_callback: Optional function(current, total) for progress
+
+        Returns:
+            List of TextOutput in same order as input
+
+        Examples:
+            ```python
+            images = [doc.get_page(i) for i in range(doc.page_count)]
+            results = extractor.batch_extract(images, output_format="markdown")
+            ```
+        """
+        results = []
+        total = len(images)
+
+        for i, image in enumerate(images):
+            if progress_callback:
+                progress_callback(i + 1, total)
+
+            result = self.extract(image, output_format=output_format)
+            results.append(result)
+
+        return results
+
+    def extract_document(
+        self,
+        document: "Document",
+        output_format: Literal["html", "markdown"] = "markdown",
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> List[TextOutput]:
+        """
+        Extract text from all pages of a document.
+
+        Args:
+            document: Document instance
+            output_format: Desired output format
+            progress_callback: Optional function(current, total) for progress
+
+        Returns:
+            List of TextOutput, one per page
+
+        Examples:
+            ```python
+            doc = Document.from_pdf("paper.pdf")
+            results = extractor.extract_document(doc, output_format="markdown")
+            ```
+        """
+        results = []
+        total = document.page_count
+
+        for i, page in enumerate(document.iter_pages()):
+            if progress_callback:
+                progress_callback(i + 1, total)
+
+            result = self.extract(page, output_format=output_format)
+            results.append(result)
+
+        return results

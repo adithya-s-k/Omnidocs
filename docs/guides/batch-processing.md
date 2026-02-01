@@ -4,6 +4,7 @@ Process multiple documents efficiently at scale. This guide covers batch loading
 
 ## Table of Contents
 
+- [Built-in Batch Utilities](#built-in-batch-utilities) **(NEW)**
 - [Batch Loading](#batch-loading)
 - [Processing Patterns](#processing-patterns)
 - [Memory Optimization](#memory-optimization)
@@ -11,6 +12,150 @@ Process multiple documents efficiently at scale. This guide covers batch loading
 - [Error Handling](#error-handling)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Troubleshooting](#troubleshooting)
+
+---
+
+## Built-in Batch Utilities
+
+OmniDocs provides built-in utilities for common batch processing workflows. These handle document loading, progress tracking, and result aggregation automatically.
+
+### DocumentBatch
+
+Load multiple PDFs from a directory or list of paths.
+
+```python
+from omnidocs import DocumentBatch
+
+# Load from directory
+batch = DocumentBatch.from_directory("pdfs/")
+print(f"Found {batch.count} documents")
+
+# Load from explicit paths
+batch = DocumentBatch.from_paths(["doc1.pdf", "doc2.pdf", "doc3.pdf"])
+
+# With pattern matching
+batch = DocumentBatch.from_directory("pdfs/", pattern="invoice_*.pdf")
+
+# Recursive search
+batch = DocumentBatch.from_directory("documents/", recursive=True)
+
+# Iterate over documents
+for doc in batch:
+    for page in doc.iter_pages():
+        result = extractor.extract(page, output_format="markdown")
+```
+
+### process_directory()
+
+One-liner for processing all PDFs in a directory.
+
+```python
+from omnidocs import process_directory
+from omnidocs.tasks.text_extraction import QwenTextExtractor
+from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+
+# Initialize extractor
+extractor = QwenTextExtractor(
+    backend=QwenTextPyTorchConfig(device="cuda")
+)
+
+# Process entire directory
+results = process_directory(
+    "pdfs/",
+    extractor,
+    output_dir="results/",  # Save JSON per document
+    output_format="markdown",
+)
+
+print(f"Processed {results.document_count} documents, {results.total_pages} pages")
+```
+
+### process_document()
+
+Process all pages of a single document.
+
+```python
+from omnidocs import Document, process_document
+
+doc = Document.from_pdf("paper.pdf")
+result = process_document(doc, extractor, output_format="markdown")
+
+# Access results
+for page_result in result.all_results:
+    print(page_result.content[:100])
+
+# Save to file
+result.save_json("paper_results.json")
+```
+
+### Progress Tracking with Callbacks
+
+```python
+from omnidocs import DocumentBatch, process_directory
+
+# Document-level progress
+def doc_progress(filename, current, total):
+    print(f"[{current}/{total}] Processing {filename}")
+
+results = process_directory(
+    "pdfs/",
+    extractor,
+    progress_callback=doc_progress,
+)
+
+# Page-level progress with iter_with_progress
+batch = DocumentBatch.from_directory("pdfs/")
+
+for doc in batch.iter_with_progress(lambda c, t, f: print(f"[{c}/{t}] {f}")):
+    for page in doc.iter_pages():
+        result = extractor.extract(page)
+```
+
+### Result Aggregation
+
+```python
+from omnidocs import DocumentResult, BatchResult, merge_text_results
+
+# Manual result collection
+doc_result = DocumentResult(source_path="paper.pdf", page_count=10)
+doc_result.add_page_result(0, text_output)
+doc_result.add_page_result(1, text_output)
+
+# Merge all page content
+all_results = doc_result.all_results
+full_text = merge_text_results(all_results, separator="\n\n---\n\n")
+
+# Batch results
+batch_result = BatchResult()
+batch_result.add_document_result("paper1", doc_result1)
+batch_result.add_document_result("paper2", doc_result2)
+
+# Save everything
+batch_result.save_json("all_results.json")
+```
+
+### Extractor Batch Methods
+
+All extractors support `batch_extract()` and `extract_document()` methods.
+
+```python
+from omnidocs import Document
+
+doc = Document.from_pdf("paper.pdf")
+
+# Extract all pages at once
+results = extractor.extract_document(
+    doc,
+    output_format="markdown",
+    progress_callback=lambda c, t: print(f"Page {c}/{t}"),
+)
+
+# Or with explicit image list
+images = list(doc.iter_pages())
+results = extractor.batch_extract(images, output_format="markdown")
+```
+
+---
 
 ## Batch Loading
 
