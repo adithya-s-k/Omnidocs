@@ -89,6 +89,100 @@ Choose your preferred method:
   uv sync
   ```
 
+### Optional: Flash Attention Installation
+
+Some models (especially VLM-based extractors with PyTorch backend) benefit from **Flash Attention 2** for faster inference. Flash Attention installation is **optional** but recommended for production deployments.
+
+> **⚠️ Important**: Flash Attention is sensitive to Python, PyTorch, and CUDA versions. Choose the installation method that matches your environment.
+
+#### Requirements
+- **CUDA**: 11.8 or higher (12.3+ recommended for FA3)
+- **PyTorch**: 2.0 or higher
+- **Python**: 3.10-3.12
+- **GPU**: NVIDIA GPU with compute capability 7.0+ (V100, A100, H100, RTX 3090, etc.)
+- **Linux**: Tested on Ubuntu 20.04+, may work on other distributions
+
+#### Installation Methods
+
+**Option 1: Pre-built Wheels (Recommended - No Compilation)**
+
+Fastest method, avoids compilation. Download the matching wheel from [Flash Attention Releases](https://github.com/Dao-AILab/flash-attention/releases):
+
+```bash
+# Example for Python 3.12, CUDA 12, PyTorch 2.5
+pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp312-cp312-linux_x86_64.whl
+```
+
+Choose the wheel matching:
+- `cp312` = Python 3.12 (cp311 for 3.11, cp310 for 3.10)
+- `cu12` = CUDA 12.x (cu118 for CUDA 11.8)
+- `torch2.5` = PyTorch 2.5.x
+
+**Option 2: pip Install from PyPI (Compiles from source)**
+
+Requires CUDA toolkit and compiler:
+
+```bash
+pip install flash-attn --no-build-isolation
+```
+
+To speed up compilation (uses 4 CPU cores):
+
+```bash
+MAX_JOBS=4 pip install flash-attn --no-build-isolation
+```
+
+**Option 3: Install from Source (Most Control)**
+
+```bash
+git clone https://github.com/Dao-AILab/flash-attention.git
+cd flash-attention
+pip install ninja  # Faster build system
+python setup.py install
+```
+
+#### Verification
+
+Test that Flash Attention installed correctly:
+
+```python
+import torch
+from flash_attn import flash_attn_func
+
+print(f"Flash Attention installed: {flash_attn_func is not None}")
+print(f"CUDA available: {torch.cuda.is_available()}")
+```
+
+#### Troubleshooting
+
+**Import Error or Symbol Mismatch**
+- Ensure PyTorch, CUDA, and flash-attn versions are compatible
+- Try reinstalling with matching pre-built wheel
+- Check: `python -c "import torch; print(torch.version.cuda)"`
+
+**Compilation Fails**
+- Install CUDA toolkit: `sudo apt install nvidia-cuda-toolkit`
+- Install build tools: `sudo apt install build-essential ninja-build`
+- Use pre-built wheels instead (Option 1)
+
+**VLLM Alternative**
+If Flash Attention installation fails, use VLLM backend instead (includes optimized attention):
+
+```python
+from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+from omnidocs.tasks.text_extraction.dotsocr import DotsOCRVLLMConfig
+
+# VLLM includes optimized attention out of the box
+extractor = DotsOCRTextExtractor(
+    backend=DotsOCRVLLMConfig(model="rednote-hilab/dots.ocr")
+)
+```
+
+**References:**
+- [Flash Attention GitHub](https://github.com/Dao-AILab/flash-attention)
+- [Installation Guide](https://github.com/Dao-AILab/flash-attention#installation-and-features)
+- [Pre-built Wheels](https://github.com/Dao-AILab/flash-attention/releases)
+
 ---
 
 ## Features
@@ -161,9 +255,10 @@ result = detector.extract(image, custom_labels=custom_labels)
 ### Text Extraction
 Convert document images to Markdown/HTML with VLM-powered extraction:
 
-| Model | Description | Backend |
-|-------|-------------|---------|
-| **QwenTextExtractor** | High-accuracy VLM text extraction | PyTorch, VLLM, MLX, API |
+| Model | Description | Backend | Notes |
+|-------|-------------|---------|-------|
+| **QwenTextExtractor** | High-accuracy VLM text extraction | PyTorch, VLLM, MLX, API | All backends tested |
+| **DotsOCRTextExtractor** | Layout-aware OCR with structure | VLLM ✅, API | **Use VLLM backend** |
 
 ```python
 from omnidocs.tasks.text_extraction import QwenTextExtractor
@@ -184,6 +279,41 @@ print(result.content)  # Full markdown output
 # Or as HTML
 result = extractor.extract(image, output_format="html")
 ```
+
+#### DotsOCR with Layout-Aware Extraction
+
+DotsOCR provides structured text extraction with layout information (recommended backend: **VLLM**):
+
+```python
+from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+from omnidocs.tasks.text_extraction.dotsocr import DotsOCRVLLMConfig
+
+# Initialize with VLLM backend (recommended)
+extractor = DotsOCRTextExtractor(
+    backend=DotsOCRVLLMConfig(
+        model="rednote-hilab/dots.ocr",
+        tensor_parallel_size=1,
+        gpu_memory_utilization=0.85,
+    )
+)
+
+# Extract with layout information
+result = extractor.extract(
+    image,
+    output_format="markdown",
+    include_layout=True,  # Include bounding boxes and categories
+)
+
+# Access extracted content
+print(result.content)  # Markdown output
+
+# Access layout elements
+for element in result.layout:
+    print(f"{element.category}: {element.bbox}")
+    if element.text:
+        print(f"  Text: {element.text[:50]}...")
+```
+
 
 ### Multi-Backend Support
 All VLM-based extractors support multiple inference backends:
