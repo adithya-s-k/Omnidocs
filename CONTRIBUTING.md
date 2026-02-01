@@ -82,68 +82,119 @@ These documents define the architecture for v0.2+.
 
 ## Version Management
 
-OmniDocs follows [Semantic Versioning](https://semver.org/):
-- **MAJOR** (X.0.0): Breaking API changes
-- **MINOR** (0.X.0): New features, backward compatible
-- **PATCH** (0.0.X): Bug fixes, backward compatible
+OmniDocs follows [Semantic Versioning](https://semver.org/) with **automated releases**.
 
-### Incrementing Version
+### Semantic Versioning Guide
 
-Version is managed in **one place**: `omnidocs/_version.py`
+| Version Bump | When to Use | Examples |
+|--------------|-------------|----------|
+| **PATCH** (0.0.X) | Bug fixes, no API changes | Fix typo in docstring, fix edge case bug, update dependencies |
+| **MINOR** (0.X.0) | New features, backward compatible | Add new extractor (DotsOCR), add new backend (MLX), add new output format |
+| **MAJOR** (X.0.0) | Breaking API changes | Rename `.extract()` method, change config class structure, remove deprecated features |
 
-```python
-# omnidocs/_version.py
-__version__ = "0.2.0"
+#### Detailed Examples
+
+**PATCH bump** (0.2.4 → 0.2.5):
+- Fix a bug in `DotsOCRTextExtractor` that caused crashes on certain images
+- Fix incorrect bounding box coordinates
+- Update a dependency version for security
+- Fix typos in documentation
+
+**MINOR bump** (0.2.5 → 0.3.0):
+- Add new `DotsOCRTextExtractor` with PyTorch/VLLM/API backends
+- Add new `TableExtractor` task
+- Add MLX backend support for existing extractors
+- Add new output format (e.g., JSON)
+- Add new configuration options (backward compatible)
+
+**MAJOR bump** (0.3.0 → 1.0.0):
+- Rename `BaseTextExtractor` to `TextExtractor`
+- Change `config=` parameter to `backend=` across all extractors
+- Remove deprecated `Document.extract_text()` method
+- Change output model structure (breaking existing code)
+
+### Automated Release Workflow
+
+**No manual git tags needed!** Releases are automatically triggered when you bump the version.
+
+#### How It Works
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. Bump version in pyproject.toml                          │
+│     version = "0.2.4" → version = "0.2.5"                   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  2. Commit and push to main                                 │
+│     git commit -m "chore: bump version to 0.2.5"            │
+│     git push                                                │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  3. CI/CD automatically:                                    │
+│     • Detects version change in pyproject.toml              │
+│     • Creates git tag (v0.2.5)                              │
+│     • Builds and publishes to PyPI                          │
+│     • Deploys versioned documentation                       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-The `pyproject.toml` reads from this file dynamically, so you only need to update one file.
+#### Version Bump Process
 
-### Version Bump Process
+1. **Update version in `pyproject.toml`**:
+```toml
+[project]
+name = "omnidocs"
+version = "0.2.5"  # Bump this
+```
 
-1. **Update version**:
+2. **Commit and push**:
 ```bash
-# Edit omnidocs/_version.py
-# Change __version__ = "0.2.0" to __version__ = "0.2.1"
+git add pyproject.toml
+git commit -m "chore: bump version to 0.2.5"
+git push origin main
 ```
 
-2. **Verify** (version should be accessible everywhere):
+3. **Done!** The CI/CD pipeline will automatically:
+   - Detect the version change
+   - Create git tag `v0.2.5`
+   - Build and publish to PyPI
+   - Deploy versioned docs at `/0.2.5/` and update `/latest/`
+
+#### Verify Release
+
+```bash
+# Check PyPI (after a few minutes)
+pip index versions omnidocs
+
+# Check GitHub releases
+gh release list
+
+# Check docs versions
+# Visit: https://adithya-s-k.github.io/OmniDocs/
+```
+
+### Version in Code
+
+Version is defined in `pyproject.toml` and accessible in code:
+
 ```python
 from omnidocs import __version__
-print(__version__)  # Should show new version
+print(__version__)  # "0.2.5"
 ```
-
-3. **Commit**:
-```bash
-git add omnidocs/_version.py
-git commit -m "chore: bump version to 0.2.1"
-```
-
-4. **Tag and release** (maintainers only):
-```bash
-git tag v0.2.1
-git push origin v0.2.1
-```
-
-This will trigger the GitHub Actions workflow to:
-- Build the package
-- Create a GitHub release
-- Publish to PyPI
-
-### When to Bump
-
-- **Patch** (0.2.X): Bug fixes, typos, documentation
-- **Minor** (0.X.0): New features, new task extractors, new models
-- **Major** (X.0.0): Breaking API changes (rare, requires discussion)
 
 ## Documentation
 
-OmniDocs uses [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) for documentation.
+OmniDocs uses [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) with **versioned documentation** and **auto-generated API reference**.
 
 ### Building Docs Locally
 
 ```bash
-# Install docs dependencies
-uv sync --group docs
+# Install dev dependencies (includes docs)
+uv sync --group dev
 
 # Serve docs with live reload
 uv run mkdocs serve
@@ -151,39 +202,72 @@ uv run mkdocs serve
 # Open http://127.0.0.1:8000 in your browser
 ```
 
-### Building Static Site
+### Versioned Documentation
+
+We use [mike](https://github.com/jimporter/mike) for multi-version documentation.
 
 ```bash
-# Build static site to site/ directory
-uv run mkdocs build
+# Deploy a version locally (for testing)
+uv run mike deploy 0.2.5 latest --update-aliases
 
-# Build with strict mode (warnings become errors)
-uv run mkdocs build --strict
+# List deployed versions
+uv run mike list
+
+# Serve versioned docs locally
+uv run mike serve
+```
+
+### Auto-Generated API Reference
+
+API documentation is **automatically generated** from source code docstrings using `mkdocstrings`.
+
+The `scripts/gen_ref_pages.py` script:
+- Auto-discovers all modules in `omnidocs/`
+- Creates clean navigation hierarchy
+- Converts `snake_case` to "Title Case"
+- Future-proof: just add modules, docs auto-generate
+
+**No manual API docs needed!** Just write good docstrings:
+
+```python
+class MyExtractor(BaseExtractor):
+    """
+    Brief description of the extractor.
+
+    Detailed description with usage information.
+
+    Example:
+        >>> from omnidocs import MyExtractor
+        >>> extractor = MyExtractor(config=MyConfig())
+        >>> result = extractor.extract(image)
+
+    Attributes:
+        config: Configuration object for the extractor.
+    """
 ```
 
 ### Documentation Structure
 
 ```
 docs/
-├── README.md              # Homepage (also serves as package README)
+├── README.md              # Homepage
 ├── architecture.md        # Backend and config system design
-└── developer-guide.md     # API design and usage patterns
+├── developer-guide.md     # API design and usage patterns
+└── reference/             # Auto-generated API docs (don't edit!)
 ```
 
 ### Automatic Deployment
 
-Documentation is automatically built and deployed to GitHub Pages when:
-- Code is pushed to the `master` branch
-- A maintainer manually triggers the workflow
+Documentation is automatically deployed when a new version is released:
+
+| Trigger | Action |
+|---------|--------|
+| Version bump in `pyproject.toml` | Deploys versioned docs (`/0.2.5/`, `/latest/`) |
+| Manual workflow dispatch | Deploy specific version |
 
 The docs are published at: https://adithya-s-k.github.io/OmniDocs/
 
-### Adding New Documentation
-
-1. Create markdown files in `docs/`
-2. Update `mkdocs.yml` nav section to include new pages
-3. Use Google-style docstrings in code (automatically extracted)
-4. Preview changes locally with `uv run mkdocs serve`
+Users can switch between versions using the version selector in the docs header.
 
 ## Pull Request Process
 
