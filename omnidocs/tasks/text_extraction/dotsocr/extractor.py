@@ -184,7 +184,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         """
         self.backend_config = backend
         self._backend: Any = None
-        self._tokenizer: Any = None
+        self._processor: Any = None
         self._model: Any = None
         self._loaded = False
 
@@ -213,7 +213,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         """Load PyTorch/HuggingFace backend."""
         try:
             import torch
-            from transformers import AutoModel, AutoTokenizer
+            from transformers import AutoModelForCausalLM, AutoProcessor
         except ImportError as e:
             raise ImportError(
                 "PyTorch backend requires torch and transformers. "
@@ -226,14 +226,14 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         print(f"Loading Dots OCR model: {config.model}")
         print(f"Cache directory: {cache_dir}")
 
-        # Load tokenizer
-        self._tokenizer = AutoTokenizer.from_pretrained(
+        # Load processor (Dots OCR uses AutoProcessor, not AutoTokenizer)
+        self._processor = AutoProcessor.from_pretrained(
             config.model,
             trust_remote_code=config.trust_remote_code,
             cache_dir=cache_dir,
         )
 
-        # Load model
+        # Load model (Dots OCR uses AutoModelForCausalLM)
         model_kwargs: Dict[str, Any] = {
             "trust_remote_code": config.trust_remote_code,
             "cache_dir": cache_dir,
@@ -251,8 +251,8 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         if config.attn_implementation != "eager":
             model_kwargs["attn_implementation"] = config.attn_implementation
 
-        # Load model
-        self._model = AutoModel.from_pretrained(
+        # Load model with AutoModelForCausalLM
+        self._model = AutoModelForCausalLM.from_pretrained(
             config.model,
             device_map=config.device_map,
             **model_kwargs,
@@ -362,10 +362,59 @@ class DotsOCRTextExtractor(BaseTextExtractor):
 
     def _infer_pytorch(self, image: Image.Image, prompt: str, max_tokens: int) -> str:
         """Run inference with PyTorch backend."""
-        # Dots OCR uses a custom .chat() method
-        # Based on the model's interface in modal_dotsocr_pytorch.py
-        raw_output = self._model.chat(self._tokenizer, image, ocr_type='format')
-        return raw_output
+        import torch
+        from qwen_vl_utils import process_vision_info
+
+        # Prepare messages in Qwen format
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "image", "image": image},
+                {"type": "text", "text": prompt}
+            ]
+        }]
+
+        # Process with processor
+        text = self._processor.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+
+        image_inputs, video_inputs, video_kwargs = process_vision_info(
+            messages,
+            return_video_kwargs=True,
+        )
+
+        inputs = self._processor(
+            text=[text],
+            images=image_inputs,
+            videos=video_inputs,
+            padding=True,
+            return_tensors="pt",
+            **video_kwargs,
+        ).to(self._model.device)
+
+        # Generate
+        with torch.no_grad():
+            generated_ids = self._model.generate(
+                **inputs,
+                max_new_tokens=max_tokens,
+                temperature=0.0,
+                do_sample=False,
+            )
+
+        # Trim input tokens and decode
+        generated_ids_trimmed = [
+            out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+        ]
+        output_text = self._processor.batch_decode(
+            generated_ids_trimmed,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False,
+        )[0]
+
+        return output_text
 
     def _infer_vllm(self, image: Image.Image, prompt: str, max_tokens: int) -> str:
         """Run inference with VLLM backend."""
