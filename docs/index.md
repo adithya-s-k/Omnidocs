@@ -6,217 +6,136 @@
   <strong>Unified Python toolkit for visual document processing</strong>
 </p>
 
-<p align="center">
-  Extract text, detect layouts, and run OCR on documents with a clean, type-safe API.
-</p>
-
 ---
 
-## Quick Install
+## Install
 
 ```bash
 pip install omnidocs[pytorch]
 ```
 
-## Quick Start
+## Extract Text in 4 Lines
 
 ```python
 from omnidocs import Document
 from omnidocs.tasks.text_extraction import QwenTextExtractor
 from omnidocs.tasks.text_extraction.qwen import QwenPyTorchConfig
 
-# Load a PDF
 doc = Document.from_pdf("document.pdf")
-
-# Extract text as Markdown
-extractor = QwenTextExtractor(
-    backend=QwenPyTorchConfig(
-        model="Qwen/Qwen3-VL-8B-Instruct",
-        device="cuda"
-    )
-)
-
+extractor = QwenTextExtractor(backend=QwenPyTorchConfig(device="cuda"))
 result = extractor.extract(doc.get_page(0), output_format="markdown")
 print(result.content)
 ```
 
 ---
 
-## Features
+## What OmniDocs Does
 
-| Feature | Description |
-|---------|-------------|
-| **Unified API** | Single `.extract()` method for all tasks |
-| **Type-Safe** | Pydantic configs with full IDE autocomplete |
-| **Multi-Backend** | PyTorch, VLLM, MLX, API - choose what fits |
-| **Production Ready** | GPU-accelerated, battle-tested |
+| Task | What You Get | Example Models |
+|------|--------------|----------------|
+| **Text Extraction** | Markdown/HTML from documents | Qwen3-VL, DotsOCR, Chandra |
+| **Layout Analysis** | Bounding boxes for titles, tables, figures | DocLayoutYOLO, Qwen Layout |
+| **OCR** | Text + coordinates | Tesseract, PaddleOCR, Surya |
+| **Table Extraction** | Structured table data | TableTransformer, Qwen |
+| **Math Recognition** | LaTeX from equations | UniMERNet, Qwen |
 
 ---
 
-## What Can You Do?
+## Core Design
+
+```
+Image → Extractor.extract() → Pydantic Output
+```
+
+- **One API**: `.extract()` for every task
+- **Type-Safe**: Pydantic configs with IDE autocomplete
+- **Multi-Backend**: PyTorch, VLLM, MLX, API
+- **Stateless**: Document loads data, you manage results
+
+---
+
+## Choose Your Backend
+
+| Backend | Install | Best For |
+|---------|---------|----------|
+| **PyTorch** | `pip install omnidocs[pytorch]` | Development, single GPU |
+| **VLLM** | `pip install omnidocs[vllm]` | Production, high throughput |
+| **MLX** | `pip install omnidocs[mlx]` | Apple Silicon (M1/M2/M3) |
+| **API** | `pip install omnidocs[api]` | No GPU, cloud-based |
+
+---
+
+## What's Available
+
+| Model | Task | PyTorch | VLLM | MLX | API |
+|-------|------|---------|------|-----|-----|
+| **Qwen3-VL** | Text, Layout | Done | Done | Done | Done |
+| **DotsOCR** | Text | Done | Done | -- | -- |
+| **DocLayoutYOLO** | Layout | Done | -- | -- | -- |
+| **Tesseract** | OCR | Done | -- | -- | -- |
+
+## Coming Soon
+
+| Model | Task | Status |
+|-------|------|--------|
+| LightOnOCR-2 | Text, OCR | Soon |
+| Chandra | Text, Layout | Soon |
+| Table Extraction | Tables | Soon |
+| Surya | OCR, Layout | Soon |
+
+See [Roadmap](ROADMAP.md) for full tracking.
+
+---
+
+## Documentation
 
 <div class="grid cards" markdown>
 
--   :material-text-box-outline: **Text Extraction**
+-   **[Getting Started](getting-started.md)**
 
-    ---
+    Install, configure, and run your first extraction
 
-    Convert documents to Markdown or HTML
+-   **[Concepts](concepts.md)**
 
-    [:octicons-arrow-right-24: Guide](guides/text-extraction.md)
+    Architecture, configs, backends, and design decisions
 
--   :material-view-grid-outline: **Layout Analysis**
+-   **[Usage](usage/index.md)**
 
-    ---
-
-    Detect structure: titles, tables, figures
-
-    [:octicons-arrow-right-24: Guide](guides/layout-analysis.md)
-
--   :material-format-text: **OCR Extraction**
-
-    ---
-
-    Get text with bounding box coordinates
-
-    [:octicons-arrow-right-24: Guide](guides/ocr-extraction.md)
-
--   :material-rocket-launch: **Batch Processing**
-
-    ---
-
-    Process hundreds of documents efficiently
-
-    [:octicons-arrow-right-24: Guide](guides/batch-processing.md)
+    Tasks, models, batch processing, and deployment
 
 </div>
 
 ---
 
-## Choose Your Path
+## Quick Reference
 
-### :material-speedometer: Just Get Started (5 min)
+### Single-Backend Model (e.g., DocLayoutYOLO)
+```python
+from omnidocs.tasks.layout_analysis import DocLayoutYOLO, DocLayoutYOLOConfig
 
-1. [Installation](getting-started/installation.md) - Set up your environment
-2. [Quick Start](getting-started/quickstart.md) - Your first extraction
-3. [Text Extraction Guide](guides/text-extraction.md) - Learn the basics
+layout = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
+result = layout.extract(image)
+```
 
-### :material-school: Understand the System (30 min)
+### Multi-Backend Model (e.g., Qwen)
+```python
+from omnidocs.tasks.text_extraction import QwenTextExtractor
+from omnidocs.tasks.text_extraction.qwen import QwenPyTorchConfig  # or VLLMConfig, MLXConfig, APIConfig
 
-1. [Architecture Overview](concepts/architecture-overview.md) - How it works
-2. [Backend System](concepts/backend-system.md) - PyTorch vs VLLM vs MLX
-3. [Config Pattern](concepts/config-pattern.md) - Configuration design
-
-### :material-server: Deploy to Production (1 hour)
-
-1. [Choosing Backends](getting-started/choosing-backends.md) - Pick the right one
-2. [Modal Deployment](guides/deployment-modal.md) - Cloud GPU setup
-3. [Batch Processing](guides/batch-processing.md) - Scale efficiently
-
----
-
-## Supported Models
-
-### Text Extraction
-| Model | Backends | Best For |
-|-------|----------|----------|
-| [Qwen3-VL](models/text-extraction/qwen.md) | PyTorch, VLLM, MLX, API | General purpose |
-| [DotsOCR](models/text-extraction/dotsocr.md) | PyTorch, VLLM | Layout-aware extraction |
-
-### Layout Analysis
-| Model | Backends | Best For |
-|-------|----------|----------|
-| [DocLayoutYOLO](models/layout-analysis/doclayout-yolo.md) | PyTorch | Fast detection |
-| [Qwen Layout](models/layout-analysis/qwen-layout.md) | PyTorch, VLLM, MLX, API | Custom labels |
-
-### OCR
-| Model | Backends | Best For |
-|-------|----------|----------|
-| [Tesseract](models/ocr-extraction/tesseract.md) | CPU | Free, offline |
-
-[:octicons-arrow-right-24: Full Model Comparison](models/comparison.md)
-
----
-
-## Installation Options
-
-```bash
-# PyTorch (recommended for most users)
-pip install omnidocs[pytorch]
-
-# VLLM (high-throughput production)
-pip install omnidocs[vllm]
-
-# Apple Silicon
-pip install omnidocs[mlx]
-
-# API-only (no local GPU)
-pip install omnidocs[api]
-
-# Everything
-pip install omnidocs[all]
+extractor = QwenTextExtractor(backend=QwenPyTorchConfig(device="cuda"))
+result = extractor.extract(image, output_format="markdown")
 ```
 
 ---
 
-## FAQ
+## Links
 
-??? question "Text Extraction vs OCR - What's the difference?"
-
-    **Text Extraction** gives you formatted Markdown/HTML - use when you want document content.
-
-    **OCR** gives you text WITH coordinates - use when you need to know WHERE text is located.
-
-??? question "Which model should I use?"
-
-    - **Text Extraction**: Start with Qwen, try DotsOCR for layout-aware
-    - **Layout Detection**: DocLayoutYOLO for speed, Qwen for custom labels
-    - **OCR**: Tesseract for free/CPU, PaddleOCR for Asian languages
-
-??? question "Which backend should I use?"
-
-    - **PyTorch**: Development, local GPU (recommended start)
-    - **VLLM**: Production, high throughput
-    - **MLX**: Apple Silicon only
-    - **API**: No GPU needed
-
-??? question "What are the hardware requirements?"
-
-    - **PyTorch**: NVIDIA GPU (CUDA 12+) or CPU
-    - **VLLM**: NVIDIA GPU required
-    - **MLX**: Apple M1/M2/M3+
-    - **API**: No GPU needed
-
----
-
-## Performance
-
-| Task | Model | Speed | Memory |
-|------|-------|-------|--------|
-| Text Extraction | Qwen3-VL-8B | 2-5 sec/page | 16GB |
-| Layout Detection | DocLayoutYOLO | 0.5 sec/page | 4GB |
-| OCR | Tesseract | 0.2 sec/page | 100MB |
-
-*Benchmarks on A10G GPU with 1024x1280 images*
-
----
-
-## Licensing
-
-**OmniDocs**: Apache 2.0
-
-**Models**: Each model has its own license - check the [Model Card](https://huggingface.co/models) on Hugging Face before use.
-
----
-
-## Get Help
-
-- [:material-book-open-variant: Documentation](getting-started/installation.md)
-- [:material-github: GitHub Issues](https://github.com/adithya-s-k/OmniDocs/issues)
-- [:material-account-group: Contributing](CONTRIBUTING.md)
+- [GitHub](https://github.com/adithya-s-k/OmniDocs)
+- [Issues](https://github.com/adithya-s-k/OmniDocs/issues)
+- [Contributing](contributing/index.md)
 
 ---
 
 <div style="text-align: center; margin-top: 2rem;">
-    <a href="getting-started/quickstart/" class="md-button md-button--primary">Get Started →</a>
+    <a href="getting-started" class="md-button md-button--primary">Get Started</a>
 </div>

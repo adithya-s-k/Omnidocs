@@ -104,41 +104,29 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 nav:
-  - Home: index.md
+  - Home:
+    - index.md
+    - Installation: installation.md
+    - Getting Started: getting-started.md
+    - Concepts: concepts.md
 
-  - Getting Started:
-    - getting-started/index.md
-    - Installation: getting-started/installation.md
-    - Quick Start: getting-started/quickstart.md
-    - First Document: getting-started/first-document.md
-    - Choosing Backends: getting-started/choosing-backends.md
-
-  - Guides:
-    - guides/index.md
-    - Text Extraction: guides/text-extraction.md
-    - Layout Analysis: guides/layout-analysis.md
-    - OCR Extraction: guides/ocr-extraction.md
-    - Batch Processing: guides/batch-processing.md
-    - Modal Deployment: guides/deployment-modal.md
-
-  - Concepts:
-    - concepts/index.md
-    - Architecture: concepts/architecture-overview.md
-    - Document Model: concepts/document-model.md
-    - Backend System: concepts/backend-system.md
-    - Config Pattern: concepts/config-pattern.md
-
-  - Models:
-    - models/index.md
-    - Comparison: models/comparison.md
+  - Usage:
+    - usage/index.md
     - Text Extraction:
-      - Qwen: models/text-extraction/qwen.md
-      - DotsOCR: models/text-extraction/dotsocr.md
+      - usage/tasks/text-extraction.md
+      - Qwen: usage/models/qwen.md
+      - DotsOCR: usage/models/dotsocr.md
     - Layout Analysis:
-      - DocLayoutYOLO: models/layout-analysis/doclayout-yolo.md
-      - Qwen: models/layout-analysis/qwen-layout.md
+      - usage/tasks/layout-analysis.md
+      - DocLayoutYOLO: usage/models/doclayout-yolo.md
+      - RT-DETR: usage/models/rtdetr.md
     - OCR:
-      - Tesseract: models/ocr-extraction/tesseract.md
+      - usage/tasks/ocr.md
+      - Tesseract: usage/models/tesseract.md
+      - EasyOCR: usage/models/easyocr.md
+      - PaddleOCR: usage/models/paddleocr.md
+    - Batch Processing: usage/batch-processing.md
+    - Deployment: usage/deployment.md
 
   - API Reference: reference/
 
@@ -149,7 +137,6 @@ nav:
     - Style Guide: contributing/style-guide.md
 
   - Roadmap: ROADMAP.md
-  - License: LICENSE.md
 
 extra:
   # Version selector (managed by mike)

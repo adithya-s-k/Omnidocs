@@ -163,6 +163,6 @@ cython_debug/
 poetry.lock
 **/experiments
 
-# Ignore models directory but not docs/models
-models/
-!docs/models/
+# # Ignore models directory but not docs/models
+# models/
+# !docs/models/
