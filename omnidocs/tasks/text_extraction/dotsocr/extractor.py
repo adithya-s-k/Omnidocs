@@ -44,11 +44,15 @@ DotsOCRBackendConfig = Union[
 ]
 
 # Dots OCR default prompt
-DOTS_OCR_PROMPT = """Please output the layout information from the PDF image, including each layout element's bbox, its category, and the corresponding text content within the bbox.
+DOTS_OCR_PROMPT = """Please output the layout information from the PDF image, \
+including each layout element's bbox, its category, and the corresponding text \
+content within the bbox.
 
 1. Bbox format: [x1, y1, x2, y2]
 
-2. Layout Categories: The possible categories are ['Caption', 'Footnote', 'Formula', 'List-item', 'Page-footer', 'Page-header', 'Picture', 'Section-header', 'Table', 'Text', 'Title'].
+2. Layout Categories: The possible categories are ['Caption', 'Footnote', \
+'Formula', 'List-item', 'Page-footer', 'Page-header', 'Picture', \
+'Section-header', 'Table', 'Text', 'Title'].
 
 3. Text Extraction & Formatting Rules:
     - Picture: For the 'Picture' category, the text field should be omitted.
@@ -94,14 +98,14 @@ def _parse_json_output(raw_output: str) -> Optional[list]:
     except json.JSONDecodeError:
         # Try to extract JSON from text
         # Look for array pattern [...] or object pattern {...}
-        array_match = re.search(r'\[.*\]', raw_output, re.DOTALL)
+        array_match = re.search(r"\[.*\]", raw_output, re.DOTALL)
         if array_match:
             try:
                 return json.loads(array_match.group())
             except json.JSONDecodeError:
                 pass
 
-        obj_match = re.search(r'\{.*\}', raw_output, re.DOTALL)
+        obj_match = re.search(r"\{.*\}", raw_output, re.DOTALL)
         if obj_match:
             try:
                 parsed = json.loads(obj_match.group())
@@ -138,11 +142,11 @@ def _format_layout_as_text(layout: list, output_format: str) -> str:
         html_parts = ['<div class="document">']
         for part in text_parts:
             html_parts.append(f'<div class="element">{part}</div>')
-        html_parts.append('</div>')
-        return '\n'.join(html_parts)
+        html_parts.append("</div>")
+        return "\n".join(html_parts)
     else:
         # Markdown - just join text parts
-        return '\n\n'.join(text_parts)
+        return "\n\n".join(text_parts)
 
 
 class DotsOCRTextExtractor(BaseTextExtractor):
@@ -216,8 +220,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
             from transformers import AutoModelForCausalLM, AutoProcessor
         except ImportError as e:
             raise ImportError(
-                "PyTorch backend requires torch and transformers. "
-                "Install with: uv add torch transformers accelerate"
+                "PyTorch backend requires torch and transformers. Install with: uv add torch transformers accelerate"
             ) from e
 
         config = self.backend_config
@@ -265,10 +268,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         try:
             from vllm import LLM, SamplingParams
         except ImportError as e:
-            raise ImportError(
-                "VLLM backend requires vllm. "
-                "Install with: uv add vllm"
-            ) from e
+            raise ImportError("VLLM backend requires vllm. Install with: uv add vllm") from e
 
         config = self.backend_config
 
@@ -296,10 +296,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         try:
             import litellm
         except ImportError as e:
-            raise ImportError(
-                "API backend requires litellm. "
-                "Install with: uv add litellm openai"
-            ) from e
+            raise ImportError("API backend requires litellm. Install with: uv add litellm openai") from e
 
         config = self.backend_config
         self._api_config = config
@@ -366,13 +363,15 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         from qwen_vl_utils import process_vision_info
 
         # Prepare messages in Qwen format - pass PIL Image directly
-        messages = [{
-            "role": "user",
-            "content": [
-                {"type": "image", "image": image},  # PIL Image object
-                {"type": "text", "text": prompt}
-            ]
-        }]
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": image},  # PIL Image object
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ]
 
         # Process with processor
         text = self._processor.apply_chat_template(
@@ -401,9 +400,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
             )
 
         # Trim input tokens and decode
-        generated_ids_trimmed = [
-            out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-        ]
+        generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
         output_text = self._processor.batch_decode(
             generated_ids_trimmed,
             skip_special_tokens=True,
@@ -418,10 +415,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         # Format: <|img|><|imgpad|><|endofimg|>{PROMPT}
         vllm_prompt = f"<|img|><|imgpad|><|endofimg|>{prompt}"
 
-        inputs = [{
-            "prompt": vllm_prompt,
-            "multi_modal_data": {"image": image}
-        }]
+        inputs = [{"prompt": vllm_prompt, "multi_modal_data": {"image": image}}]
 
         # Sampling parameters
         sampling_params = self._sampling_params_class(
@@ -454,11 +448,8 @@ class DotsOCRTextExtractor(BaseTextExtractor):
                 "role": "user",
                 "content": [
                     {"type": "text", "text": prompt},
-                    {
-                        "type": "image_url",
-                        "image_url": f"data:image/png;base64,{img_base64}"
-                    }
-                ]
+                    {"type": "image_url", "image_url": f"data:image/png;base64,{img_base64}"},
+                ],
             }
         ]
 
@@ -516,11 +507,13 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         if include_layout:
             for elem in parsed_json:
                 if isinstance(elem, dict) and "bbox" in elem and "category" in elem:
-                    layout_elements.append(LayoutElement(
-                        bbox=elem["bbox"],
-                        category=elem["category"],
-                        text=elem.get("text"),
-                    ))
+                    layout_elements.append(
+                        LayoutElement(
+                            bbox=elem["bbox"],
+                            category=elem["category"],
+                            text=elem.get("text"),
+                        )
+                    )
 
         # Format content
         content = _format_layout_as_text(parsed_json, output_format)

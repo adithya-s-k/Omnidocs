@@ -1,7 +1,8 @@
 """PyTorch backend configuration for Dots OCR."""
 
-from pydantic import BaseModel, Field
 from typing import Literal, Optional
+
+from pydantic import BaseModel, Field
 
 
 class DotsOCRPyTorchConfig(BaseModel):
@@ -24,29 +25,15 @@ class DotsOCRPyTorchConfig(BaseModel):
         >>> extractor = DotsOCRTextExtractor(backend=config)
     """
 
-    model: str = Field(
-        default="rednote-hilab/dots.ocr",
-        description="HuggingFace model ID for Dots OCR"
-    )
-    device: str = Field(
-        default="cuda",
-        description="Device to run on (cuda/cpu/mps)"
-    )
+    model: str = Field(default="rednote-hilab/dots.ocr", description="HuggingFace model ID for Dots OCR")
+    device: str = Field(default="cuda", description="Device to run on (cuda/cpu/mps)")
     torch_dtype: Literal["float16", "bfloat16", "float32"] = Field(
-        default="bfloat16",
-        description="Torch dtype for model weights"
+        default="bfloat16", description="Torch dtype for model weights"
     )
-    trust_remote_code: bool = Field(
-        default=True,
-        description="Trust remote code for model loading"
-    )
-    device_map: Optional[str] = Field(
-        default="auto",
-        description="Device mapping strategy (auto/balanced/sequential)"
-    )
+    trust_remote_code: bool = Field(default=True, description="Trust remote code for model loading")
+    device_map: Optional[str] = Field(default="auto", description="Device mapping strategy (auto/balanced/sequential)")
     attn_implementation: Literal["eager", "flash_attention_2", "sdpa"] = Field(
-        default="flash_attention_2",
-        description="Attention implementation (flash_attention_2 recommended for speed)"
+        default="flash_attention_2", description="Attention implementation (flash_attention_2 recommended for speed)"
     )
 
     class Config:

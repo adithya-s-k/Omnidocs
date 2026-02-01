@@ -7,10 +7,10 @@ Available backends:
 - API: DotsOCRAPIConfig (online VLLM server via OpenAI-compatible API)
 """
 
-from .pytorch import DotsOCRPyTorchConfig
-from .vllm import DotsOCRVLLMConfig
 from .api import DotsOCRAPIConfig
 from .extractor import DotsOCRTextExtractor
+from .pytorch import DotsOCRPyTorchConfig
+from .vllm import DotsOCRVLLMConfig
 
 __all__ = [
     "DotsOCRPyTorchConfig",

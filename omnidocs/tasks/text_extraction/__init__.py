@@ -21,9 +21,9 @@ Example:
 """
 
 from .base import BaseTextExtractor
-from .models import OutputFormat, TextOutput, LayoutElement, DotsOCRTextOutput
-from .qwen import QwenTextExtractor
 from .dotsocr import DotsOCRTextExtractor
+from .models import DotsOCRTextOutput, LayoutElement, OutputFormat, TextOutput
+from .qwen import QwenTextExtractor
 
 __all__ = [
     # Base
