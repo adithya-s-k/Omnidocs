@@ -2,11 +2,12 @@
 Text Extraction Module.
 
 Provides extractors for converting document images to structured text formats
-(HTML, Markdown). Uses Vision-Language Models for accurate text extraction
-with formatting preservation.
+(HTML, Markdown, JSON). Uses Vision-Language Models for accurate text extraction
+with formatting preservation and optional layout detection.
 
 Available Extractors:
     - QwenTextExtractor: Qwen3-VL based extractor (multi-backend)
+    - DotsOCRTextExtractor: Dots OCR with layout-aware extraction (PyTorch/VLLM/API)
 
 Example:
     >>> from omnidocs.tasks.text_extraction import QwenTextExtractor
@@ -20,8 +21,9 @@ Example:
 """
 
 from .base import BaseTextExtractor
-from .models import OutputFormat, TextOutput
+from .models import OutputFormat, TextOutput, LayoutElement, DotsOCRTextOutput
 from .qwen import QwenTextExtractor
+from .dotsocr import DotsOCRTextExtractor
 
 __all__ = [
     # Base
@@ -29,6 +31,9 @@ __all__ = [
     # Models
     "TextOutput",
     "OutputFormat",
+    "LayoutElement",
+    "DotsOCRTextOutput",
     # Extractors
     "QwenTextExtractor",
+    "DotsOCRTextExtractor",
 ]
