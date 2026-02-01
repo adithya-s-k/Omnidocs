@@ -219,7 +219,7 @@ class EasyOCR(BaseOCRExtractor):
                     text=text,
                     bbox=bbox,
                     confidence=float(confidence),
-                    granularity=OCRGranularity.LINE if paragraph else OCRGranularity.WORD,
+                    granularity=(OCRGranularity.LINE if paragraph else OCRGranularity.WORD),
                     polygon=polygon,
                     language="+".join(self.config.languages),
                 )

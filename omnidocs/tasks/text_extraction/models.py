@@ -146,7 +146,8 @@ class DotsOCRTextOutput(BaseModel):
     content: str = Field(..., description="Extracted text in requested format (markdown/html/json)")
     format: OutputFormat = Field(..., description="Output format")
     layout: List[LayoutElement] = Field(
-        default_factory=list, description="Layout elements with bounding boxes (if include_layout=True)"
+        default_factory=list,
+        description="Layout elements with bounding boxes (if include_layout=True)",
     )
     has_layout: bool = Field(default=False, description="Whether layout information is included")
     layout_categories: List[str] = Field(

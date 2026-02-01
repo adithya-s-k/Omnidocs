@@ -27,7 +27,10 @@ class DotsOCRAPIConfig(BaseModel):
     """
 
     model: str = Field(default="dotsocr", description="Model identifier for the API endpoint")
-    api_base: str = Field(..., description="Base URL for the VLLM server API (e.g., https://app.modal.run/v1)")
+    api_base: str = Field(
+        ...,
+        description="Base URL for the VLLM server API (e.g., https://app.modal.run/v1)",
+    )
     api_key: Optional[str] = Field(default=None, description="API key for authentication (if required)")
     timeout: int = Field(default=120, ge=10, description="Request timeout in seconds")
     max_retries: int = Field(default=3, ge=0, description="Maximum number of retry attempts")

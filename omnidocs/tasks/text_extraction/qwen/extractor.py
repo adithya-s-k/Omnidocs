@@ -199,7 +199,7 @@ class QwenTextExtractor(BaseTextExtractor):
         device = self._resolve_device(config.device)
 
         model_kwargs: Dict[str, Any] = {
-            "torch_dtype": config.torch_dtype if config.torch_dtype != "auto" else "auto",
+            "torch_dtype": (config.torch_dtype if config.torch_dtype != "auto" else "auto"),
             "device_map": config.device_map,
             "trust_remote_code": config.trust_remote_code,
             "cache_dir": str(cache_dir),

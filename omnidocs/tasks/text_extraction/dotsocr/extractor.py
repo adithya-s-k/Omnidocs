@@ -452,7 +452,10 @@ class DotsOCRTextExtractor(BaseTextExtractor):
                 "role": "user",
                 "content": [
                     {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": f"data:image/png;base64,{img_base64}"},
+                    {
+                        "type": "image_url",
+                        "image_url": f"data:image/png;base64,{img_base64}",
+                    },
                 ],
             }
         ]

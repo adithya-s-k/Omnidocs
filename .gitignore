@@ -162,4 +162,7 @@ cython_debug/
 #.idea/
 poetry.lock
 **/experiments
+
+# Ignore models directory but not docs/models
 models/
+!docs/models/

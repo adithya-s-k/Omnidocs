@@ -2897,8 +2897,11 @@ dev = [
 ]
 docs = [
     { name = "mkdocs" },
+    { name = "mkdocs-gen-files" },
     { name = "mkdocs-git-revision-date-localized-plugin" },
+    { name = "mkdocs-literate-nav" },
     { name = "mkdocs-material" },
+    { name = "mkdocs-section-index" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
 mlx = [
@@ -2974,8 +2977,11 @@ dev = [
 ]
 docs = [
     { name = "mkdocs", specifier = ">=1.6.1" },
+    { name = "mkdocs-gen-files", specifier = ">=0.6.0" },
     { name = "mkdocs-git-revision-date-localized-plugin", specifier = ">=1.5.0" },
+    { name = "mkdocs-literate-nav", specifier = ">=0.6.2" },
     { name = "mkdocs-material", specifier = ">=9.7.1" },
+    { name = "mkdocs-section-index", specifier = ">=0.3.10" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.1" },
 ]
 mlx = [

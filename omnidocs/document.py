@@ -79,7 +79,8 @@ class DocumentMetadata(BaseModel):
 
     # Timestamps
     loaded_at: str = Field(
-        default_factory=lambda: datetime.now().isoformat(), description="ISO timestamp of when document was loaded"
+        default_factory=lambda: datetime.now().isoformat(),
+        description="ISO timestamp of when document was loaded",
     )
 
     model_config = ConfigDict(extra="forbid")

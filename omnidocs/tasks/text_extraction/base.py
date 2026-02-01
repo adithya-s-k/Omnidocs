@@ -27,11 +27,11 @@ class BaseTextExtractor(ABC):
                 def __init__(self, config: MyConfig):
                     self.config = config
                     self._load_model()
-            
+
                 def _load_model(self):
                     # Load model weights
                     pass
-            
+
                 def extract(self, image, output_format="markdown"):
                     # Run extraction
                     return TextOutput(...)
