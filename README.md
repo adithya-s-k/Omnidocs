@@ -7,7 +7,10 @@
   <a href="https://pypi.org/project/omnidocs/"><img src="https://img.shields.io/pypi/v/omnidocs.svg" alt="PyPI version"></a>
   <a href="https://github.com/adithya-s-k/OmniDocs/blob/main/LICENSE"><img src="https://img.shields.io/github/license/adithya-s-k/OmniDocs" alt="License"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
+  <!-- [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/adithya-s-k/Omnidocs) -->
+<a href="https://deepwiki.com/adithya-s-k/Omnidocs"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
 </p>
+
 
 **OmniDocs** is your all-in-one Python toolkit for extracting layout, tables, text, math, and OCR from PDFs and images, powered by classic libraries and state-of-the-art deep learning models. Build robust document workflows with a single, consistent API.
 
