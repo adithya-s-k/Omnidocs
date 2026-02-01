@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'pyproject.toml'  # Only trigger when pyproject.toml changes
+      - 'omnidocs/_version.py'  # Trigger when version file changes
 
 jobs:
   check-version:
@@ -24,13 +24,13 @@ jobs:
       - name: Check if version changed
         id: check
         run: |
-          # Get current version from pyproject.toml
-          CURRENT_VERSION=$(grep -m1 'version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          # Get current version from _version.py
+          CURRENT_VERSION=$(grep -oP '__version__ = "\K[^"]+' omnidocs/_version.py)
           echo "Current version: $CURRENT_VERSION"
 
           # Get previous version
-          git show HEAD~1:pyproject.toml > /tmp/old_pyproject.toml 2>/dev/null || echo 'version = "0.0.0"' > /tmp/old_pyproject.toml
-          PREVIOUS_VERSION=$(grep -m1 'version = ' /tmp/old_pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          git show HEAD~1:omnidocs/_version.py > /tmp/old_version.py 2>/dev/null || echo '__version__ = "0.0.0"' > /tmp/old_version.py
+          PREVIOUS_VERSION=$(grep -oP '__version__ = "\K[^"]+' /tmp/old_version.py)
           echo "Previous version: $PREVIOUS_VERSION"
 
           # Check if version changed
