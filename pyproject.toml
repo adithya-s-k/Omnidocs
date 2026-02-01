@@ -70,6 +70,14 @@ api = [
     "python-dotenv>=1.2.1",
 ]
 dev = [
+    "mike>=2.1.3",
+    "mkdocs-gen-files>=0.6.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.5.0",
+    "mkdocs-literate-nav>=0.6.2",
+    "mkdocs-material>=9.7.1",
+    "mkdocs-section-index>=0.3.10",
+    "mkdocstrings>=1.0.1",
+    "mkdocstrings-python>=2.0.1",
     "pytest>=8.0",
     "reportlab>=4.4.9",
     "ruff>=0.14.13",

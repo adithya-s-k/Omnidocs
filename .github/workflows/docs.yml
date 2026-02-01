@@ -1,10 +1,23 @@
-name: Deploy MkDocs to GitHub Pages
+name: Deploy Versioned Documentation
 
 on:
+  # Only build docs on version tags
   push:
-    branches:
-      - main  # Deploy docs on push to main
-  workflow_dispatch:  # Allow manual trigger
+    tags:
+      - 'v*'  # Triggers on v0.2.4, v1.0.0, etc.
+
+  # Allow manual trigger with version input
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., 0.2.4)'
+        required: true
+        type: string
+      set_latest:
+        description: 'Set as latest?'
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -17,7 +30,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for git-revision-date-localized plugin
+          fetch-depth: 0  # Fetch all history for mike and git-revision-date
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -30,14 +43,42 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          uv sync --group docs
+        run: uv sync --group dev
 
       - name: Configure git
         run: |
-          git config user.name github-actions[bot]
-          git config user.email github-actions[bot]@users.noreply.github.com
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Deploy to GitHub Pages
+      # Extract version from tag or workflow input
+      - name: Get version
+        id: version
         run: |
-          uv run mkdocs gh-deploy --force
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "SET_LATEST=${{ github.event.inputs.set_latest }}" >> $GITHUB_OUTPUT
+          else
+            # Extract version from tag (v0.2.4 -> 0.2.4)
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+            echo "SET_LATEST=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Display version info
+        run: |
+          echo "Deploying documentation for version: ${{ steps.version.outputs.VERSION }}"
+          echo "Set as latest: ${{ steps.version.outputs.SET_LATEST }}"
+
+      # Deploy with mike (versioned docs)
+      - name: Deploy versioned docs
+        run: |
+          if [ "${{ steps.version.outputs.SET_LATEST }}" = "true" ]; then
+            uv run mike deploy ${{ steps.version.outputs.VERSION }} latest \
+              --update-aliases --push
+          else
+            uv run mike deploy ${{ steps.version.outputs.VERSION }} --push
+          fi
+
+      - name: Set default version
+        if: steps.version.outputs.SET_LATEST == 'true'
+        run: uv run mike set-default latest --push

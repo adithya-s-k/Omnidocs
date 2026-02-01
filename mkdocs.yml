@@ -3,7 +3,6 @@ site_description: Unified Python toolkit for visual document processing
 site_url: https://adithya-s-k.github.io/Omnidocs/
 repo_url: https://github.com/adithya-s-k/OmniDocs
 repo_name: adithya-s-k/OmniDocs
-edit_uri: edit/master/docs/
 
 theme:
   name: material
@@ -16,47 +15,101 @@ theme:
     - navigation.sections
     - navigation.top
     - navigation.expand
+    - navigation.indexes
     - search.suggest
     - search.highlight
     - content.code.copy
     - content.code.annotate
+    - content.tabs.link
 
 plugins:
   - search
   - git-revision-date-localized:
       enable_creation_date: true
 
+  # ==========================================
+  # AUTO API REFERENCE GENERATION (Magic!)
+  # ==========================================
+  - gen-files:
+      scripts:
+        - scripts/gen_ref_pages.py  # Runs at build time
+
+  - literate-nav:
+      nav_file: SUMMARY.md  # Uses generated nav
+
+  - section-index  # Makes index pages work
+
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["."]
+          options:
+            docstring_style: google
+            docstring_section_style: spacy  # Better code block rendering
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_signature: true
+            show_signature_annotations: true
+            separate_signature: true
+            members_order: source
+            show_submodules: true
+            show_if_no_docstring: false
+            show_docstring_examples: true
+            show_docstring_parameters: true
+            show_docstring_returns: true
+            show_bases: true
+            show_source: true
+            merge_init_into_class: true
+            heading_level: 2
+            filters:
+              - "!^_"
+              - "!^__init__$"
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
-  - admonition
-  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
+  - admonition
+  - pymdownx.details
   - attr_list
   - md_in_html
   - tables
-  - footnotes
+  - toc:
+      permalink: true
+  - pymdownx.magiclink  # Auto-link URLs
 
 nav:
   - Home: README.md
-  - Roadmap: ROADMAP.md
+  # ==========================================
+  # AUTO-GENERATED API REFERENCE
+  # ==========================================
+  - API Reference: reference/  # ← Everything auto-generated!
   - Design Documents:
     - Architecture: architecture.md
     - Developer Guide: developer-guide.md
+  - Roadmap: ROADMAP.md
   - Contributing: CONTRIBUTING.md
   - License: LICENSE.md
 
 extra:
+  # Version selector (managed by mike)
+  version:
+    provider: mike
+    default: latest
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/adithya-s-k/OmniDocs
-    - icon: fontawesome/brands/twitter
-      link: https://x.com/adithya_s_k
-    - icon: fontawesome/brands/linkedin
-      link: https://www.linkedin.com/in/adithya-s-kolavi/
 
 copyright: "&copy; 2025 OmniDocs. All rights reserved."
