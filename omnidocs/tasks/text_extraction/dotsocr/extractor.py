@@ -365,11 +365,11 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         import torch
         from qwen_vl_utils import process_vision_info
 
-        # Prepare messages in Qwen format
+        # Prepare messages in Qwen format - pass PIL Image directly
         messages = [{
             "role": "user",
             "content": [
-                {"type": "image", "image": image},
+                {"type": "image", "image": image},  # PIL Image object
                 {"type": "text", "text": prompt}
             ]
         }]
@@ -381,27 +381,23 @@ class DotsOCRTextExtractor(BaseTextExtractor):
             add_generation_prompt=True,
         )
 
-        image_inputs, video_inputs, video_kwargs = process_vision_info(
-            messages,
-            return_video_kwargs=True,
-        )
+        # Process vision info - NO video_kwargs
+        image_inputs, video_inputs = process_vision_info(messages)
 
+        # Prepare inputs - NO video_kwargs
         inputs = self._processor(
             text=[text],
             images=image_inputs,
             videos=video_inputs,
             padding=True,
             return_tensors="pt",
-            **video_kwargs,
         ).to(self._model.device)
 
-        # Generate
+        # Generate - Remove temperature/do_sample to avoid warnings
         with torch.no_grad():
             generated_ids = self._model.generate(
                 **inputs,
                 max_new_tokens=max_tokens,
-                temperature=0.0,
-                do_sample=False,
             )
 
         # Trim input tokens and decode
