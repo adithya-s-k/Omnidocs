@@ -22,18 +22,20 @@ class BaseLayoutExtractor(ABC):
     the required methods.
 
     Example:
-        >>> class MyLayoutExtractor(BaseLayoutExtractor):
-        ...     def __init__(self, config: MyConfig):
-        ...         self.config = config
-        ...         self._load_model()
-        ...
-        ...     def _load_model(self):
-        ...         # Load model weights
-        ...         pass
-        ...
-        ...     def extract(self, image):
-        ...         # Run extraction
-        ...         return LayoutOutput(...)
+        ```python
+        class MyLayoutExtractor(BaseLayoutExtractor):
+                def __init__(self, config: MyConfig):
+                    self.config = config
+                    self._load_model()
+            
+                def _load_model(self):
+                    # Load model weights
+                    pass
+            
+                def extract(self, image):
+                    # Run extraction
+                    return LayoutOutput(...)
+        ```
     """
 
     @abstractmethod

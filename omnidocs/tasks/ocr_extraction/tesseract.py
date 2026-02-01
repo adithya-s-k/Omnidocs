@@ -35,8 +35,10 @@ class TesseractOCRConfig(BaseModel):
     This is a single-backend model (CPU only, requires system Tesseract).
 
     Example:
-        >>> config = TesseractOCRConfig(languages=["eng", "fra"], psm=3)
-        >>> ocr = TesseractOCR(config=config)
+        ```python
+        config = TesseractOCRConfig(languages=["eng", "fra"], psm=3)
+        ocr = TesseractOCR(config=config)
+        ```
     """
 
     languages: List[str] = Field(
@@ -92,13 +94,15 @@ class TesseractOCR(BaseOCRExtractor):
     Single-backend model (CPU only). Requires system Tesseract installation.
 
     Example:
-        >>> from omnidocs.tasks.ocr_extraction import TesseractOCR, TesseractOCRConfig
-        >>>
-        >>> ocr = TesseractOCR(config=TesseractOCRConfig(languages=["eng"]))
-        >>> result = ocr.extract(image)
-        >>>
-        >>> for block in result.text_blocks:
-        ...     print(f"'{block.text}' @ {block.bbox.to_list()}")
+        ```python
+        from omnidocs.tasks.ocr_extraction import TesseractOCR, TesseractOCRConfig
+
+        ocr = TesseractOCR(config=TesseractOCRConfig(languages=["eng"]))
+        result = ocr.extract(image)
+
+        for block in result.text_blocks:
+                print(f"'{block.text}' @ {block.bbox.to_list()}")
+        ```
     """
 
     MODEL_NAME = "tesseract"

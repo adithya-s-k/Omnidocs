@@ -34,8 +34,10 @@ class DocLayoutYOLOConfig(BaseModel):
     This is a single-backend model (PyTorch only).
 
     Example:
-        >>> config = DocLayoutYOLOConfig(device="cuda", confidence=0.3)
-        >>> extractor = DocLayoutYOLO(config=config)
+        ```python
+        config = DocLayoutYOLOConfig(device="cuda", confidence=0.3)
+        extractor = DocLayoutYOLO(config=config)
+        ```
     """
 
     device: str = Field(
@@ -82,13 +84,15 @@ class DocLayoutYOLO(BaseLayoutExtractor):
     This is a single-backend model (PyTorch only).
 
     Example:
-        >>> from omnidocs.tasks.layout_extraction import DocLayoutYOLO, DocLayoutYOLOConfig
-        >>>
-        >>> extractor = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
-        >>> result = extractor.extract(image)
-        >>>
-        >>> for box in result.bboxes:
-        ...     print(f"{box.label.value}: {box.confidence:.2f}")
+        ```python
+        from omnidocs.tasks.layout_extraction import DocLayoutYOLO, DocLayoutYOLOConfig
+
+        extractor = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
+        result = extractor.extract(image)
+
+        for box in result.bboxes:
+                print(f"{box.label.value}: {box.confidence:.2f}")
+        ```
     """
 
     def __init__(self, config: DocLayoutYOLOConfig):

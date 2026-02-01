@@ -15,25 +15,25 @@ Key Difference from Text Extraction:
     - Text Extraction: Markdown/HTML (formatted document export)
 
 Example:
-    >>> from omnidocs.tasks.ocr_extraction import TesseractOCR, TesseractOCRConfig
-    >>>
-    >>> ocr = TesseractOCR(config=TesseractOCRConfig(languages=["eng"]))
-    >>> result = ocr.extract(image)
-    >>>
-    >>> for block in result.text_blocks:
-    ...     print(f"'{block.text}' @ {block.bbox.to_list()} (conf: {block.confidence:.2f})")
+    ```python
+    from omnidocs.tasks.ocr_extraction import TesseractOCR, TesseractOCRConfig
 
-    >>> # With EasyOCR
-    >>> from omnidocs.tasks.ocr_extraction import EasyOCR, EasyOCRConfig
-    >>>
-    >>> ocr = EasyOCR(config=EasyOCRConfig(languages=["en", "ch_sim"], gpu=True))
-    >>> result = ocr.extract(image)
+    ocr = TesseractOCR(config=TesseractOCRConfig(languages=["eng"]))
+    result = ocr.extract(image)
 
-    >>> # With PaddleOCR
-    >>> from omnidocs.tasks.ocr_extraction import PaddleOCR, PaddleOCRConfig
-    >>>
-    >>> ocr = PaddleOCR(config=PaddleOCRConfig(lang="ch", device="cpu"))
-    >>> result = ocr.extract(image)
+    for block in result.text_blocks:
+            print(f"'{block.text}' @ {block.bbox.to_list()} (conf: {block.confidence:.2f})")
+    # With EasyOCR
+    from omnidocs.tasks.ocr_extraction import EasyOCR, EasyOCRConfig
+
+    ocr = EasyOCR(config=EasyOCRConfig(languages=["en", "ch_sim"], gpu=True))
+    result = ocr.extract(image)
+    # With PaddleOCR
+    from omnidocs.tasks.ocr_extraction import PaddleOCR, PaddleOCRConfig
+
+    ocr = PaddleOCR(config=PaddleOCRConfig(lang="ch", device="cpu"))
+    result = ocr.extract(image)
+    ```
 """
 
 from .base import BaseOCRExtractor

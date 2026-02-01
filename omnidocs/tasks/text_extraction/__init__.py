@@ -10,14 +10,16 @@ Available Extractors:
     - DotsOCRTextExtractor: Dots OCR with layout-aware extraction (PyTorch/VLLM/API)
 
 Example:
-    >>> from omnidocs.tasks.text_extraction import QwenTextExtractor
-    >>> from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
-    >>>
-    >>> extractor = QwenTextExtractor(
-    ...     backend=QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
-    ... )
-    >>> result = extractor.extract(image, output_format="markdown")
-    >>> print(result.content)
+    ```python
+    from omnidocs.tasks.text_extraction import QwenTextExtractor
+    from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+
+    extractor = QwenTextExtractor(
+            backend=QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+        )
+    result = extractor.extract(image, output_format="markdown")
+    print(result.content)
+    ```
 """
 
 from .base import BaseTextExtractor

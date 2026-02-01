@@ -22,18 +22,20 @@ class BaseOCRExtractor(ABC):
     the required methods.
 
     Example:
-        >>> class MyOCRExtractor(BaseOCRExtractor):
-        ...     def __init__(self, config: MyConfig):
-        ...         self.config = config
-        ...         self._load_model()
-        ...
-        ...     def _load_model(self):
-        ...         # Initialize OCR engine
-        ...         pass
-        ...
-        ...     def extract(self, image):
-        ...         # Run OCR extraction
-        ...         return OCROutput(...)
+        ```python
+        class MyOCRExtractor(BaseOCRExtractor):
+                def __init__(self, config: MyConfig):
+                    self.config = config
+                    self._load_model()
+            
+                def _load_model(self):
+                    # Initialize OCR engine
+                    pass
+            
+                def extract(self, image):
+                    # Run OCR extraction
+                    return OCROutput(...)
+        ```
     """
 
     @abstractmethod

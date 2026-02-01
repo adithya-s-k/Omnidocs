@@ -8,8 +8,10 @@ Available backends:
     - QwenLayoutAPIConfig: API backend (OpenRouter, etc.)
 
 Example:
-    >>> from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
-    >>> config = QwenLayoutPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+    ```python
+    from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
+    config = QwenLayoutPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+    ```
 """
 
 from .api import QwenLayoutAPIConfig

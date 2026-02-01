@@ -153,16 +153,18 @@ class Document:
     - Users manage their own analysis results and caching strategy
 
     Examples:
-        >>> # Load from file
-        >>> doc = Document.from_pdf("paper.pdf")
-        >>>
-        >>> # Access pages
-        >>> page = doc.get_page(0)  # 0-indexed
-        >>> text = doc.get_page_text(1)  # 1-indexed for compatibility
-        >>>
-        >>> # Iterate efficiently
-        >>> for page in doc.iter_pages():
-        ...     result = layout.extract(page)
+        ```python
+        # Load from file
+        doc = Document.from_pdf("paper.pdf")
+
+        # Access pages
+        page = doc.get_page(0)  # 0-indexed
+        text = doc.get_page_text(1)  # 1-indexed for compatibility
+
+        # Iterate efficiently
+        for page in doc.iter_pages():
+                result = layout.extract(page)
+        ```
     """
 
     def __init__(
@@ -219,9 +221,11 @@ class Document:
             PageRangeError: If page range is invalid
 
         Examples:
-            >>> doc = Document.from_pdf("paper.pdf")
-            >>> doc = Document.from_pdf("paper.pdf", page_range=(0, 4))
-            >>> doc = Document.from_pdf("paper.pdf", dpi=300)
+            ```python
+            doc = Document.from_pdf("paper.pdf")
+            doc = Document.from_pdf("paper.pdf", page_range=(0, 4))
+            doc = Document.from_pdf("paper.pdf", dpi=300)
+            ```
         """
         path = Path(path)
 
@@ -297,8 +301,10 @@ class Document:
             PageRangeError: If page range is invalid
 
         Examples:
-            >>> doc = Document.from_url("https://example.com/doc.pdf")
-            >>> doc = Document.from_url("https://example.com/doc.pdf", timeout=60)
+            ```python
+            doc = Document.from_url("https://example.com/doc.pdf")
+            doc = Document.from_url("https://example.com/doc.pdf", timeout=60)
+            ```
         """
         try:
             import requests
@@ -377,8 +383,10 @@ class Document:
             PageRangeError: If page range is invalid
 
         Examples:
-            >>> with open("doc.pdf", "rb") as f:
-            ...     doc = Document.from_bytes(f.read())
+            ```python
+            with open("doc.pdf", "rb") as f:
+                    doc = Document.from_bytes(f.read())
+            ```
         """
         pdf_doc = pdfium.PdfDocument(data)
         total_pages = len(pdf_doc)
@@ -431,7 +439,9 @@ class Document:
             DocumentLoadError: If file not found
 
         Examples:
-            >>> doc = Document.from_image("page.png")
+            ```python
+            doc = Document.from_image("page.png")
+            ```
         """
         path = Path(path)
         if not path.exists():
@@ -470,7 +480,9 @@ class Document:
             DocumentLoadError: If any file not found
 
         Examples:
-            >>> doc = Document.from_images(["page1.png", "page2.png"])
+            ```python
+            doc = Document.from_images(["page1.png", "page2.png"])
+            ```
         """
         images = []
         total_size = 0
@@ -595,8 +607,10 @@ class Document:
             PageRangeError: If page number out of range
 
         Examples:
-            >>> page = doc.get_page(0)  # First page
-            >>> page = doc.get_page(doc.page_count - 1)  # Last page
+            ```python
+            page = doc.get_page(0)  # First page
+            page = doc.get_page(doc.page_count - 1)  # Last page
+            ```
         """
         if self._preloaded_images:
             if page_num < 0 or page_num >= len(self._preloaded_images):
@@ -624,7 +638,9 @@ class Document:
             PageRangeError: If page number out of range
 
         Examples:
-            >>> text = doc.get_page_text(1)  # First page
+            ```python
+            text = doc.get_page_text(1)  # First page
+            ```
         """
         idx = page_num - 1  # Convert to 0-based
 
@@ -646,7 +662,9 @@ class Document:
             Tuple of (width, height) in pixels
 
         Examples:
-            >>> width, height = doc.get_page_size(0)
+            ```python
+            width, height = doc.get_page_size(0)
+            ```
         """
         if self._lazy_pages:
             if page_num < 0 or page_num >= len(self._lazy_pages):
@@ -670,8 +688,10 @@ class Document:
             PIL Images
 
         Examples:
-            >>> for page in doc.iter_pages():
-            ...     result = layout.extract(page)
+            ```python
+            for page in doc.iter_pages():
+                    result = layout.extract(page)
+            ```
         """
         for i in range(self.page_count):
             yield self.get_page(i)
@@ -684,8 +704,10 @@ class Document:
             page_num: Specific page to clear, or None for all pages
 
         Examples:
-            >>> doc.clear_cache()  # Clear all
-            >>> doc.clear_cache(0)  # Clear just first page
+            ```python
+            doc.clear_cache()  # Clear all
+            doc.clear_cache(0)  # Clear just first page
+            ```
         """
         if self._lazy_pages:
             if page_num is not None:
@@ -713,7 +735,9 @@ class Document:
             List of saved file paths
 
         Examples:
-            >>> paths = doc.save_images("output/", prefix="doc", format="PNG")
+            ```python
+            paths = doc.save_images("output/", prefix="doc", format="PNG")
+            ```
         """
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -735,8 +759,10 @@ class Document:
             Dictionary of metadata
 
         Examples:
-            >>> data = doc.to_dict()
-            >>> print(data['page_count'])
+            ```python
+            data = doc.to_dict()
+            print(data['page_count'])
+            ```
         """
         return self._metadata.model_dump()
 
@@ -745,7 +771,9 @@ class Document:
         Close PDF document and free resources.
 
         Examples:
-            >>> doc.close()
+            ```python
+            doc.close()
+            ```
         """
         if self._pdf_doc:
             self._pdf_doc.close()

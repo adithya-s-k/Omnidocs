@@ -13,15 +13,17 @@ class DotsOCRAPIConfig(BaseModel):
     Typically used with modal_dotsocr_vllm_online.py deployment.
 
     Example:
-        >>> from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
-        >>> from omnidocs.tasks.text_extraction.dotsocr import DotsOCRAPIConfig
-        >>>
-        >>> config = DotsOCRAPIConfig(
-        ...     model="dotsocr",
-        ...     api_base="https://your-modal-app.modal.run/v1",
-        ...     api_key="optional-key",
-        ... )
-        >>> extractor = DotsOCRTextExtractor(backend=config)
+        ```python
+        from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+        from omnidocs.tasks.text_extraction.dotsocr import DotsOCRAPIConfig
+
+        config = DotsOCRAPIConfig(
+                model="dotsocr",
+                api_base="https://your-modal-app.modal.run/v1",
+                api_key="optional-key",
+            )
+        extractor = DotsOCRTextExtractor(backend=config)
+        ```
     """
 
     model: str = Field(default="dotsocr", description="Model identifier for the API endpoint")

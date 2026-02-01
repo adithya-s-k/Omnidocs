@@ -15,15 +15,17 @@ class DotsOCRVLLMConfig(BaseModel):
     - Optimized CUDA kernels
 
     Example:
-        >>> from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
-        >>> from omnidocs.tasks.text_extraction.dotsocr import DotsOCRVLLMConfig
-        >>>
-        >>> config = DotsOCRVLLMConfig(
-        ...     model="rednote-hilab/dots.ocr",
-        ...     tensor_parallel_size=2,
-        ...     gpu_memory_utilization=0.9,
-        ... )
-        >>> extractor = DotsOCRTextExtractor(backend=config)
+        ```python
+        from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+        from omnidocs.tasks.text_extraction.dotsocr import DotsOCRVLLMConfig
+
+        config = DotsOCRVLLMConfig(
+                model="rednote-hilab/dots.ocr",
+                tensor_parallel_size=2,
+                gpu_memory_utilization=0.9,
+            )
+        extractor = DotsOCRTextExtractor(backend=config)
+        ```
     """
 
     model: str = Field(default="rednote-hilab/dots.ocr", description="HuggingFace model ID for Dots OCR")

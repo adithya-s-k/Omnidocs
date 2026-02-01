@@ -57,8 +57,10 @@ class PaddleOCRConfig(BaseModel):
     This is a single-backend model (PaddlePaddle - CPU/GPU).
 
     Example:
-        >>> config = PaddleOCRConfig(lang="ch", device="gpu")
-        >>> ocr = PaddleOCR(config=config)
+        ```python
+        config = PaddleOCRConfig(lang="ch", device="gpu")
+        ocr = PaddleOCR(config=config)
+        ```
     """
 
     lang: str = Field(
@@ -81,13 +83,15 @@ class PaddleOCR(BaseOCRExtractor):
     Single-backend model (PaddlePaddle - CPU/GPU).
 
     Example:
-        >>> from omnidocs.tasks.ocr_extraction import PaddleOCR, PaddleOCRConfig
-        >>>
-        >>> ocr = PaddleOCR(config=PaddleOCRConfig(lang="en", device="cpu"))
-        >>> result = ocr.extract(image)
-        >>>
-        >>> for block in result.text_blocks:
-        ...     print(f"'{block.text}' @ {block.bbox.to_list()}")
+        ```python
+        from omnidocs.tasks.ocr_extraction import PaddleOCR, PaddleOCRConfig
+
+        ocr = PaddleOCR(config=PaddleOCRConfig(lang="en", device="cpu"))
+        result = ocr.extract(image)
+
+        for block in result.text_blocks:
+                print(f"'{block.text}' @ {block.bbox.to_list()}")
+        ```
     """
 
     MODEL_NAME = "paddleocr"

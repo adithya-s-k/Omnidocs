@@ -15,11 +15,13 @@ class QwenTextPyTorchConfig(BaseModel):
     Requires: torch, transformers, accelerate, qwen-vl-utils
 
     Example:
-        >>> config = QwenTextPyTorchConfig(
-        ...     model="Qwen/Qwen3-VL-8B-Instruct",
-        ...     device="cuda",
-        ...     torch_dtype="bfloat16",
-        ... )
+        ```python
+        config = QwenTextPyTorchConfig(
+                model="Qwen/Qwen3-VL-8B-Instruct",
+                device="cuda",
+                torch_dtype="bfloat16",
+            )
+        ```
     """
 
     model: str = Field(

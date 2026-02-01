@@ -8,8 +8,10 @@ Available backends:
     - QwenTextAPIConfig: API backend (OpenRouter, etc.)
 
 Example:
-    >>> from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
-    >>> config = QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+    ```python
+    from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+    config = QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+    ```
 """
 
 from .api import QwenTextAPIConfig

@@ -14,15 +14,17 @@ class DotsOCRPyTorchConfig(BaseModel):
     Picture, Section-header, Table, Text, Title).
 
     Example:
-        >>> from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
-        >>> from omnidocs.tasks.text_extraction.dotsocr import DotsOCRPyTorchConfig
-        >>>
-        >>> config = DotsOCRPyTorchConfig(
-        ...     model="rednote-hilab/dots.ocr",
-        ...     device="cuda",
-        ...     torch_dtype="bfloat16",
-        ... )
-        >>> extractor = DotsOCRTextExtractor(backend=config)
+        ```python
+        from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+        from omnidocs.tasks.text_extraction.dotsocr import DotsOCRPyTorchConfig
+
+        config = DotsOCRPyTorchConfig(
+                model="rednote-hilab/dots.ocr",
+                device="cuda",
+                torch_dtype="bfloat16",
+            )
+        extractor = DotsOCRTextExtractor(backend=config)
+        ```
     """
 
     model: str = Field(default="rednote-hilab/dots.ocr", description="HuggingFace model ID for Dots OCR")

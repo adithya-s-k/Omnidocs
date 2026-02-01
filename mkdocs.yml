@@ -3,13 +3,17 @@ site_description: Unified Python toolkit for visual document processing
 site_url: https://adithya-s-k.github.io/Omnidocs/
 repo_url: https://github.com/adithya-s-k/OmniDocs
 repo_name: adithya-s-k/OmniDocs
+edit_uri: blob/main/
 
 theme:
   name: material
+  custom_dir: docs/overrides  # Custom templates with GitHub source links
   palette:
     scheme: slate
     primary: teal
     accent: light blue
+  icon:
+    repo: fontawesome/brands/github
   features:
     - navigation.tabs
     - navigation.sections
@@ -21,6 +25,8 @@ theme:
     - content.code.copy
     - content.code.annotate
     - content.tabs.link
+    - content.action.edit    # Edit this page on GitHub
+    - content.action.view    # View source on GitHub
 
 plugins:
   - search
@@ -66,6 +72,9 @@ plugins:
             filters:
               - "!^_"
               - "!^__init__$"
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://docs.pydantic.dev/latest/objects.inv
 
 markdown_extensions:
   - pymdownx.highlight:

@@ -17,9 +17,11 @@ class QwenTextMLXConfig(BaseModel):
     Do NOT use for Modal/cloud deployments.
 
     Example:
-        >>> config = QwenTextMLXConfig(
-        ...     model="mlx-community/Qwen3-VL-8B-Instruct-4bit",
-        ... )
+        ```python
+        config = QwenTextMLXConfig(
+                model="mlx-community/Qwen3-VL-8B-Instruct-4bit",
+            )
+        ```
     """
 
     model: str = Field(

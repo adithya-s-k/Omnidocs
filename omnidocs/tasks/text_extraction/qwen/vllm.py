@@ -16,11 +16,13 @@ class QwenTextVLLMConfig(BaseModel):
     Requires: vllm, torch, transformers, qwen-vl-utils
 
     Example:
-        >>> config = QwenTextVLLMConfig(
-        ...     model="Qwen/Qwen3-VL-8B-Instruct",
-        ...     tensor_parallel_size=2,
-        ...     gpu_memory_utilization=0.9,
-        ... )
+        ```python
+        config = QwenTextVLLMConfig(
+                model="Qwen/Qwen3-VL-8B-Instruct",
+                tensor_parallel_size=2,
+                gpu_memory_utilization=0.9,
+            )
+        ```
     """
 
     model: str = Field(

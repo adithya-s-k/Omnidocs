@@ -7,14 +7,16 @@ as structured HTML or Markdown.
 Supports PyTorch, VLLM, MLX, and API backends.
 
 Example:
-    >>> from omnidocs.tasks.text_extraction import QwenTextExtractor
-    >>> from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
-    >>>
-    >>> extractor = QwenTextExtractor(
-    ...     backend=QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
-    ... )
-    >>> result = extractor.extract(image, output_format="markdown")
-    >>> print(result.content)
+    ```python
+    from omnidocs.tasks.text_extraction import QwenTextExtractor
+    from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+
+    extractor = QwenTextExtractor(
+            backend=QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+        )
+    result = extractor.extract(image, output_format="markdown")
+    print(result.content)
+    ```
 """
 
 import os
@@ -113,21 +115,23 @@ class QwenTextExtractor(BaseTextExtractor):
     Supports PyTorch, VLLM, MLX, and API backends.
 
     Example:
-        >>> from omnidocs.tasks.text_extraction import QwenTextExtractor
-        >>> from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
-        >>>
-        >>> # Initialize with PyTorch backend
-        >>> extractor = QwenTextExtractor(
-        ...     backend=QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
-        ... )
-        >>>
-        >>> # Extract as Markdown
-        >>> result = extractor.extract(image, output_format="markdown")
-        >>> print(result.content)
-        >>>
-        >>> # Extract as HTML
-        >>> result = extractor.extract(image, output_format="html")
-        >>> print(result.content)
+        ```python
+        from omnidocs.tasks.text_extraction import QwenTextExtractor
+        from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+
+        # Initialize with PyTorch backend
+        extractor = QwenTextExtractor(
+                backend=QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+            )
+
+        # Extract as Markdown
+        result = extractor.extract(image, output_format="markdown")
+        print(result.content)
+
+        # Extract as HTML
+        result = extractor.extract(image, output_format="html")
+        print(result.content)
+        ```
     """
 
     def __init__(self, backend: QwenTextBackendConfig):

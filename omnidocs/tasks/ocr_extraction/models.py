@@ -16,8 +16,10 @@ Coordinate Systems:
     to convert to normalized coordinates.
 
 Example:
-    >>> result = ocr.extract(image)  # Returns absolute pixel coordinates
-    >>> normalized = result.get_normalized_blocks()  # Returns 0-1024 normalized coords
+    ```python
+    result = ocr.extract(image)  # Returns absolute pixel coordinates
+    normalized = result.get_normalized_blocks()  # Returns 0-1024 normalized coords
+    ```
 """
 
 from enum import Enum
@@ -56,9 +58,11 @@ class BoundingBox(BaseModel):
     For rotated text, use the polygon field in TextBlock instead.
 
     Example:
-        >>> bbox = BoundingBox(x1=100, y1=50, x2=300, y2=80)
-        >>> print(bbox.width, bbox.height)  # 200, 30
-        >>> print(bbox.center)  # (200.0, 65.0)
+        ```python
+        bbox = BoundingBox(x1=100, y1=50, x2=300, y2=80)
+        print(bbox.width, bbox.height)  # 200, 30
+        print(bbox.center)  # (200.0, 65.0)
+        ```
     """
 
     x1: float = Field(..., description="Left x coordinate")
@@ -173,12 +177,14 @@ class TextBlock(BaseModel):
     word, line, or block depending on the OCR model and configuration.
 
     Example:
-        >>> block = TextBlock(
-        ...     text="Hello",
-        ...     bbox=BoundingBox(x1=100, y1=50, x2=200, y2=80),
-        ...     confidence=0.95,
-        ...     granularity=OCRGranularity.WORD,
-        ... )
+        ```python
+        block = TextBlock(
+                text="Hello",
+                bbox=BoundingBox(x1=100, y1=50, x2=200, y2=80),
+                confidence=0.95,
+                granularity=OCRGranularity.WORD,
+            )
+        ```
     """
 
     text: str = Field(..., description="Detected text content")
@@ -237,11 +243,13 @@ class OCROutput(BaseModel):
     plus metadata about the extraction.
 
     Example:
-        >>> result = ocr.extract(image)
-        >>> print(f"Found {result.block_count} blocks")
-        >>> print(f"Full text: {result.full_text}")
-        >>> for block in result.text_blocks:
-        ...     print(f"'{block.text}' @ {block.bbox.to_list()}")
+        ```python
+        result = ocr.extract(image)
+        print(f"Found {result.block_count} blocks")
+        print(f"Full text: {result.full_text}")
+        for block in result.text_blocks:
+                print(f"'{block.text}' @ {block.bbox.to_list()}")
+        ```
     """
 
     text_blocks: List[TextBlock] = Field(
@@ -380,8 +388,10 @@ class OCROutput(BaseModel):
             PIL Image with visualizations drawn
 
         Example:
-            >>> result = ocr.extract(image)
-            >>> viz = result.visualize(image, output_path="ocr_viz.png")
+            ```python
+            result = ocr.extract(image)
+            viz = result.visualize(image, output_path="ocr_viz.png")
+            ```
         """
         from PIL import ImageDraw, ImageFont
 

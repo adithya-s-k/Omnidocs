@@ -5,16 +5,18 @@ A Vision-Language Model for flexible layout detection with custom label support.
 Supports PyTorch, VLLM, MLX, and API backends.
 
 Example:
-    >>> from omnidocs.tasks.layout_extraction import QwenLayoutDetector
-    >>> from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
-    >>>
-    >>> detector = QwenLayoutDetector(
-    ...     backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
-    ... )
-    >>> result = detector.extract(image)
-    >>>
-    >>> # With custom labels
-    >>> result = detector.extract(image, custom_labels=["code_block", "sidebar"])
+    ```python
+    from omnidocs.tasks.layout_extraction import QwenLayoutDetector
+    from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
+
+    detector = QwenLayoutDetector(
+            backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+        )
+    result = detector.extract(image)
+
+    # With custom labels
+    result = detector.extract(image, custom_labels=["code_block", "sidebar"])
+    ```
 """
 
 import json
@@ -91,26 +93,28 @@ class QwenLayoutDetector(BaseLayoutExtractor):
     Supports PyTorch, VLLM, MLX, and API backends.
 
     Example:
-        >>> from omnidocs.tasks.layout_extraction import QwenLayoutDetector, CustomLabel
-        >>> from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
-        >>>
-        >>> # Initialize with PyTorch backend
-        >>> detector = QwenLayoutDetector(
-        ...     backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
-        ... )
-        >>>
-        >>> # Basic extraction with default labels
-        >>> result = detector.extract(image)
-        >>>
-        >>> # With custom labels (strings)
-        >>> result = detector.extract(image, custom_labels=["code_block", "sidebar"])
-        >>>
-        >>> # With typed custom labels
-        >>> labels = [
-        ...     CustomLabel(name="code_block", color="#E74C3C"),
-        ...     CustomLabel(name="sidebar", description="Side panel content"),
-        ... ]
-        >>> result = detector.extract(image, custom_labels=labels)
+        ```python
+        from omnidocs.tasks.layout_extraction import QwenLayoutDetector, CustomLabel
+        from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
+
+        # Initialize with PyTorch backend
+        detector = QwenLayoutDetector(
+                backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+            )
+
+        # Basic extraction with default labels
+        result = detector.extract(image)
+
+        # With custom labels (strings)
+        result = detector.extract(image, custom_labels=["code_block", "sidebar"])
+
+        # With typed custom labels
+        labels = [
+                CustomLabel(name="code_block", color="#E74C3C"),
+                CustomLabel(name="sidebar", description="Side panel content"),
+            ]
+        result = detector.extract(image, custom_labels=labels)
+        ```
     """
 
     def __init__(self, backend: QwenLayoutBackendConfig):

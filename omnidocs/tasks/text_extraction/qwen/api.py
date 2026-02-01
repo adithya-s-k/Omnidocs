@@ -16,12 +16,14 @@ class QwenTextAPIConfig(BaseModel):
     Requires: openai
 
     Example:
-        >>> import os
-        >>> config = QwenTextAPIConfig(
-        ...     model="qwen/qwen3-vl-8b-instruct",
-        ...     api_key=os.environ["OPENROUTER_API_KEY"],
-        ...     base_url="https://openrouter.ai/api/v1",
-        ... )
+        ```python
+        import os
+        config = QwenTextAPIConfig(
+                model="qwen/qwen3-vl-8b-instruct",
+                api_key=os.environ["OPENROUTER_API_KEY"],
+                base_url="https://openrouter.ai/api/v1",
+            )
+        ```
     """
 
     model: str = Field(

@@ -7,16 +7,18 @@ containing layout information, bounding boxes, and multi-format text.
 Supports PyTorch, VLLM, and API backends.
 
 Example:
-    >>> from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
-    >>> from omnidocs.tasks.text_extraction.dotsocr import DotsOCRPyTorchConfig
-    >>>
-    >>> extractor = DotsOCRTextExtractor(
-    ...     backend=DotsOCRPyTorchConfig(model="rednote-hilab/dots.ocr")
-    ... )
-    >>> result = extractor.extract(image, include_layout=True)
-    >>> print(result.content)
-    >>> for elem in result.layout:
-    ...     print(f"{elem.category}: {elem.bbox}")
+    ```python
+    from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+    from omnidocs.tasks.text_extraction.dotsocr import DotsOCRPyTorchConfig
+
+    extractor = DotsOCRTextExtractor(
+            backend=DotsOCRPyTorchConfig(model="rednote-hilab/dots.ocr")
+        )
+    result = extractor.extract(image, include_layout=True)
+    print(result.content)
+    for elem in result.layout:
+            print(f"{elem.category}: {elem.bbox}")
+    ```
 """
 
 import json
@@ -162,18 +164,20 @@ class DotsOCRTextExtractor(BaseTextExtractor):
     Supports PyTorch, VLLM, and API backends.
 
     Example:
-        >>> from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
-        >>> from omnidocs.tasks.text_extraction.dotsocr import DotsOCRPyTorchConfig
-        >>>
-        >>> # Initialize with PyTorch backend
-        >>> extractor = DotsOCRTextExtractor(
-        ...     backend=DotsOCRPyTorchConfig(model="rednote-hilab/dots.ocr")
-        ... )
-        >>>
-        >>> # Extract with layout
-        >>> result = extractor.extract(image, include_layout=True)
-        >>> print(f"Found {result.num_layout_elements} elements")
-        >>> print(result.content)
+        ```python
+        from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+        from omnidocs.tasks.text_extraction.dotsocr import DotsOCRPyTorchConfig
+
+        # Initialize with PyTorch backend
+        extractor = DotsOCRTextExtractor(
+                backend=DotsOCRPyTorchConfig(model="rednote-hilab/dots.ocr")
+            )
+
+        # Extract with layout
+        result = extractor.extract(image, include_layout=True)
+        print(f"Found {result.num_layout_elements} elements")
+        print(result.content)
+        ```
     """
 
     def __init__(self, backend: DotsOCRBackendConfig):

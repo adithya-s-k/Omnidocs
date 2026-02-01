@@ -33,9 +33,11 @@ class TextOutput(BaseModel):
     along with optional raw output and plain text versions.
 
     Example:
-        >>> result = extractor.extract(image, output_format="markdown")
-        >>> print(result.content)  # Clean markdown
-        >>> print(result.plain_text)  # Plain text without formatting
+        ```python
+        result = extractor.extract(image, output_format="markdown")
+        print(result.content)  # Clean markdown
+        print(result.plain_text)  # Plain text without formatting
+        ```
     """
 
     content: str = Field(
@@ -132,11 +134,13 @@ class DotsOCRTextOutput(BaseModel):
         - Picture: (text omitted)
 
     Example:
-        >>> from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
-        >>> result = extractor.extract(image, include_layout=True)
-        >>> print(result.content)  # Full text with formatting
-        >>> for elem in result.layout:
-        ...     print(f"{elem.category}: {elem.bbox}")
+        ```python
+        from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+        result = extractor.extract(image, include_layout=True)
+        print(result.content)  # Full text with formatting
+        for elem in result.layout:
+                print(f"{elem.category}: {elem.bbox}")
+        ```
     """
 
     content: str = Field(..., description="Extracted text in requested format (markdown/html/json)")

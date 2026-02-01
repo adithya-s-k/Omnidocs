@@ -10,22 +10,23 @@ Available Extractors:
     - QwenLayoutDetector: VLM-based detector with custom label support (multi-backend)
 
 Example:
-    >>> from omnidocs.tasks.layout_extraction import DocLayoutYOLO, DocLayoutYOLOConfig
-    >>>
-    >>> extractor = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
-    >>> result = extractor.extract(image)
-    >>>
-    >>> for box in result.bboxes:
-    ...     print(f"{box.label.value}: {box.confidence:.2f}")
+    ```python
+    from omnidocs.tasks.layout_extraction import DocLayoutYOLO, DocLayoutYOLOConfig
 
-    >>> # VLM-based detection with custom labels
-    >>> from omnidocs.tasks.layout_extraction import QwenLayoutDetector, CustomLabel
-    >>> from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
-    >>>
-    >>> detector = QwenLayoutDetector(
-    ...     backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
-    ... )
-    >>> result = detector.extract(image, custom_labels=["code_block", "sidebar"])
+    extractor = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
+    result = extractor.extract(image)
+
+    for box in result.bboxes:
+            print(f"{box.label.value}: {box.confidence:.2f}")
+    # VLM-based detection with custom labels
+    from omnidocs.tasks.layout_extraction import QwenLayoutDetector, CustomLabel
+    from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
+
+    detector = QwenLayoutDetector(
+            backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen3-VL-8B-Instruct")
+        )
+    result = detector.extract(image, custom_labels=["code_block", "sidebar"])
+    ```
 """
 
 from .base import BaseLayoutExtractor

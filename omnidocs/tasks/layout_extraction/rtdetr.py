@@ -33,8 +33,10 @@ class RTDETRConfig(BaseModel):
     This is a single-backend model (PyTorch/Transformers only).
 
     Example:
-        >>> config = RTDETRConfig(device="cuda", confidence=0.4)
-        >>> extractor = RTDETRLayoutExtractor(config=config)
+        ```python
+        config = RTDETRConfig(device="cuda", confidence=0.4)
+        extractor = RTDETRLayoutExtractor(config=config)
+        ```
     """
 
     device: str = Field(
@@ -79,13 +81,15 @@ class RTDETRLayoutExtractor(BaseLayoutExtractor):
     This is a single-backend model (PyTorch/Transformers only).
 
     Example:
-        >>> from omnidocs.tasks.layout_extraction import RTDETRLayoutExtractor, RTDETRConfig
-        >>>
-        >>> extractor = RTDETRLayoutExtractor(config=RTDETRConfig(device="cuda"))
-        >>> result = extractor.extract(image)
-        >>>
-        >>> for box in result.bboxes:
-        ...     print(f"{box.label.value}: {box.confidence:.2f}")
+        ```python
+        from omnidocs.tasks.layout_extraction import RTDETRLayoutExtractor, RTDETRConfig
+
+        extractor = RTDETRLayoutExtractor(config=RTDETRConfig(device="cuda"))
+        result = extractor.extract(image)
+
+        for box in result.bboxes:
+                print(f"{box.label.value}: {box.confidence:.2f}")
+        ```
     """
 
     def __init__(self, config: RTDETRConfig):

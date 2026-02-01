@@ -33,8 +33,10 @@ class EasyOCRConfig(BaseModel):
     This is a single-backend model (PyTorch - CPU/GPU).
 
     Example:
-        >>> config = EasyOCRConfig(languages=["en", "ch_sim"], gpu=True)
-        >>> ocr = EasyOCR(config=config)
+        ```python
+        config = EasyOCRConfig(languages=["en", "ch_sim"], gpu=True)
+        ocr = EasyOCR(config=config)
+        ```
     """
 
     languages: List[str] = Field(
@@ -77,13 +79,15 @@ class EasyOCR(BaseOCRExtractor):
     Single-backend model (PyTorch - CPU/GPU).
 
     Example:
-        >>> from omnidocs.tasks.ocr_extraction import EasyOCR, EasyOCRConfig
-        >>>
-        >>> ocr = EasyOCR(config=EasyOCRConfig(languages=["en"], gpu=True))
-        >>> result = ocr.extract(image)
-        >>>
-        >>> for block in result.text_blocks:
-        ...     print(f"'{block.text}' @ {block.bbox.to_list()}")
+        ```python
+        from omnidocs.tasks.ocr_extraction import EasyOCR, EasyOCRConfig
+
+        ocr = EasyOCR(config=EasyOCRConfig(languages=["en"], gpu=True))
+        result = ocr.extract(image)
+
+        for block in result.text_blocks:
+                print(f"'{block.text}' @ {block.bbox.to_list()}")
+        ```
     """
 
     MODEL_NAME = "easyocr"

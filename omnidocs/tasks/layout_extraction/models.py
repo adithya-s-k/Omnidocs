@@ -11,8 +11,10 @@ Coordinate Systems:
     to convert to normalized coordinates.
 
 Example:
-    >>> result = extractor.extract(image)  # Returns absolute pixel coordinates
-    >>> normalized = result.get_normalized_bboxes()  # Returns 0-1024 normalized coords
+    ```python
+    result = extractor.extract(image)  # Returns absolute pixel coordinates
+    normalized = result.get_normalized_bboxes()  # Returns 0-1024 normalized coords
+    ```
 """
 
 from enum import Enum
@@ -74,20 +76,22 @@ class CustomLabel(BaseModel):
     with validation.
 
     Example:
-        >>> from omnidocs.tasks.layout_extraction import CustomLabel
-        >>>
-        >>> # Simple custom label
-        >>> code_block = CustomLabel(name="code_block")
-        >>>
-        >>> # With metadata
-        >>> sidebar = CustomLabel(
-        ...     name="sidebar",
-        ...     description="Secondary content panel",
-        ...     color="#9B59B6",
-        ... )
-        >>>
-        >>> # Use with QwenLayoutDetector
-        >>> result = detector.extract(image, custom_labels=[code_block, sidebar])
+        ```python
+        from omnidocs.tasks.layout_extraction import CustomLabel
+
+        # Simple custom label
+        code_block = CustomLabel(name="code_block")
+
+        # With metadata
+        sidebar = CustomLabel(
+                name="sidebar",
+                description="Secondary content panel",
+                color="#9B59B6",
+            )
+
+        # Use with QwenLayoutDetector
+        result = detector.extract(image, custom_labels=[code_block, sidebar])
+        ```
     """
 
     name: str = Field(
@@ -325,9 +329,11 @@ class BoundingBox(BaseModel):
             New BoundingBox with coordinates in 0-1024 range
 
         Example:
-            >>> bbox = BoundingBox(x1=100, y1=50, x2=500, y2=300)
-            >>> normalized = bbox.to_normalized(1000, 800)
-            >>> # x: 100/1000*1024 = 102.4, y: 50/800*1024 = 64
+            ```python
+            bbox = BoundingBox(x1=100, y1=50, x2=500, y2=300)
+            normalized = bbox.to_normalized(1000, 800)
+            # x: 100/1000*1024 = 102.4, y: 50/800*1024 = 64
+            ```
         """
         return BoundingBox(
             x1=self.x1 / image_width * NORMALIZED_SIZE,
@@ -480,10 +486,12 @@ class LayoutOutput(BaseModel):
             List of dicts with normalized bbox coordinates and metadata.
 
         Example:
-            >>> result = extractor.extract(image)
-            >>> normalized = result.get_normalized_bboxes()
-            >>> for box in normalized:
-            ...     print(f"{box['label']}: {box['bbox']}")  # coords in 0-1024 range
+            ```python
+            result = extractor.extract(image)
+            normalized = result.get_normalized_bboxes()
+            for box in normalized:
+                    print(f"{box['label']}: {box['bbox']}")  # coords in 0-1024 range
+            ```
         """
         normalized = []
         for box in self.bboxes:
@@ -526,9 +534,11 @@ class LayoutOutput(BaseModel):
             PIL Image with visualizations drawn
 
         Example:
-            >>> result = extractor.extract(image)
-            >>> viz = result.visualize(image, output_path="layout_viz.png")
-            >>> viz.show()  # Display in notebook/viewer
+            ```python
+            result = extractor.extract(image)
+            viz = result.visualize(image, output_path="layout_viz.png")
+            viz.show()  # Display in notebook/viewer
+            ```
         """
         from PIL import ImageDraw
 
@@ -594,8 +604,10 @@ class LayoutOutput(BaseModel):
             ValidationError: If JSON data doesn't match LayoutOutput schema.
 
         Example:
-            >>> output = LayoutOutput.load_json('layout_results.json')
-            >>> print(f"Found {output.element_count} elements")
+            ```python
+            output = LayoutOutput.load_json('layout_results.json')
+            print(f"Found {output.element_count} elements")
+            ```
             Found 5 elements
         """
         path = Path(file_path)
@@ -622,10 +634,12 @@ class LayoutOutput(BaseModel):
             TypeError: If file_path is not a string or Path object.
 
         Example:
-            >>> output = LayoutOutput(bboxes=[], image_width=800, image_height=600)
-            >>> output.save_json('results/layout_output.json')
-            >>> # File is created at results/layout_output.json
-            >>> # Parent 'results' directory is created if it didn't exist
+            ```python
+            output = LayoutOutput(bboxes=[], image_width=800, image_height=600)
+            output.save_json('results/layout_output.json')
+            # File is created at results/layout_output.json
+            # Parent 'results' directory is created if it didn't exist
+            ```
         """
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
