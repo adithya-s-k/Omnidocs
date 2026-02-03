@@ -131,6 +131,39 @@ TEST_REGISTRY: List[TestSpec] = [
         gpu_type=None,
         tags=["dotsocr", "api"],
     ),
+    # Granite Docling Text Extractor
+    TestSpec(
+        name="granite_docling_text_vllm",
+        module="text_extraction.granite_docling_vllm",
+        backend=Backend.VLLM,
+        task=Task.TEXT,
+        gpu_type="L40S:1",
+        tags=["granite_docling", "ibm"],
+    ),
+    TestSpec(
+        name="granite_docling_text_pytorch",
+        module="text_extraction.granite_docling_pytorch",
+        backend=Backend.PYTORCH_GPU,
+        task=Task.TEXT,
+        gpu_type="A10G:1",
+        tags=["granite_docling", "ibm"],
+    ),
+    TestSpec(
+        name="granite_docling_text_mlx",
+        module="text_extraction.granite_docling_mlx",
+        backend=Backend.MLX,
+        task=Task.TEXT,
+        gpu_type=None,
+        tags=["granite_docling", "ibm", "apple_silicon"],
+    ),
+    TestSpec(
+        name="granite_docling_text_api",
+        module="text_extraction.granite_docling_api",
+        backend=Backend.API,
+        task=Task.TEXT,
+        gpu_type=None,
+        tags=["granite_docling", "ibm", "api"],
+    ),
     # ============================================================
     # LAYOUT EXTRACTION
     # ============================================================

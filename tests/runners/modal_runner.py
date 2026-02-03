@@ -1,380 +1,1080 @@
 """
 Modal Test Runner for OmniDocs.
 
-Runs OmniDocs tests on Modal with GPU concurrency control.
-Supports filtering by task, backend, and compute type.
+Explicit test functions pattern - each test is a dedicated @app.function.
+Installs omnidocs[vllm] or omnidocs[pytorch] from local source.
 
 Usage:
     cd Omnidocs
-    modal run tests/runners/modal_runner.py --task text_extraction --concurrency 5
-    modal run tests/runners/modal_runner.py --backend vllm --concurrency 3
-    modal run tests/runners/modal_runner.py --gpu-only --concurrency 5
+    modal run tests/runners/modal_runner.py --test qwen_vllm
+    modal run tests/runners/modal_runner.py --test granite_docling_pytorch
     modal run tests/runners/modal_runner.py --list
-    modal run tests/runners/modal_runner.py --test qwen_text_vllm
+    modal run tests/runners/modal_runner.py --run-all
 """
 
-import json
-import os
-from dataclasses import asdict
-from datetime import datetime
-from typing import Dict, List, Optional
-
 import modal
+from pathlib import Path
 
-from tests.runners.registry import Backend, Task, TestSpec, get_tests
-
-# Modal configuration
+SCRIPT_DIR = Path(__file__).parent
+OMNIDOCS_DIR = SCRIPT_DIR.parent.parent  # Omnidocs/
 MODEL_CACHE_DIR = "/data/.cache"
-VOLUME_NAME = "omnidocs"
 
-app = modal.App("omnidocs-tests")
-vol = modal.Volume.from_name(VOLUME_NAME, create_if_missing=True)
+# ============= Modal Images =============
 
-# CUDA configuration for VLLM
-VLLM_CUDA_VERSION = "12.8.1"
-VLLM_FLAVOR = "devel"
-VLLM_OS = "ubuntu24.04"
-VLLM_TAG = f"{VLLM_CUDA_VERSION}-{VLLM_FLAVOR}-{VLLM_OS}"
-
-# CUDA configuration for PyTorch
-PYTORCH_CUDA_VERSION = "12.8.0"
-PYTORCH_FLAVOR = "devel"
-PYTORCH_OS = "ubuntu24.04"
-PYTORCH_TAG = f"{PYTORCH_CUDA_VERSION}-{PYTORCH_FLAVOR}-{PYTORCH_OS}"
-
-flash_attn_wheel = (
-    "https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/"
-    "flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp312-cp312-linux_x86_64.whl"
-)
-
-# VLLM GPU Image
-VLLM_GPU_IMAGE = (
-    modal.Image.from_registry(f"nvidia/cuda:{VLLM_TAG}", add_python="3.12")
+cuda_vllm = "12.8.1"
+VLLM_IMAGE = (
+    modal.Image.from_registry(
+        f"nvidia/cuda:{cuda_vllm}-devel-ubuntu24.04", add_python="3.12"
+    )
     .apt_install("libopenmpi-dev", "libnuma-dev", "libgl1", "libglib2.0-0")
     .run_commands("pip install uv")
     .run_commands("uv pip install vllm --system")
     .run_commands("uv pip install flash-attn --no-build-isolation --system")
-    .uv_pip_install(
-        "transformers==4.57.6",
-        "pillow",
-        "huggingface_hub[hf_transfer]",
-        "numpy",
-        "pydantic",
+    .add_local_dir(
+        str(OMNIDOCS_DIR),
+        remote_path="/opt/omnidocs",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
     )
-    .uv_pip_install(
-        "qwen-vl-utils",
-    )
+    .run_commands("uv pip install '/opt/omnidocs[vllm]' --system")
     .env(
         {
             "HF_HUB_ENABLE_HF_TRANSFER": "1",
-            "HF_HOME": "/data/.cache",
-            "OMNIDOCS_MODEL_CACHE": MODEL_CACHE_DIR,
+            "HF_HOME": MODEL_CACHE_DIR,
             "VLLM_USE_V1": "0",
         }
     )
 )
 
-# PyTorch GPU Image
-PYTORCH_GPU_IMAGE = (
-    modal.Image.from_registry(f"nvidia/cuda:{PYTORCH_TAG}", add_python="3.12")
+cuda_pytorch = "12.8.0"
+flash_attn_wheel = (
+    "https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/"
+    "flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp312-cp312-linux_x86_64.whl"
+)
+PYTORCH_IMAGE = (
+    modal.Image.from_registry(
+        f"nvidia/cuda:{cuda_pytorch}-devel-ubuntu24.04", add_python="3.12"
+    )
     .apt_install("libglib2.0-0", "libgl1", "libglx-mesa0", "libgl1-mesa-dri")
-    .uv_pip_install(
-        "torch==2.6",
-        "torchvision",
-        "torchaudio",
+    .run_commands("pip install uv")
+    .add_local_dir(
+        str(OMNIDOCS_DIR),
+        remote_path="/opt/omnidocs",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
     )
-    .uv_pip_install(
-        "transformers==4.57.6",
-        "pillow",
-        "numpy",
-        "pydantic",
-        "huggingface_hub",
-        "hf_transfer",
-        "accelerate",
-    )
+    .run_commands("uv pip install '/opt/omnidocs[pytorch]' --system")
     .uv_pip_install(flash_attn_wheel)
-    .uv_pip_install(
-        "ultralytics",
-        "easyocr",
-        "paddlepaddle",
-        "paddleocr",
-    )
     .env(
         {
             "HF_HUB_ENABLE_HF_TRANSFER": "1",
-            "HF_HOME": "/data/.cache",
-            "OMNIDOCS_MODEL_CACHE": MODEL_CACHE_DIR,
+            "HF_HOME": MODEL_CACHE_DIR,
         }
     )
 )
 
-# CPU Image (for CPU-only tests)
-CPU_IMAGE = (
-    modal.Image.debian_slim(python_version="3.12")
-    .apt_install("tesseract-ocr", "libglib2.0-0", "libgl1", "libglx-mesa0")
-    .uv_pip_install(
-        "torch",
-        "torchvision",
-        "transformers==4.57.6",
-        "pillow",
-        "numpy",
-        "pydantic",
-        "ultralytics",
-        "easyocr",
-        "paddlepaddle",
-        "paddleocr",
-        "pytesseract",
-        "rtree",
+# ============= Modal App =============
+
+app = modal.App("omnidocs-tests")
+volume = modal.Volume.from_name("omnidocs", create_if_missing=True)
+secret = modal.Secret.from_name("adithya-hf-wandb")
+
+
+# ============= Test Image Generation =============
+
+
+def create_test_image():
+    """Create a simple test document image."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    img = Image.new("RGB", (800, 600), "white")
+    draw = ImageDraw.Draw(img)
+
+    try:
+        font = ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24
+        )
+        small_font = ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16
+        )
+    except OSError:
+        font = ImageFont.load_default()
+        small_font = font
+
+    draw.text((50, 30), "Sample Document", fill="black", font=font)
+    draw.text(
+        (50, 80),
+        "This is a test document for OCR extraction.",
+        fill="black",
+        font=small_font,
     )
-)
+    draw.text(
+        (50, 110), "It contains multiple lines of text.", fill="black", font=small_font
+    )
+
+    # Table
+    draw.rectangle([50, 160, 350, 280], outline="black")
+    draw.line([50, 200, 350, 200], fill="black")
+    draw.line([150, 160, 150, 280], fill="black")
+    draw.line([250, 160, 250, 280], fill="black")
+    draw.text((70, 170), "Name", fill="black", font=small_font)
+    draw.text((170, 170), "Value", fill="black", font=small_font)
+    draw.text((270, 170), "Unit", fill="black", font=small_font)
+    draw.text((70, 220), "Alpha", fill="black", font=small_font)
+    draw.text((170, 220), "100", fill="black", font=small_font)
+    draw.text((270, 220), "kg", fill="black", font=small_font)
+
+    # List
+    draw.text((50, 320), "Key Points:", fill="black", font=small_font)
+    draw.text((50, 350), "- First item in the list", fill="black", font=small_font)
+    draw.text((50, 380), "- Second item in the list", fill="black", font=small_font)
+    draw.text((50, 410), "- Third item in the list", fill="black", font=small_font)
+
+    return img
 
 
-def get_image_for_backend(backend: Backend) -> modal.Image:
-    """Get the appropriate Modal image for a backend type."""
-    if backend == Backend.VLLM:
-        return VLLM_GPU_IMAGE
-    elif backend == Backend.PYTORCH_GPU:
-        return PYTORCH_GPU_IMAGE
-    elif backend in (Backend.PYTORCH_CPU, Backend.MLX, Backend.API):
-        return CPU_IMAGE
-    else:
-        return CPU_IMAGE
-
-
-def parse_gpu_type(gpu_type: Optional[str]) -> Optional[str]:
-    """Parse GPU type string to Modal GPU spec."""
-    if gpu_type is None:
-        return None
-    # GPU type format: "L40S:1", "A10G:1", "T4:1"
-    return gpu_type
-
-
-@app.function(
-    image=VLLM_GPU_IMAGE,
-    gpu="L40S:1",
-    volumes={"/data": vol},
-    secrets=[modal.Secret.from_name("adithya-hf-wandb")],
-    timeout=600,
-)
-def run_vllm_test(test_spec: Dict, image_bytes: bytes) -> Dict:
-    """Run a VLLM backend test."""
-    return _run_test_impl(test_spec, image_bytes)
+# ============= TEXT EXTRACTION TESTS =============
 
 
 @app.function(
-    image=PYTORCH_GPU_IMAGE,
-    gpu="A10G:1",
-    volumes={"/data": vol},
-    secrets=[modal.Secret.from_name("adithya-hf-wandb")],
-    timeout=600,
+    image=VLLM_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
 )
-def run_pytorch_gpu_test(test_spec: Dict, image_bytes: bytes) -> Dict:
-    """Run a PyTorch GPU backend test."""
-    return _run_test_impl(test_spec, image_bytes)
-
-
-@app.function(
-    image=PYTORCH_GPU_IMAGE,
-    gpu="T4:1",
-    volumes={"/data": vol},
-    secrets=[modal.Secret.from_name("adithya-hf-wandb")],
-    timeout=600,
-)
-def run_pytorch_gpu_light_test(test_spec: Dict, image_bytes: bytes) -> Dict:
-    """Run a lighter PyTorch GPU test (T4 GPU for YOLO, RT-DETR, etc.)."""
-    return _run_test_impl(test_spec, image_bytes)
-
-
-@app.function(
-    image=CPU_IMAGE,
-    volumes={"/data": vol},
-    timeout=600,
-)
-def run_cpu_test(test_spec: Dict, image_bytes: bytes) -> Dict:
-    """Run a CPU-only test."""
-    return _run_test_impl(test_spec, image_bytes)
-
-
-def _run_test_impl(test_spec: Dict, image_bytes: bytes) -> Dict:
-    """Internal implementation of test execution."""
-    import importlib
+def test_qwen_vllm(img_bytes: bytes) -> dict:
+    """Test Qwen text extraction with VLLM backend."""
     import io
-    import sys
+    import os
     import time
-    from pathlib import Path
+
+    os.environ["VLLM_USE_V1"] = "0"
+    os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
 
     from PIL import Image
 
-    # Add the omnidocs package to path
-    sys.path.insert(0, "/root")
+    from omnidocs.tasks.text_extraction import QwenTextExtractor
+    from omnidocs.tasks.text_extraction.qwen import QwenTextVLLMConfig
 
-    # Load the image
-    img = Image.open(io.BytesIO(image_bytes))
+    img = Image.open(io.BytesIO(img_bytes))
 
-    # Import the test module
-    module_path = f"tests.standalone.{test_spec['module']}"
-    try:
-        module = importlib.import_module(module_path)
-    except ImportError as e:
-        return {
-            "success": False,
-            "test_name": test_spec["name"],
-            "error": f"Failed to import module {module_path}: {e}",
-            "load_time": 0,
-            "inference_time": 0,
-        }
+    print("=" * 60)
+    print("Testing QwenTextExtractor with VLLM backend")
+    print("=" * 60)
 
-    # Find the test class (first class that ends with 'Test')
-    test_class = None
-    for name in dir(module):
-        obj = getattr(module, name)
-        if (
-            isinstance(obj, type)
-            and name.endswith("Test")
-            and name != "BaseOmnidocsTest"
-        ):
-            test_class = obj
-            break
+    start = time.time()
+    extractor = QwenTextExtractor(
+        backend=QwenTextVLLMConfig(
+            model="Qwen/Qwen3-VL-4B-Instruct",
+            gpu_memory_utilization=0.90,
+            max_model_len=8192,
+            enforce_eager=True,
+            download_dir=MODEL_CACHE_DIR,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
 
-    if test_class is None:
-        return {
-            "success": False,
-            "test_name": test_spec["name"],
-            "error": f"No test class found in {module_path}",
-            "load_time": 0,
-            "inference_time": 0,
-        }
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
 
-    # Run the test
-    test = test_class()
-    result = test.run(img)
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
 
-    return result.to_dict()
+    return {
+        "status": "success",
+        "test": "qwen_vllm",
+        "backend": "vllm",
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
 
 
-def select_runner_for_test(spec: TestSpec):
-    """Select the appropriate Modal function for a test spec."""
-    if spec.backend == Backend.VLLM:
-        return run_vllm_test
-    elif spec.backend == Backend.PYTORCH_GPU:
-        # Use light GPU for simpler models
-        if any(tag in spec.tags for tag in ["yolo", "rtdetr", "easyocr", "paddleocr", "tesseract", "tableformer"]):
-            return run_pytorch_gpu_light_test
-        return run_pytorch_gpu_test
-    else:
-        return run_cpu_test
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_qwen_pytorch(img_bytes: bytes) -> dict:
+    """Test Qwen text extraction with PyTorch backend."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import QwenTextExtractor
+    from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing QwenTextExtractor with PyTorch backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = QwenTextExtractor(
+        backend=QwenTextPyTorchConfig(
+            model="Qwen/Qwen3-VL-4B-Instruct",
+            device="cuda",
+            torch_dtype="bfloat16",
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "qwen_pytorch",
+        "backend": "pytorch",
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=VLLM_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_nanonets_vllm(img_bytes: bytes) -> dict:
+    """Test Nanonets text extraction with VLLM backend."""
+    import io
+    import os
+    import time
+
+    os.environ["VLLM_USE_V1"] = "0"
+    os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import NanonetsTextExtractor
+    from omnidocs.tasks.text_extraction.nanonets import NanonetsTextVLLMConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing NanonetsTextExtractor with VLLM backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = NanonetsTextExtractor(
+        backend=NanonetsTextVLLMConfig(
+            model="nanonets/Nanonets-OCR-s",
+            gpu_memory_utilization=0.85,
+            download_dir=MODEL_CACHE_DIR,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "nanonets_vllm",
+        "backend": "vllm",
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_nanonets_pytorch(img_bytes: bytes) -> dict:
+    """Test Nanonets text extraction with PyTorch backend."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import NanonetsTextExtractor
+    from omnidocs.tasks.text_extraction.nanonets import NanonetsTextPyTorchConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing NanonetsTextExtractor with PyTorch backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = NanonetsTextExtractor(
+        backend=NanonetsTextPyTorchConfig(
+            model="nanonets/Nanonets-OCR-s",
+            device="cuda",
+            torch_dtype="bfloat16",
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "nanonets_pytorch",
+        "backend": "pytorch",
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=VLLM_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_dotsocr_vllm(img_bytes: bytes) -> dict:
+    """Test DotsOCR text extraction with VLLM backend."""
+    import io
+    import os
+    import time
+
+    os.environ["VLLM_USE_V1"] = "0"
+    os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+    from omnidocs.tasks.text_extraction.dotsocr import DotsOCRVLLMConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing DotsOCRTextExtractor with VLLM backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = DotsOCRTextExtractor(
+        backend=DotsOCRVLLMConfig(
+            model="rednote-hilab/dots.ocr",
+            gpu_memory_utilization=0.90,
+            max_model_len=8192,
+            enforce_eager=True,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "dotsocr_vllm",
+        "backend": "vllm",
+        "model": "dots.ocr",
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_dotsocr_pytorch(img_bytes: bytes) -> dict:
+    """Test DotsOCR text extraction with PyTorch backend."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
+    from omnidocs.tasks.text_extraction.dotsocr import DotsOCRPyTorchConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing DotsOCRTextExtractor with PyTorch backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = DotsOCRTextExtractor(
+        backend=DotsOCRPyTorchConfig(
+            model="rednote-hilab/dots.ocr",
+            device="cuda",
+            torch_dtype="bfloat16",
+            attn_implementation="sdpa",
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "dotsocr_pytorch",
+        "backend": "pytorch",
+        "model": "dots.ocr",
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=VLLM_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_granite_docling_vllm(img_bytes: bytes) -> dict:
+    """Test Granite Docling text extraction with VLLM backend."""
+    import io
+    import os
+    import time
+
+    os.environ["VLLM_USE_V1"] = "0"
+    os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import GraniteDoclingTextExtractor
+    from omnidocs.tasks.text_extraction.granitedocling import GraniteDoclingTextVLLMConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing GraniteDoclingTextExtractor with VLLM backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = GraniteDoclingTextExtractor(
+        backend=GraniteDoclingTextVLLMConfig(
+            gpu_memory_utilization=0.85,
+            download_dir=MODEL_CACHE_DIR,
+            fast_boot=True,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "granite_docling_vllm",
+        "backend": "vllm",
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_granite_docling_pytorch(img_bytes: bytes) -> dict:
+    """Test Granite Docling text extraction with PyTorch backend."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import GraniteDoclingTextExtractor
+    from omnidocs.tasks.text_extraction.granitedocling import (
+        GraniteDoclingTextPyTorchConfig,
+    )
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing GraniteDoclingTextExtractor with PyTorch backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = GraniteDoclingTextExtractor(
+        backend=GraniteDoclingTextPyTorchConfig(
+            device="cuda",
+            torch_dtype="bfloat16",
+            use_flash_attention=True,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "granite_docling_pytorch",
+        "backend": "pytorch",
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+# ============= LAYOUT EXTRACTION TESTS =============
+
+
+@app.function(
+    image=VLLM_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_qwen_layout_vllm(img_bytes: bytes) -> dict:
+    """Test Qwen layout detection with VLLM backend."""
+    import io
+    import os
+    import time
+
+    os.environ["VLLM_USE_V1"] = "0"
+    os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+
+    from PIL import Image
+
+    from omnidocs.tasks.layout_extraction import QwenLayoutDetector
+    from omnidocs.tasks.layout_extraction.qwen import QwenLayoutVLLMConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing QwenLayoutDetector with VLLM backend")
+    print("=" * 60)
+
+    start = time.time()
+    detector = QwenLayoutDetector(
+        backend=QwenLayoutVLLMConfig(
+            model="Qwen/Qwen3-VL-4B-Instruct",
+            gpu_memory_utilization=0.90,
+            max_model_len=8192,
+            enforce_eager=True,
+            download_dir=MODEL_CACHE_DIR,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = detector.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Detected Layout Elements ---")
+    print(f"Number of boxes: {len(result.bboxes)}")
+    for i, box in enumerate(result.bboxes[:5]):
+        print(f"  {i+1}. {box.label}: conf={box.confidence:.2f}")
+    if len(result.bboxes) > 5:
+        print(f"  ... and {len(result.bboxes) - 5} more")
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "qwen_layout_vllm",
+        "backend": "vllm",
+        "model": "Qwen3-VL-4B",
+        "num_boxes": len(result.bboxes),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_qwen_layout_pytorch(img_bytes: bytes) -> dict:
+    """Test Qwen layout detection with PyTorch backend."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.layout_extraction import QwenLayoutDetector
+    from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing QwenLayoutDetector with PyTorch backend")
+    print("=" * 60)
+
+    start = time.time()
+    detector = QwenLayoutDetector(
+        backend=QwenLayoutPyTorchConfig(
+            model="Qwen/Qwen3-VL-4B-Instruct",
+            device="cuda",
+            torch_dtype="bfloat16",
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = detector.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Detected Layout Elements ---")
+    print(f"Number of boxes: {len(result.bboxes)}")
+    for i, box in enumerate(result.bboxes[:5]):
+        print(f"  {i+1}. {box.label}: conf={box.confidence:.2f}")
+    if len(result.bboxes) > 5:
+        print(f"  ... and {len(result.bboxes) - 5} more")
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "qwen_layout_pytorch",
+        "backend": "pytorch",
+        "model": "Qwen3-VL-4B",
+        "num_boxes": len(result.bboxes),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=600,
+)
+def test_doclayout_yolo_gpu(img_bytes: bytes) -> dict:
+    """Test DocLayoutYOLO with GPU."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.layout_extraction import DocLayoutYOLO, DocLayoutYOLOConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing DocLayoutYOLO with GPU")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Detected Layout Elements ---")
+    print(f"Number of boxes: {len(result.bboxes)}")
+    for i, box in enumerate(result.bboxes[:5]):
+        print(f"  {i+1}. {box.label}: conf={box.confidence:.2f}")
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "doclayout_yolo_gpu",
+        "backend": "pytorch_gpu",
+        "model": "DocLayoutYOLO",
+        "num_boxes": len(result.bboxes),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=600,
+)
+def test_rtdetr_gpu(img_bytes: bytes) -> dict:
+    """Test RTDETRLayoutExtractor with GPU."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.layout_extraction import RTDETRLayoutExtractor, RTDETRConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing RTDETRLayoutExtractor with GPU")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = RTDETRLayoutExtractor(config=RTDETRConfig(device="cuda"))
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Detected Layout Elements ---")
+    print(f"Number of boxes: {len(result.bboxes)}")
+    for i, box in enumerate(result.bboxes[:5]):
+        print(f"  {i+1}. {box.label}: conf={box.confidence:.2f}")
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "rtdetr_gpu",
+        "backend": "pytorch_gpu",
+        "model": "RTDETR",
+        "num_boxes": len(result.bboxes),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+# ============= OCR EXTRACTION TESTS =============
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=600,
+)
+def test_easyocr_gpu(img_bytes: bytes) -> dict:
+    """Test EasyOCR with GPU."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.ocr_extraction import EasyOCR, EasyOCRConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing EasyOCR with GPU")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = EasyOCR(config=EasyOCRConfig(device="cuda"))
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- OCR Results ---")
+    print(f"Number of text blocks: {len(result.text_blocks)}")
+    for i, block in enumerate(result.text_blocks[:5]):
+        print(f"  {i+1}. '{block.text}' (conf={block.confidence:.2f})")
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "easyocr_gpu",
+        "backend": "pytorch_gpu",
+        "model": "EasyOCR",
+        "num_blocks": len(result.text_blocks),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=600,
+)
+def test_paddleocr_gpu(img_bytes: bytes) -> dict:
+    """Test PaddleOCR with GPU."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.ocr_extraction import PaddleOCR, PaddleOCRConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing PaddleOCR with GPU")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = PaddleOCR(config=PaddleOCRConfig(device="cuda"))
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- OCR Results ---")
+    print(f"Number of text blocks: {len(result.text_blocks)}")
+    for i, block in enumerate(result.text_blocks[:5]):
+        print(f"  {i+1}. '{block.text}' (conf={block.confidence:.2f})")
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "paddleocr_gpu",
+        "backend": "pytorch_gpu",
+        "model": "PaddleOCR",
+        "num_blocks": len(result.text_blocks),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+# ============= TABLE EXTRACTION TESTS =============
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=600,
+)
+def test_tableformer_gpu(img_bytes: bytes) -> dict:
+    """Test TableFormerExtractor with GPU."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.table_extraction import TableFormerExtractor, TableFormerConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing TableFormerExtractor with GPU")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = TableFormerExtractor(config=TableFormerConfig(device="cuda"))
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Table Extraction Results ---")
+    print(f"Number of tables: {len(result.tables)}")
+    for i, table in enumerate(result.tables[:3]):
+        print(f"  Table {i+1}: {table.num_rows}x{table.num_cols}")
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "tableformer_gpu",
+        "backend": "pytorch_gpu",
+        "model": "TableFormer",
+        "num_tables": len(result.tables),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+# ============= Test Registry =============
+
+AVAILABLE_TESTS = {
+    # Text extraction
+    "qwen_vllm": test_qwen_vllm,
+    "qwen_pytorch": test_qwen_pytorch,
+    "nanonets_vllm": test_nanonets_vllm,
+    "nanonets_pytorch": test_nanonets_pytorch,
+    "dotsocr_vllm": test_dotsocr_vllm,
+    "dotsocr_pytorch": test_dotsocr_pytorch,
+    "granite_docling_vllm": test_granite_docling_vllm,
+    "granite_docling_pytorch": test_granite_docling_pytorch,
+    # Layout extraction
+    "qwen_layout_vllm": test_qwen_layout_vllm,
+    "qwen_layout_pytorch": test_qwen_layout_pytorch,
+    "doclayout_yolo_gpu": test_doclayout_yolo_gpu,
+    "rtdetr_gpu": test_rtdetr_gpu,
+    # OCR extraction
+    "easyocr_gpu": test_easyocr_gpu,
+    "paddleocr_gpu": test_paddleocr_gpu,
+    # Table extraction
+    "tableformer_gpu": test_tableformer_gpu,
+}
+
+
+# ============= Local Entrypoint =============
 
 
 @app.local_entrypoint()
-def main(
-    task: str = None,
-    backend: str = None,
-    concurrency: int = 5,
-    gpu_only: bool = False,
-    cpu_only: bool = False,
-    list_tests: bool = False,
-    test: str = None,
-    image_path: str = None,
-):
+def main(test: str = "qwen_vllm", list_tests: bool = False, run_all: bool = False):
     """
     Run OmniDocs tests on Modal.
 
     Args:
-        task: Filter by task (text_extraction, layout_extraction, ocr_extraction,
-              table_extraction, reading_order)
-        backend: Filter by backend (vllm, pytorch_gpu, pytorch_cpu, mlx, api)
-        concurrency: Maximum number of concurrent GPU jobs
-        gpu_only: Only run tests that require GPU
-        cpu_only: Only run tests that run on CPU
-        list_tests: List available tests without running
-        test: Run a specific test by name
-        image_path: Path to test image (required unless --list)
+        test: Test name (e.g., "qwen_vllm", "granite_docling_pytorch")
+        list_tests: List all available tests
+        run_all: Run all available tests
     """
-    # Parse filters
-    task_enum = Task(task) if task else None
-    backend_enum = Backend(backend) if backend else None
-    names = [test] if test else None
-
-    # Get filtered tests
-    tests = get_tests(
-        task=task_enum,
-        backend=backend_enum,
-        gpu_only=gpu_only,
-        cpu_only=cpu_only,
-        names=names,
-    )
-
-    # Skip MLX and API tests on Modal (they run locally)
-    tests = [t for t in tests if t.backend not in (Backend.MLX, Backend.API)]
+    import io
 
     if list_tests:
-        print(f"\n{'Name':<30} {'Task':<20} {'Backend':<15} {'GPU':<10}")
-        print("-" * 75)
-        for t in tests:
-            gpu = t.gpu_type or "CPU"
-            print(f"{t.name:<30} {t.task.value:<20} {t.backend.value:<15} {gpu:<10}")
-        print(f"\nTotal: {len(tests)} tests")
+        print("\nAvailable tests:")
+        print("-" * 40)
+        for name in sorted(AVAILABLE_TESTS.keys()):
+            print(f"  {name}")
+        print(f"\nTotal: {len(AVAILABLE_TESTS)} tests")
         return
 
-    if not image_path:
-        print("Error: --image-path is required to run tests")
-        print("Usage: modal run tests/runners/modal_runner.py --image-path test.png")
+    # Create test image
+    img = create_test_image()
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    img_bytes = buffer.getvalue()
+    print(f"Created test image: {img.size[0]}x{img.size[1]}")
+
+    if run_all:
+        print("\n" + "=" * 60)
+        print("RUNNING ALL TESTS")
+        print("=" * 60)
+
+        all_results = []
+        for test_name, test_fn in AVAILABLE_TESTS.items():
+            print(f"\n>>> Running: {test_name}")
+            try:
+                result = test_fn.remote(img_bytes)
+                all_results.append(result)
+                print(f"    OK: {result['status']}")
+            except Exception as e:
+                all_results.append(
+                    {"status": "failed", "test": test_name, "error": str(e)}
+                )
+                print(f"    FAIL: {e}")
+
+        print("\n" + "=" * 60)
+        print("SUMMARY")
+        print("=" * 60)
+        passed = sum(1 for r in all_results if r["status"] == "success")
+        failed = len(all_results) - passed
+        print(f"Passed: {passed}/{len(all_results)}")
+        print(f"Failed: {failed}/{len(all_results)}")
+
+        for result in all_results:
+            status = "OK" if result["status"] == "success" else "FAIL"
+            test_name = result.get("test", "unknown")
+            if result["status"] == "success":
+                print(
+                    f"  [{status}] {test_name}: "
+                    f"load={result['load_time']:.1f}s, "
+                    f"inference={result['inference_time']:.1f}s"
+                )
+            else:
+                print(f"  [{status}] {test_name}: {result.get('error', 'unknown')}")
         return
 
-    # Load test image
-    with open(image_path, "rb") as f:
-        image_bytes = f.read()
+    if test not in AVAILABLE_TESTS:
+        print(f"Unknown test: {test}")
+        print("\nAvailable tests:")
+        for name in sorted(AVAILABLE_TESTS.keys()):
+            print(f"  {name}")
+        return
 
-    print(f"\nRunning {len(tests)} tests with concurrency={concurrency}")
-    print(f"Image: {image_path}")
-    print("-" * 75)
+    print(f"\nRunning test: {test}")
+    print("=" * 60)
 
-    # Group tests by runner function for better concurrency control
-    results = []
-    start_time = datetime.now()
+    test_fn = AVAILABLE_TESTS[test]
+    result = test_fn.remote(img_bytes)
 
-    # Run tests with their appropriate runners
-    for spec in tests:
-        runner = select_runner_for_test(spec)
-        spec_dict = {
-            "name": spec.name,
-            "module": spec.module,
-            "backend": spec.backend.value,
-            "task": spec.task.value,
-            "tags": spec.tags,
-        }
-
-        print(f"  Running {spec.name}...")
-        try:
-            result = runner.remote(spec_dict, image_bytes)
-            results.append(result)
-            status = "PASS" if result["success"] else "FAIL"
-            print(f"    [{status}] {spec.name} ({result.get('inference_time', 0):.2f}s)")
-        except Exception as e:
-            results.append({
-                "success": False,
-                "test_name": spec.name,
-                "error": str(e),
-            })
-            print(f"    [FAIL] {spec.name}: {e}")
-
-    # Print summary
-    elapsed = (datetime.now() - start_time).total_seconds()
-    passed = sum(1 for r in results if r["success"])
-    failed = len(results) - passed
-
-    print("\n" + "=" * 75)
-    print(f"SUMMARY: {passed} passed, {failed} failed ({elapsed:.1f}s)")
-    print("=" * 75)
-
-    if failed > 0:
-        print("\nFailed tests:")
-        for r in results:
-            if not r["success"]:
-                print(f"  - {r['test_name']}: {r.get('error', 'Unknown error')}")
-
-    # Write results to file
-    results_file = f"test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(results_file, "w") as f:
-        json.dump(results, f, indent=2)
-    print(f"\nResults written to {results_file}")
+    print("\n" + "=" * 60)
+    print("TEST RESULT")
+    print("=" * 60)
+    for key, value in result.items():
+        print(f"  {key}: {value}")
