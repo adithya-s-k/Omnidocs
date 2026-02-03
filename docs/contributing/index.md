@@ -5,6 +5,7 @@ Thank you for your interest in contributing to OmniDocs!
 ## Quick Links
 
 - [Development Workflow](workflow.md) - 6-phase implementation process
+- [Testing Guide](testing.md) - How to run tests (local, MLX, Modal GPU)
 - [Adding Models](adding-models.md) - How to add new model support
 - [Style Guide](style-guide.md) - Code standards and conventions
 
@@ -32,8 +33,18 @@ uv sync
 ### 3. Run tests
 
 ```bash
+# Run pytest unit tests
 uv run pytest tests/ -v
+
+# Run local CPU/MLX tests
+uv run python -m tests.runners.local_runner \
+    --image tests/fixtures/images/test_simple.png \
+    --cpu-only
+
+# See full testing guide
 ```
+
+For comprehensive testing instructions including GPU tests on Modal, see the [Testing Guide](testing.md).
 
 ---
 

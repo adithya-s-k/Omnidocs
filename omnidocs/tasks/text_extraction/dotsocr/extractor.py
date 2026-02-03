@@ -222,6 +222,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         try:
             import torch
             from transformers import AutoModelForCausalLM, AutoProcessor
+            import transformers.processing_utils as pu
         except ImportError as e:
             raise ImportError(
                 "PyTorch backend requires torch and transformers. Install with: uv add torch transformers accelerate"
@@ -233,12 +234,20 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         print(f"Loading Dots OCR model: {config.model}")
         print(f"Cache directory: {cache_dir}")
 
-        # Load processor (Dots OCR uses AutoProcessor, not AutoTokenizer)
+        # PATCH: Bypass video_processor validation for Dots OCR compatibility
+        # Dots OCR doesn't need video processing but transformers 4.55+ requires it
+        _orig_check = pu.ProcessorMixin.check_argument_for_proper_class
+        pu.ProcessorMixin.check_argument_for_proper_class = lambda *args, **kwargs: None
+
+        # Load processor with validation disabled
         self._processor = AutoProcessor.from_pretrained(
             config.model,
             trust_remote_code=config.trust_remote_code,
             cache_dir=cache_dir,
         )
+
+        # Restore validation
+        pu.ProcessorMixin.check_argument_for_proper_class = _orig_check
 
         # Load model (Dots OCR uses AutoModelForCausalLM)
         model_kwargs: Dict[str, Any] = {

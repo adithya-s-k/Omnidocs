@@ -21,17 +21,21 @@ classifiers = [
 ]
 dependencies = [
     "doclayout-yolo>=0.0.4",
+    "docling-ibm-models>=3.4.0",
+    "hf-transfer>=0.1.0",
     "huggingface-hub>=0.36.0",
     "numpy>=2.2.6",
+    "opencv-contrib-python>=4.10.0",
     "pdfplumber>=0.11.9",
     "pillow>=12.1.0",
     "pydantic>=2.12.5",
     "pypdfium2>=5.3.0",
     "requests>=2.32.5",
+    "rtree>=1.0.0",
     "timm>=1.0.24",
-    "torch==2.6",
+    "torch>=2.6",
     "torchvision",
-    "transformers>=4.57.6",
+    "transformers>=4.57.6,<5.0.0",
 ]
 
 [project.urls]
@@ -99,13 +103,14 @@ ocr = [
     "easyocr>=1.7.2",
     "paddleocr>=3.4.0",
     "paddlepaddle>=3.3.0",
+    "paddlex[ocr-core]>=3.4.0",
     "pytesseract>=0.3.13",
 ]
 pytorch = [
     "accelerate>=1.12.0",
     "qwen-vl-utils>=0.0.14",
-    "torch==2.6",
-    "transformers>=4.57.6",
+    "torch>=2.6",
+    "transformers>=4.57.6,<5.0.0",
 ]
 vllm = [
     {include-group = "pytorch"},
@@ -123,10 +128,33 @@ path = "omnidocs/_version.py"
 testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow (requiring network, large files, etc.)",
+    "gpu: requires GPU for execution",
+    "cpu: CPU-only tests",
+    "vllm: VLLM backend tests",
+    "pytorch: PyTorch backend tests",
+    "mlx: MLX backend tests (Apple Silicon)",
+    "api: API backend tests",
+    "text_extraction: text extraction task tests",
+    "layout_extraction: layout extraction task tests",
+    "ocr_extraction: OCR extraction task tests",
+    "table_extraction: table extraction task tests",
+    "reading_order: reading order prediction task tests",
+    "integration: integration tests requiring model inference",
 ]
 filterwarnings = [
     # Ignore deprecation warning from thop (external dependency of doclayout-yolo)
     "ignore:The distutils package is deprecated:DeprecationWarning",
+]
+
+[tool.uv]
+# Override opencv dependencies from packages that pull in conflicting variants
+# easyocr wants opencv-python-headless, paddleocr/paddlex want opencv-contrib-python
+# We use opencv-contrib-python as the standard (superset of opencv-python)
+override-dependencies = [
+    "opencv-contrib-python>=4.10.0",
+    # Replace headless/standard with opencv-contrib-python
+    "opencv-python-headless>=4.10.0 ; sys_platform == 'never'",
+    "opencv-python>=4.10.0 ; sys_platform == 'never'",
 ]
 
 [tool.ruff]
