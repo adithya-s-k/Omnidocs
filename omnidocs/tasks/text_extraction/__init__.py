@@ -8,6 +8,7 @@ with formatting preservation and optional layout detection.
 Available Extractors:
     - QwenTextExtractor: Qwen3-VL based extractor (multi-backend)
     - DotsOCRTextExtractor: Dots OCR with layout-aware extraction (PyTorch/VLLM/API)
+    - NanonetsTextExtractor: Nanonets OCR2-3B for text extraction (PyTorch/VLLM)
 
 Example:
     ```python
@@ -25,6 +26,7 @@ Example:
 from .base import BaseTextExtractor
 from .dotsocr import DotsOCRTextExtractor
 from .models import DotsOCRTextOutput, LayoutElement, OutputFormat, TextOutput
+from .nanonets import NanonetsTextExtractor
 from .qwen import QwenTextExtractor
 
 __all__ = [
@@ -38,4 +40,5 @@ __all__ = [
     # Extractors
     "QwenTextExtractor",
     "DotsOCRTextExtractor",
+    "NanonetsTextExtractor",
 ]
