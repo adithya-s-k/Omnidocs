@@ -116,6 +116,7 @@ nav:
       - usage/tasks/text-extraction.md
       - Qwen: usage/models/qwen.md
       - DotsOCR: usage/models/dotsocr.md
+      - Nanonets OCR2: usage/models/nanonets.md
     - Layout Analysis:
       - usage/tasks/layout-analysis.md
       - DocLayoutYOLO: usage/models/doclayout-yolo.md
@@ -125,6 +126,11 @@ nav:
       - Tesseract: usage/models/tesseract.md
       - EasyOCR: usage/models/easyocr.md
       - PaddleOCR: usage/models/paddleocr.md
+    - Table Extraction:
+      - usage/tasks/table-extraction.md
+      - TableFormer: usage/models/tableformer.md
+    - Reading Order:
+      - usage/tasks/reading-order.md
     - Batch Processing: usage/batch-processing.md
     - Deployment: usage/deployment.md
 
@@ -133,6 +139,7 @@ nav:
   - Contributing:
     - contributing/index.md
     - Development Workflow: contributing/workflow.md
+    - Testing Guide: contributing/testing.md
     - Adding Models: contributing/adding-models.md
     - Style Guide: contributing/style-guide.md
 
