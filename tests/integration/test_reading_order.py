@@ -8,10 +8,24 @@ Usage:
     pytest tests/integration/test_reading_order.py -m cpu
 """
 
+import shutil
+
 import pytest
 from PIL import Image
 
+# Check for optional dependencies
+easyocr_available = False
+try:
+    import easyocr  # noqa: F401
 
+    easyocr_available = True
+except ImportError:
+    pass
+
+tesseract_available = shutil.which("tesseract") is not None
+
+
+@pytest.mark.skipif(not easyocr_available, reason="easyocr not installed")
 class TestRuleBasedReadingOrder:
     """Tests for rule-based reading order prediction."""
 
@@ -70,6 +84,7 @@ class TestRuleBasedReadingOrder:
 class TestReadingOrderWithDifferentLayouts:
     """Tests for reading order with various document layouts."""
 
+    @pytest.mark.skipif(not tesseract_available, reason="tesseract not installed")
     @pytest.mark.integration
     @pytest.mark.reading_order
     @pytest.mark.cpu

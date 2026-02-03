@@ -9,10 +9,32 @@ Usage:
     pytest tests/integration/test_ocr_extractors.py -m gpu
 """
 
+import shutil
+
 import pytest
 from PIL import Image
 
+# Check for optional dependencies
+easyocr_available = False
+try:
+    import easyocr  # noqa: F401
 
+    easyocr_available = True
+except ImportError:
+    pass
+
+paddle_available = False
+try:
+    import paddle  # noqa: F401
+
+    paddle_available = True
+except ImportError:
+    pass
+
+tesseract_available = shutil.which("tesseract") is not None
+
+
+@pytest.mark.skipif(not easyocr_available, reason="easyocr not installed")
 class TestEasyOCR:
     """Tests for EasyOCR."""
 
@@ -50,6 +72,7 @@ class TestEasyOCR:
         assert hasattr(result, "text_blocks")
 
 
+@pytest.mark.skipif(not paddle_available, reason="paddlepaddle not installed")
 class TestPaddleOCR:
     """Tests for PaddleOCR."""
 
@@ -82,6 +105,7 @@ class TestPaddleOCR:
         assert hasattr(result, "text_blocks")
 
 
+@pytest.mark.skipif(not tesseract_available, reason="tesseract not installed")
 class TestTesseractOCR:
     """Tests for Tesseract OCR."""
 
@@ -102,6 +126,7 @@ class TestTesseractOCR:
 class TestOCRWithDocument:
     """Tests for OCR on full documents."""
 
+    @pytest.mark.skipif(not easyocr_available, reason="easyocr not installed")
     @pytest.mark.integration
     @pytest.mark.ocr_extraction
     @pytest.mark.cpu
@@ -118,6 +143,7 @@ class TestOCRWithDocument:
         # Should extract multiple text blocks from a document
         assert len(result.text_blocks) >= 0  # May vary based on document
 
+    @pytest.mark.skipif(not tesseract_available, reason="tesseract not installed")
     @pytest.mark.integration
     @pytest.mark.ocr_extraction
     @pytest.mark.cpu
