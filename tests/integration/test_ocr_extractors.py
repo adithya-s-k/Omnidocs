@@ -31,7 +31,15 @@ try:
 except ImportError:
     pass
 
-tesseract_available = shutil.which("tesseract") is not None
+# Check for tesseract binary and pytesseract package
+tesseract_available = False
+if shutil.which("tesseract") is not None:
+    try:
+        import pytesseract  # noqa: F401
+
+        tesseract_available = True
+    except ImportError:
+        pass
 
 
 @pytest.mark.skipif(not easyocr_available, reason="easyocr not installed")
