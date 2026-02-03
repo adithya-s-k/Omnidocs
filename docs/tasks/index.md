@@ -1,6 +1,6 @@
 # Tasks
 
-OmniDocs supports three document processing tasks. Each task defines **what** you want to extract - the models define **how**.
+OmniDocs supports five document processing tasks. Each task defines **what** you want to extract - the models define **how**.
 
 ---
 
@@ -16,7 +16,7 @@ result = extractor.extract(image, output_format="markdown")
 print(result.content)  # "# Title\n\nParagraph text..."
 ```
 
-**Available Models:** [Qwen](../models/qwen.md), [DotsOCR](../models/dotsocr.md)
+**Available Models:** Qwen3-VL, DotsOCR, Nanonets OCR2
 
 ---
 
@@ -29,13 +29,13 @@ Detect document structure: titles, paragraphs, tables, figures, formulas, header
 
 ```python
 result = detector.extract(image)
-for elem in result.elements:
-    print(f"{elem.label}: {elem.bbox}")
+for box in result.bboxes:
+    print(f"{box.label}: {box.bbox}")
 # title: [50, 20, 500, 60]
 # table: [50, 100, 900, 400]
 ```
 
-**Available Models:** [DocLayoutYOLO](../models/doclayout-yolo.md), [Qwen Layout](../models/qwen.md#layout-analysis)
+**Available Models:** DocLayoutYOLO, RT-DETR, Qwen Layout
 
 ---
 
@@ -53,7 +53,65 @@ for block in result.text_blocks:
 # 'Invoice' @ BoundingBox(x1=100, y1=50, x2=200, y2=80)
 ```
 
-**Available Models:** [Tesseract](../models/tesseract.md)
+**Available Models:** Tesseract, EasyOCR, PaddleOCR
+
+---
+
+## Table Extraction
+
+**Input:** Table image (cropped from document)
+**Output:** Structured table data (cells, rows, columns)
+
+Extract table structure with cell coordinates, row/column spans, and content. Export to HTML, Markdown, or Pandas DataFrame.
+
+```python
+from omnidocs.tasks.table_extraction import TableFormerExtractor, TableFormerConfig
+
+extractor = TableFormerExtractor(config=TableFormerConfig(device="cuda"))
+result = extractor.extract(table_image)
+
+# Get HTML
+html = result.to_html()
+
+# Get DataFrame
+df = result.to_dataframe()
+
+# Access cells
+for cell in result.cells:
+    print(f"[{cell.row},{cell.col}] {cell.text}")
+```
+
+**Available Models:** TableFormer
+
+---
+
+## Reading Order
+
+**Input:** Layout detection + OCR results
+**Output:** Elements in logical reading sequence
+
+Determine the correct reading order of document elements. Handles multi-column layouts, headers/footers, and caption associations.
+
+```python
+from omnidocs.tasks.reading_order import RuleBasedReadingOrderPredictor
+from omnidocs.tasks.layout_extraction import DocLayoutYOLO, DocLayoutYOLOConfig
+from omnidocs.tasks.ocr_extraction import EasyOCR, EasyOCRConfig
+
+# Initialize components
+layout_extractor = DocLayoutYOLO(config=DocLayoutYOLOConfig())
+ocr = EasyOCR(config=EasyOCRConfig())
+predictor = RuleBasedReadingOrderPredictor()
+
+# Process document
+layout = layout_extractor.extract(image)
+ocr_result = ocr.extract(image)
+reading_order = predictor.predict(layout, ocr_result)
+
+# Get text in reading order
+text = reading_order.get_full_text()
+```
+
+**Available Models:** Rule-based (R-tree indexing)
 
 ---
 
@@ -64,12 +122,14 @@ for block in result.text_blocks:
 | Convert PDF to Markdown | Text Extraction |
 | Find where tables/figures are | Layout Analysis |
 | Get word coordinates | OCR |
-| Build a document pipeline | Layout Analysis → Text Extraction |
+| Extract structured table data | Table Extraction |
+| Order elements for reading | Reading Order |
+| Build a full document pipeline | Layout → OCR → Reading Order |
 
 ---
 
 ## Coming Soon
 
-- **Table Extraction** - Structured table data
 - **Math Recognition** - LaTeX from equations
 - **Chart Understanding** - Data from charts
+- **Image Captioning** - Captions for figures

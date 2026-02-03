@@ -33,17 +33,19 @@ extractor.extract(image) → Pydantic output
 
 ```
 omnidocs/
-├── document.py           # Document class (stateless)
+├── document.py            # Document class (stateless)
 ├── tasks/
-│   ├── text_extraction/  # Text → Markdown/HTML
-│   ├── layout_analysis/  # Structure detection
-│   ├── ocr_extraction/   # Text + bounding boxes
+│   ├── text_extraction/   # Text → Markdown/HTML
+│   ├── layout_extraction/ # Structure detection
+│   ├── ocr_extraction/    # Text + bounding boxes
+│   ├── table_extraction/  # Table structure extraction
+│   ├── reading_order/     # Logical reading sequence
 │   └── ...
 └── inference/
-    ├── pytorch.py        # HuggingFace/torch
-    ├── vllm.py           # High-throughput
-    ├── mlx.py            # Apple Silicon
-    └── api.py            # LiteLLM
+    ├── pytorch.py         # HuggingFace/torch
+    ├── vllm.py            # High-throughput
+    ├── mlx.py             # Apple Silicon
+    └── api.py             # LiteLLM
 ```
 
 ---

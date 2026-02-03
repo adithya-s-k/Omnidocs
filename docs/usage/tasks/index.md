@@ -11,6 +11,8 @@ Tasks define **what** you want to extract. Models define **how**.
 | [Text Extraction](text-extraction.md) | Image / PDF | Markdown, HTML | ✅ Ready |
 | [Layout Analysis](layout-analysis.md) | Image | Bounding boxes + labels | ✅ Ready |
 | [OCR](ocr.md) | Image | Text + coordinates | ✅ Ready |
+| [Table Extraction](table-extraction.md) | Table image | Structured table data | ✅ Ready |
+| [Reading Order](reading-order.md) | Layout + OCR | Ordered elements | ✅ Ready |
 
 ---
 
@@ -25,16 +27,20 @@ Tasks define **what** you want to extract. Models define **how**.
 **"I need word positions for downstream processing"**
 → [OCR](ocr.md)
 
+**"I want structured data from a table"**
+→ [Table Extraction](table-extraction.md)
+
+**"I need elements in reading order"**
+→ [Reading Order](reading-order.md)
+
 ---
 
 ## Upcoming Tasks
 
 | Task | Description | Status |
 |------|-------------|--------|
-| **Table Extraction** | Structured table data (rows, columns, cells) | 🔜 Soon |
 | **Math Recognition** | LaTeX from equations | 🔜 Soon |
 | **Chart Understanding** | Data extraction from charts | 🔜 Planned |
-| **Reading Order** | Order elements in reading sequence | 🔜 Planned |
 | **Image Captioning** | Caption figures and images | 🔜 Planned |
 | **Structured Output** | Extract data with custom schemas | 🔜 Planned |
 

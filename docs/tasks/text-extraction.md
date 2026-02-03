@@ -9,9 +9,10 @@ Convert document images to Markdown or HTML.
 | Model | Speed | Quality | Backends |
 |-------|-------|---------|----------|
 | **Qwen3-VL** | 2-3s/page | Excellent | PyTorch, VLLM, MLX, API |
-| **DotsOCR** | 3-5s/page | Very Good | PyTorch, VLLM |
+| **DotsOCR** | 3-5s/page | Very Good | PyTorch, VLLM, API |
+| **Nanonets OCR2** | 2-4s/page | Excellent | PyTorch, VLLM, MLX |
 
-**Recommendation:** Start with Qwen3-VL-8B for most use cases.
+**Recommendation:** Start with Qwen3-VL-8B for most use cases. Use Nanonets for document digitization.
 
 ---
 
@@ -136,6 +137,39 @@ result = extractor.extract(image, include_layout=True)
 # Access layout elements
 for element in result.layout:
     print(f"[{element.category}] {element.text[:50]}...")
+```
+
+---
+
+## Nanonets OCR2
+
+Nanonets OCR2-3B is optimized for document text extraction.
+
+```python
+from omnidocs.tasks.text_extraction import NanonetsTextExtractor
+from omnidocs.tasks.text_extraction.nanonets import NanonetsTextPyTorchConfig
+
+config = NanonetsTextPyTorchConfig(device="cuda")
+extractor = NanonetsTextExtractor(backend=config)
+
+result = extractor.extract(image, output_format="markdown")
+print(result.content)
+```
+
+### Nanonets Backends
+
+```python
+# PyTorch
+from omnidocs.tasks.text_extraction.nanonets import NanonetsTextPyTorchConfig
+config = NanonetsTextPyTorchConfig(device="cuda")
+
+# VLLM (high throughput)
+from omnidocs.tasks.text_extraction.nanonets import NanonetsTextVLLMConfig
+config = NanonetsTextVLLMConfig(gpu_memory_utilization=0.85)
+
+# MLX (Apple Silicon)
+from omnidocs.tasks.text_extraction.nanonets import NanonetsTextMLXConfig
+config = NanonetsTextMLXConfig()
 ```
 
 ---

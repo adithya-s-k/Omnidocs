@@ -380,3 +380,18 @@ uv run python -m tests.runners.local_runner --test qwen_layout_api
 | DocLayoutYOLO | CPU (local) | 0.5s | 0.3s |
 | RTDETR | GPU (L4) | 12.4s | 1.9s |
 | RTDETR | CPU (local) | 0.9s | 0.5s |
+
+### Table Extraction Performance
+
+| Model | Backend | Load Time | Inference Time |
+|-------|---------|-----------|----------------|
+| TableFormer (fast) | CPU (local) | 0.5s | 0.3s |
+| TableFormer (accurate) | CPU (local) | 0.5s | 0.9s |
+| TableFormer (fast) | GPU (L4) | 8s | 0.2s |
+| TableFormer (accurate) | GPU (L4) | 8s | 0.5s |
+
+### Reading Order Performance
+
+| Model | Backend | Load Time | Inference Time |
+|-------|---------|-----------|----------------|
+| Rule-based | CPU (local) | <0.1s | <0.1s |
