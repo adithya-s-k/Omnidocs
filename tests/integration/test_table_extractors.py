@@ -10,7 +10,6 @@ Usage:
 """
 
 import pytest
-from PIL import Image
 
 from tests.utils.evaluation import evaluate_table_extraction
 

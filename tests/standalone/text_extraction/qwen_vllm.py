@@ -33,9 +33,7 @@ class QwenTextVLLMTest(BaseOmnidocsTest):
         from omnidocs.tasks.text_extraction import QwenTextExtractor
         from omnidocs.tasks.text_extraction.qwen import QwenTextVLLMConfig
 
-        return QwenTextExtractor(
-            backend=QwenTextVLLMConfig(gpu_memory_utilization=0.85)
-        )
+        return QwenTextExtractor(backend=QwenTextVLLMConfig(gpu_memory_utilization=0.85))
 
     def run_extraction(self, extractor: Any, image: Image.Image) -> Any:
         return extractor.extract(image, output_format="markdown")

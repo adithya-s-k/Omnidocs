@@ -33,9 +33,7 @@ class QwenLayoutPyTorchTest(BaseOmnidocsTest):
         from omnidocs.tasks.layout_extraction import QwenLayoutDetector
         from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
 
-        return QwenLayoutDetector(
-            backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen2-VL-7B-Instruct")
-        )
+        return QwenLayoutDetector(backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen2-VL-7B-Instruct"))
 
     def run_extraction(self, extractor: Any, image: Image.Image) -> Any:
         return extractor.extract(image)

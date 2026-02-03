@@ -33,9 +33,7 @@ class NanonetsTextVLLMTest(BaseOmnidocsTest):
         from omnidocs.tasks.text_extraction import NanonetsTextExtractor
         from omnidocs.tasks.text_extraction.nanonets import NanonetsTextVLLMConfig
 
-        return NanonetsTextExtractor(
-            backend=NanonetsTextVLLMConfig(gpu_memory_utilization=0.85)
-        )
+        return NanonetsTextExtractor(backend=NanonetsTextVLLMConfig(gpu_memory_utilization=0.85))
 
     def run_extraction(self, extractor: Any, image: Image.Image) -> Any:
         return extractor.extract(image)

@@ -91,9 +91,7 @@ class TestQwenLayoutDetector:
         from omnidocs.tasks.layout_extraction import QwenLayoutDetector
         from omnidocs.tasks.layout_extraction.qwen import QwenLayoutPyTorchConfig
 
-        detector = QwenLayoutDetector(
-            backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen2-VL-7B-Instruct")
-        )
+        detector = QwenLayoutDetector(backend=QwenLayoutPyTorchConfig(model="Qwen/Qwen2-VL-7B-Instruct"))
         result = detector.extract(sample_document)
 
         assert result is not None
@@ -108,9 +106,7 @@ class TestQwenLayoutDetector:
         from omnidocs.tasks.layout_extraction import QwenLayoutDetector
         from omnidocs.tasks.layout_extraction.qwen import QwenLayoutVLLMConfig
 
-        detector = QwenLayoutDetector(
-            backend=QwenLayoutVLLMConfig(gpu_memory_utilization=0.85)
-        )
+        detector = QwenLayoutDetector(backend=QwenLayoutVLLMConfig(gpu_memory_utilization=0.85))
         result = detector.extract(sample_document)
 
         assert result is not None

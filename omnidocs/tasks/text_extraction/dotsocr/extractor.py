@@ -221,8 +221,8 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         """Load PyTorch/HuggingFace backend."""
         try:
             import torch
-            from transformers import AutoModelForCausalLM, AutoProcessor
             import transformers.processing_utils as pu
+            from transformers import AutoModelForCausalLM, AutoProcessor
         except ImportError as e:
             raise ImportError(
                 "PyTorch backend requires torch and transformers. Install with: uv add torch transformers accelerate"

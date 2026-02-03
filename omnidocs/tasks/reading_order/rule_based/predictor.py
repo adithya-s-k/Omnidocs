@@ -64,10 +64,10 @@ class _PageElement:
     page_height: float
     label: ElementType
     # Coordinates (bottom-left origin)
-    l: float  # left
-    b: float  # bottom
-    r: float  # right
-    t: float  # top
+    left: float
+    bottom: float
+    right: float
+    top: float
 
     eps: float = 1.0e-3
 
@@ -75,27 +75,27 @@ class _PageElement:
         """Compare for sorting - by page, then vertical position, then horizontal."""
         if self.page_no == other.page_no:
             if self.overlaps_horizontally(other):
-                return self.b > other.b  # Higher bottom = higher on page
+                return self.bottom > other.bottom  # Higher bottom = higher on page
             else:
-                return self.l < other.l  # Leftmost first
+                return self.left < other.left  # Leftmost first
         else:
             return self.page_no < other.page_no
 
     @property
     def width(self) -> float:
-        return self.r - self.l
+        return self.right - self.left
 
     @property
     def height(self) -> float:
-        return self.t - self.b
+        return self.top - self.bottom
 
     def overlaps_horizontally(self, other: "_PageElement") -> bool:
         """Check if two elements overlap horizontally."""
-        return not (self.r <= other.l or other.r <= self.l)
+        return not (self.right <= other.left or other.right <= self.left)
 
     def overlaps_vertically(self, other: "_PageElement") -> bool:
         """Check if two elements overlap vertically."""
-        return not (self.t <= other.b or other.t <= self.b)
+        return not (self.top <= other.bottom or other.top <= self.bottom)
 
     def overlaps(self, other: "_PageElement") -> bool:
         """Check if two elements overlap in both dimensions."""
@@ -103,23 +103,23 @@ class _PageElement:
 
     def is_strictly_above(self, other: "_PageElement") -> bool:
         """Check if self is strictly above other (no vertical overlap)."""
-        return self.b >= other.t - self.eps
+        return self.bottom >= other.top - self.eps
 
     def is_strictly_left_of(self, other: "_PageElement") -> bool:
         """Check if self is strictly to the left of other."""
-        return self.r <= other.l + self.eps
+        return self.right <= other.left + self.eps
 
     def overlaps_vertically_with_iou(self, other: "_PageElement", min_iou: float) -> bool:
         """Check if vertical overlap meets minimum IoU threshold."""
         if not self.overlaps_vertically(other):
             return False
 
-        overlap_bottom = max(self.b, other.b)
-        overlap_top = min(self.t, other.t)
+        overlap_bottom = max(self.bottom, other.bottom)
+        overlap_top = min(self.top, other.top)
         overlap_height = overlap_top - overlap_bottom
 
-        union_bottom = min(self.b, other.b)
-        union_top = max(self.t, other.t)
+        union_bottom = min(self.bottom, other.bottom)
+        union_top = max(self.top, other.top)
         union_height = union_top - union_bottom
 
         if union_height <= 0:
@@ -222,10 +222,10 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
                 page_width=page_width,
                 page_height=page_height,
                 label=element_type,
-                l=box.bbox.x1,
-                b=page_height - box.bbox.y2,  # Convert y2 to bottom
-                r=box.bbox.x2,
-                t=page_height - box.bbox.y1,  # Convert y1 to top
+                left=box.bbox.x1,
+                bottom=page_height - box.bbox.y2,  # Convert y2 to bottom
+                right=box.bbox.x2,
+                top=page_height - box.bbox.y1,  # Convert y1 to top
             )
             page_elements.append(elem)
 
@@ -246,10 +246,10 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
         for idx, elem in enumerate(sorted_elements):
             # Convert back from bottom-left to top-left origin
             bbox = BoundingBox(
-                x1=elem.l,
-                y1=page_height - elem.t,
-                x2=elem.r,
-                y2=page_height - elem.b,
+                x1=elem.left,
+                y1=page_height - elem.top,
+                x2=elem.right,
+                y2=page_height - elem.bottom,
             )
 
             confidence = 1.0
@@ -277,9 +277,7 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
             model_name="RuleBasedReadingOrderPredictor",
         )
 
-    def _predict_reading_order(
-        self, page_elements: List[_PageElement]
-    ) -> List[_PageElement]:
+    def _predict_reading_order(self, page_elements: List[_PageElement]) -> List[_PageElement]:
         """Predict reading order across all page elements."""
         page_nos: Set[int] = {elem.page_no for elem in page_elements}
 
@@ -326,9 +324,7 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
         # Apply horizontal dilation for better column detection
         if self.dilated_page_element:
             dilated_elements = copy.deepcopy(page_elements)
-            dilated_elements = self._do_horizontal_dilation(
-                page_elements, dilated_elements, state
-            )
+            dilated_elements = self._do_horizontal_dilation(page_elements, dilated_elements, state)
             self._init_ud_maps(dilated_elements, state)
 
         # Find head elements (no predecessors)
@@ -342,9 +338,7 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
 
         return [page_elements[i] for i in order]
 
-    def _init_h2i_map(
-        self, page_elems: List[_PageElement], state: _ReadingOrderState
-    ) -> None:
+    def _init_h2i_map(self, page_elems: List[_PageElement], state: _ReadingOrderState) -> None:
         """Initialize cid-to-index and index-to-cid maps."""
         state.h2i_map = {}
         state.i2h_map = {}
@@ -352,16 +346,12 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
             state.h2i_map[elem.cid] = i
             state.i2h_map[i] = elem.cid
 
-    def _init_l2r_map(
-        self, page_elems: List[_PageElement], state: _ReadingOrderState
-    ) -> None:
+    def _init_l2r_map(self, page_elems: List[_PageElement], state: _ReadingOrderState) -> None:
         """Initialize left-to-right links (currently disabled)."""
         state.l2r_map = {}
         state.r2l_map = {}
 
-    def _init_ud_maps(
-        self, page_elems: List[_PageElement], state: _ReadingOrderState
-    ) -> None:
+    def _init_ud_maps(self, page_elems: List[_PageElement], state: _ReadingOrderState) -> None:
         """Initialize up/down maps using R-tree spatial indexing."""
         state.up_map = {i: [] for i in range(len(page_elems))}
         state.dn_map = {i: [] for i in range(len(page_elems))}
@@ -369,7 +359,7 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
         # Build R-tree spatial index
         spatial_idx = rtree_index.Index()
         for i, elem in enumerate(page_elems):
-            spatial_idx.insert(i, (elem.l, elem.b, elem.r, elem.t))
+            spatial_idx.insert(i, (elem.left, elem.bottom, elem.right, elem.top))
 
         for j, elem_j in enumerate(page_elems):
             if j in state.r2l_map:
@@ -389,16 +379,11 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
                 elem_i = page_elems[i]
 
                 # Check spatial relationship
-                if not (
-                    elem_i.is_strictly_above(elem_j)
-                    and elem_i.overlaps_horizontally(elem_j)
-                ):
+                if not (elem_i.is_strictly_above(elem_j) and elem_i.overlaps_horizontally(elem_j)):
                     continue
 
                 # Check for interrupting elements
-                if not self._has_sequence_interruption(
-                    spatial_idx, page_elems, i, j, elem_i, elem_j
-                ):
+                if not self._has_sequence_interruption(spatial_idx, page_elems, i, j, elem_i, elem_j):
                     # Follow left-to-right mapping
                     while i in state.l2r_map:
                         i = state.l2r_map[i]
@@ -471,11 +456,20 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
             overlaps = any(
                 page_elems[k].overlaps(
                     _PageElement(
-                        cid=-1, text="", page_no=0, page_width=0, page_height=0,
-                        label=ElementType.OTHER, l=x0, b=y0, r=x1, t=y1
+                        cid=-1,
+                        text="",
+                        page_no=0,
+                        page_width=0,
+                        page_height=0,
+                        label=ElementType.OTHER,
+                        left=x0,
+                        bottom=y0,
+                        right=x1,
+                        top=y1,
                     )
                 )
-                for k in range(len(page_elems)) if k != i
+                for k in range(len(page_elems))
+                if k != i
             )
 
             if not overlaps:
@@ -484,29 +478,19 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
 
         return dilated_elems
 
-    def _find_heads(
-        self, page_elems: List[_PageElement], state: _ReadingOrderState
-    ) -> None:
+    def _find_heads(self, page_elems: List[_PageElement], state: _ReadingOrderState) -> None:
         """Find head elements (those with no predecessors)."""
-        head_elems = [
-            page_elems[key]
-            for key, vals in state.up_map.items()
-            if not vals
-        ]
+        head_elems = [page_elems[key] for key, vals in state.up_map.items() if not vals]
         head_elems = sorted(head_elems)  # Uses __lt__
         state.heads = [state.h2i_map[elem.cid] for elem in head_elems]
 
-    def _sort_ud_maps(
-        self, page_elems: List[_PageElement], state: _ReadingOrderState
-    ) -> None:
+    def _sort_ud_maps(self, page_elems: List[_PageElement], state: _ReadingOrderState) -> None:
         """Sort children in down_map by position."""
         for ind_i, vals in state.dn_map.items():
             child_elems = sorted([page_elems[j] for j in vals])
             state.dn_map[ind_i] = [state.h2i_map[c.cid] for c in child_elems]
 
-    def _find_order(
-        self, page_elems: List[_PageElement], state: _ReadingOrderState
-    ) -> List[int]:
+    def _find_order(self, page_elems: List[_PageElement], state: _ReadingOrderState) -> List[int]:
         """Find final reading order via depth-first search."""
         order: List[int] = []
         visited = [False] * len(page_elems)
@@ -522,9 +506,7 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
 
         return order
 
-    def _dfs_upwards(
-        self, j: int, visited: List[bool], state: _ReadingOrderState
-    ) -> int:
+    def _dfs_upwards(self, j: int, visited: List[bool], state: _ReadingOrderState) -> int:
         """Depth-first search upwards to find unvisited ancestors."""
         k = j
         while True:
@@ -565,9 +547,7 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
             if not found:
                 stack.pop()
 
-    def _find_to_captions(
-        self, page_elements: List[_PageElement]
-    ) -> Dict[int, List[int]]:
+    def _find_to_captions(self, page_elements: List[_PageElement]) -> Dict[int, List[int]]:
         """Find caption associations for figures/tables."""
         to_captions: Dict[int, List[int]] = {}
         from_captions: Dict[int, Tuple[List[int], List[int]]] = {}
@@ -627,9 +607,7 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
 
         return _remove_overlapping(to_captions)
 
-    def _find_to_footnotes(
-        self, page_elements: List[_PageElement]
-    ) -> Dict[int, List[int]]:
+    def _find_to_footnotes(self, page_elements: List[_PageElement]) -> Dict[int, List[int]]:
         """Find footnote associations for figures/tables."""
         to_footnotes: Dict[int, List[int]] = {}
         target_labels = {ElementType.TABLE, ElementType.FIGURE}
@@ -645,15 +623,16 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
 
         return to_footnotes
 
-    def _predict_merges(
-        self, sorted_elements: List[_PageElement]
-    ) -> Dict[int, List[int]]:
+    def _predict_merges(self, sorted_elements: List[_PageElement]) -> Dict[int, List[int]]:
         """Predict which elements should be merged (split paragraphs)."""
         merges: Dict[int, List[int]] = {}
         skip_labels = {
-            ElementType.PAGE_HEADER, ElementType.PAGE_FOOTER,
-            ElementType.TABLE, ElementType.FIGURE,
-            ElementType.CAPTION, ElementType.FOOTNOTE,
+            ElementType.PAGE_HEADER,
+            ElementType.PAGE_FOOTER,
+            ElementType.TABLE,
+            ElementType.FIGURE,
+            ElementType.CAPTION,
+            ElementType.FOOTNOTE,
         }
 
         curr_ind = -1
@@ -668,9 +647,8 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
 
                 if ind_p1 < len(sorted_elements):
                     next_elem = sorted_elements[ind_p1]
-                    if (
-                        next_elem.label == elem.label
-                        and (elem.page_no != next_elem.page_no or elem.is_strictly_left_of(next_elem))
+                    if next_elem.label == elem.label and (
+                        elem.page_no != next_elem.page_no or elem.is_strictly_left_of(next_elem)
                     ):
                         # Check for sentence continuation patterns
                         m1 = re.fullmatch(r".+([a-z,\-])(\s*)", elem.text)
@@ -681,9 +659,7 @@ class RuleBasedReadingOrderPredictor(BaseReadingOrderPredictor):
 
         return merges
 
-    def _build_text_map(
-        self, layout: "LayoutOutput", ocr: "OCROutput"
-    ) -> Dict[int, str]:
+    def _build_text_map(self, layout: "LayoutOutput", ocr: "OCROutput") -> Dict[int, str]:
         """Build a map from layout element IDs to text content."""
         text_map: Dict[int, str] = {}
 

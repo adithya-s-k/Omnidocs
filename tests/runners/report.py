@@ -110,21 +110,25 @@ class TestReport:
         ]
 
         if self.filters:
-            lines.extend([
-                "## Filters Applied",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Filters Applied",
+                    "",
+                ]
+            )
             for key, value in self.filters.items():
                 lines.append(f"- **{key}:** {value}")
             lines.append("")
 
         # Results table
-        lines.extend([
-            "## Results",
-            "",
-            "| Test | Backend | Task | Status | Load (s) | Inference (s) |",
-            "|------|---------|------|--------|----------|---------------|",
-        ])
+        lines.extend(
+            [
+                "## Results",
+                "",
+                "| Test | Backend | Task | Status | Load (s) | Inference (s) |",
+                "|------|---------|------|--------|----------|---------------|",
+            ]
+        )
 
         for r in self.results:
             status = "PASS" if r.get("success") else "FAIL"
@@ -141,18 +145,22 @@ class TestReport:
         # Failed tests details
         failed = [r for r in self.results if not r.get("success")]
         if failed:
-            lines.extend([
-                "",
-                "## Failed Tests",
-                "",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "## Failed Tests",
+                    "",
+                ]
+            )
             for r in failed:
-                lines.extend([
-                    f"### {r.get('test_name', 'Unknown')}",
-                    "",
-                    f"**Error:** {r.get('error', 'Unknown error')}",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"### {r.get('test_name', 'Unknown')}",
+                        "",
+                        f"**Error:** {r.get('error', 'Unknown error')}",
+                        "",
+                    ]
+                )
 
         md_str = "\n".join(lines)
         if path:
@@ -226,10 +234,12 @@ def compare_reports(
 
         # Check for regressions (was passing, now failing)
         if baseline_result.get("success") and not result.get("success"):
-            regressions.append({
-                "test": name,
-                "error": result.get("error"),
-            })
+            regressions.append(
+                {
+                    "test": name,
+                    "error": result.get("error"),
+                }
+            )
         # Check for improvements (was failing, now passing)
         elif not baseline_result.get("success") and result.get("success"):
             improvements.append(name)

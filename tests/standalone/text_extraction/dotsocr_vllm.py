@@ -33,9 +33,7 @@ class DotsOCRTextVLLMTest(BaseOmnidocsTest):
         from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
         from omnidocs.tasks.text_extraction.dotsocr import DotsOCRVLLMConfig
 
-        return DotsOCRTextExtractor(
-            backend=DotsOCRVLLMConfig(gpu_memory_utilization=0.85)
-        )
+        return DotsOCRTextExtractor(backend=DotsOCRVLLMConfig(gpu_memory_utilization=0.85))
 
     def run_extraction(self, extractor: Any, image: Image.Image) -> Any:
         return extractor.extract(image)

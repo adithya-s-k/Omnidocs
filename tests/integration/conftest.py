@@ -4,7 +4,6 @@ Pytest configuration and fixtures for integration tests.
 
 import os
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from PIL import Image
@@ -41,16 +40,15 @@ def pytest_collection_modifyitems(config, items):
     # Check for GPU availability
     try:
         import torch
+
         has_gpu = torch.cuda.is_available()
     except ImportError:
         has_gpu = False
 
     # Check for MLX availability
-    try:
-        import mlx
-        has_mlx = True
-    except ImportError:
-        has_mlx = False
+    import importlib.util
+
+    has_mlx = importlib.util.find_spec("mlx") is not None
 
     # Check for API credentials
     has_api = bool(os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENROUTER_API_KEY"))

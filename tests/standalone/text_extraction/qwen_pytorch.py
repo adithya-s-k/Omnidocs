@@ -33,9 +33,7 @@ class QwenTextPyTorchTest(BaseOmnidocsTest):
         from omnidocs.tasks.text_extraction import QwenTextExtractor
         from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
 
-        return QwenTextExtractor(
-            backend=QwenTextPyTorchConfig(model="Qwen/Qwen2-VL-7B-Instruct")
-        )
+        return QwenTextExtractor(backend=QwenTextPyTorchConfig(model="Qwen/Qwen2-VL-7B-Instruct"))
 
     def run_extraction(self, extractor: Any, image: Image.Image) -> Any:
         return extractor.extract(image, output_format="markdown")

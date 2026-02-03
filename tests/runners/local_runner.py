@@ -18,7 +18,7 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict
 
 from PIL import Image
 
@@ -53,11 +53,7 @@ def run_test(spec: TestSpec, image: Image.Image) -> Dict:
     test_class = None
     for name in dir(module):
         obj = getattr(module, name)
-        if (
-            isinstance(obj, type)
-            and name.endswith("Test")
-            and name != "BaseOmnidocsTest"
-        ):
+        if isinstance(obj, type) and name.endswith("Test") and name != "BaseOmnidocsTest":
             test_class = obj
             break
 

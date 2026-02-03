@@ -12,8 +12,9 @@ Usage:
     modal run tests/runners/modal_runner.py --run-all
 """
 
-import modal
 from pathlib import Path
+
+import modal
 
 SCRIPT_DIR = Path(__file__).parent
 OMNIDOCS_DIR = SCRIPT_DIR.parent.parent  # Omnidocs/
@@ -23,9 +24,7 @@ MODEL_CACHE_DIR = "/data/.cache"
 
 cuda_vllm = "12.8.1"
 VLLM_IMAGE = (
-    modal.Image.from_registry(
-        f"nvidia/cuda:{cuda_vllm}-devel-ubuntu24.04", add_python="3.12"
-    )
+    modal.Image.from_registry(f"nvidia/cuda:{cuda_vllm}-devel-ubuntu24.04", add_python="3.12")
     .apt_install("libopenmpi-dev", "libnuma-dev", "libgl1", "libglib2.0-0")
     .run_commands("pip install uv")
     .run_commands("uv pip install vllm --system")
@@ -52,9 +51,7 @@ flash_attn_wheel = (
     "flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp312-cp312-linux_x86_64.whl"
 )
 PYTORCH_IMAGE = (
-    modal.Image.from_registry(
-        f"nvidia/cuda:{cuda_pytorch}-devel-ubuntu24.04", add_python="3.12"
-    )
+    modal.Image.from_registry(f"nvidia/cuda:{cuda_pytorch}-devel-ubuntu24.04", add_python="3.12")
     .apt_install("libglib2.0-0", "libgl1", "libglx-mesa0", "libgl1-mesa-dri")
     .run_commands("pip install uv")
     .add_local_dir(
@@ -91,12 +88,8 @@ def create_test_image():
     draw = ImageDraw.Draw(img)
 
     try:
-        font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24
-        )
-        small_font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16
-        )
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
+        small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16)
     except OSError:
         font = ImageFont.load_default()
         small_font = font
@@ -108,9 +101,7 @@ def create_test_image():
         fill="black",
         font=small_font,
     )
-    draw.text(
-        (50, 110), "It contains multiple lines of text.", fill="black", font=small_font
-    )
+    draw.text((50, 110), "It contains multiple lines of text.", fill="black", font=small_font)
 
     # Table
     draw.rectangle([50, 160, 350, 280], outline="black")
@@ -641,7 +632,7 @@ def test_qwen_layout_vllm(img_bytes: bytes) -> dict:
     print("\n--- Detected Layout Elements ---")
     print(f"Number of boxes: {len(result.bboxes)}")
     for i, box in enumerate(result.bboxes[:5]):
-        print(f"  {i+1}. {box.label}: conf={box.confidence:.2f}")
+        print(f"  {i + 1}. {box.label}: conf={box.confidence:.2f}")
     if len(result.bboxes) > 5:
         print(f"  ... and {len(result.bboxes) - 5} more")
     print("---")
@@ -699,7 +690,7 @@ def test_qwen_layout_pytorch(img_bytes: bytes) -> dict:
     print("\n--- Detected Layout Elements ---")
     print(f"Number of boxes: {len(result.bboxes)}")
     for i, box in enumerate(result.bboxes[:5]):
-        print(f"  {i+1}. {box.label}: conf={box.confidence:.2f}")
+        print(f"  {i + 1}. {box.label}: conf={box.confidence:.2f}")
     if len(result.bboxes) > 5:
         print(f"  ... and {len(result.bboxes) - 5} more")
     print("---")
@@ -750,7 +741,7 @@ def test_doclayout_yolo_gpu(img_bytes: bytes) -> dict:
     print("\n--- Detected Layout Elements ---")
     print(f"Number of boxes: {len(result.bboxes)}")
     for i, box in enumerate(result.bboxes[:5]):
-        print(f"  {i+1}. {box.label}: conf={box.confidence:.2f}")
+        print(f"  {i + 1}. {box.label}: conf={box.confidence:.2f}")
     print("---")
 
     return {
@@ -778,7 +769,7 @@ def test_rtdetr_gpu(img_bytes: bytes) -> dict:
 
     from PIL import Image
 
-    from omnidocs.tasks.layout_extraction import RTDETRLayoutExtractor, RTDETRConfig
+    from omnidocs.tasks.layout_extraction import RTDETRConfig, RTDETRLayoutExtractor
 
     img = Image.open(io.BytesIO(img_bytes))
 
@@ -799,7 +790,7 @@ def test_rtdetr_gpu(img_bytes: bytes) -> dict:
     print("\n--- Detected Layout Elements ---")
     print(f"Number of boxes: {len(result.bboxes)}")
     for i, box in enumerate(result.bboxes[:5]):
-        print(f"  {i+1}. {box.label}: conf={box.confidence:.2f}")
+        print(f"  {i + 1}. {box.label}: conf={box.confidence:.2f}")
     print("---")
 
     return {
@@ -851,7 +842,7 @@ def test_easyocr_gpu(img_bytes: bytes) -> dict:
     print("\n--- OCR Results ---")
     print(f"Number of text blocks: {len(result.text_blocks)}")
     for i, block in enumerate(result.text_blocks[:5]):
-        print(f"  {i+1}. '{block.text}' (conf={block.confidence:.2f})")
+        print(f"  {i + 1}. '{block.text}' (conf={block.confidence:.2f})")
     print("---")
 
     return {
@@ -900,7 +891,7 @@ def test_paddleocr_gpu(img_bytes: bytes) -> dict:
     print("\n--- OCR Results ---")
     print(f"Number of text blocks: {len(result.text_blocks)}")
     for i, block in enumerate(result.text_blocks[:5]):
-        print(f"  {i+1}. '{block.text}' (conf={block.confidence:.2f})")
+        print(f"  {i + 1}. '{block.text}' (conf={block.confidence:.2f})")
     print("---")
 
     return {
@@ -931,7 +922,7 @@ def test_tableformer_gpu(img_bytes: bytes) -> dict:
 
     from PIL import Image
 
-    from omnidocs.tasks.table_extraction import TableFormerExtractor, TableFormerConfig
+    from omnidocs.tasks.table_extraction import TableFormerConfig, TableFormerExtractor
 
     img = Image.open(io.BytesIO(img_bytes))
 
@@ -952,7 +943,7 @@ def test_tableformer_gpu(img_bytes: bytes) -> dict:
     print("\n--- Table Extraction Results ---")
     print(f"Number of tables: {len(result.tables)}")
     for i, table in enumerate(result.tables[:3]):
-        print(f"  Table {i+1}: {table.num_rows}x{table.num_cols}")
+        print(f"  Table {i + 1}: {table.num_rows}x{table.num_cols}")
     print("---")
 
     return {
@@ -1034,9 +1025,7 @@ def main(test: str = "qwen_vllm", list_tests: bool = False, run_all: bool = Fals
                 all_results.append(result)
                 print(f"    OK: {result['status']}")
             except Exception as e:
-                all_results.append(
-                    {"status": "failed", "test": test_name, "error": str(e)}
-                )
+                all_results.append({"status": "failed", "test": test_name, "error": str(e)})
                 print(f"    FAIL: {e}")
 
         print("\n" + "=" * 60)

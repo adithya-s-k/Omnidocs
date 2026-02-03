@@ -28,9 +28,7 @@ class TestQwenTextExtractor:
         from omnidocs.tasks.text_extraction import QwenTextExtractor
         from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
 
-        extractor = QwenTextExtractor(
-            backend=QwenTextPyTorchConfig(model="Qwen/Qwen2-VL-7B-Instruct")
-        )
+        extractor = QwenTextExtractor(backend=QwenTextPyTorchConfig(model="Qwen/Qwen2-VL-7B-Instruct"))
         result = extractor.extract(sample_document, output_format="markdown")
 
         assert result is not None
@@ -47,9 +45,7 @@ class TestQwenTextExtractor:
         from omnidocs.tasks.text_extraction import QwenTextExtractor
         from omnidocs.tasks.text_extraction.qwen import QwenTextVLLMConfig
 
-        extractor = QwenTextExtractor(
-            backend=QwenTextVLLMConfig(gpu_memory_utilization=0.85)
-        )
+        extractor = QwenTextExtractor(backend=QwenTextVLLMConfig(gpu_memory_utilization=0.85))
         result = extractor.extract(sample_document, output_format="markdown")
 
         assert result is not None
@@ -115,9 +111,7 @@ class TestNanonetsTextExtractor:
         from omnidocs.tasks.text_extraction import NanonetsTextExtractor
         from omnidocs.tasks.text_extraction.nanonets import NanonetsTextVLLMConfig
 
-        extractor = NanonetsTextExtractor(
-            backend=NanonetsTextVLLMConfig(gpu_memory_utilization=0.85)
-        )
+        extractor = NanonetsTextExtractor(backend=NanonetsTextVLLMConfig(gpu_memory_utilization=0.85))
         result = extractor.extract(sample_document)
 
         assert result is not None
@@ -168,9 +162,7 @@ class TestDotsOCRTextExtractor:
         from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
         from omnidocs.tasks.text_extraction.dotsocr import DotsOCRVLLMConfig
 
-        extractor = DotsOCRTextExtractor(
-            backend=DotsOCRVLLMConfig(gpu_memory_utilization=0.85)
-        )
+        extractor = DotsOCRTextExtractor(backend=DotsOCRVLLMConfig(gpu_memory_utilization=0.85))
         result = extractor.extract(sample_document)
 
         assert result is not None

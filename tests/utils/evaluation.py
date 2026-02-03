@@ -7,7 +7,7 @@ Provides metrics and comparison functions for evaluating extraction quality.
 import re
 from dataclasses import dataclass
 from difflib import SequenceMatcher
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 
 @dataclass
@@ -123,10 +123,10 @@ def evaluate_text_extraction(
     word_accuracy = len(common_words) / max(len(gt_words), 1)
 
     # Line-level analysis
-    gt_lines = [l.strip() for l in ground_truth.split("\n") if l.strip()]
-    ext_lines = [l.strip() for l in extracted.split("\n") if l.strip()]
+    gt_lines = [line.strip() for line in ground_truth.split("\n") if line.strip()]
+    ext_lines = [line.strip() for line in extracted.split("\n") if line.strip()]
 
-    matching_lines = sum(1 for l in gt_lines if l in ext_lines)
+    matching_lines = sum(1 for line in gt_lines if line in ext_lines)
     line_accuracy = matching_lines / max(len(gt_lines), 1)
 
     # Edit distance

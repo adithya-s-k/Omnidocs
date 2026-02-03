@@ -98,8 +98,7 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
             from transformers import AutoModelForImageTextToText, AutoProcessor
         except ImportError as e:
             raise ImportError(
-                "PyTorch backend requires torch and transformers. "
-                "Install with: uv add torch transformers accelerate"
+                "PyTorch backend requires torch and transformers. Install with: uv add torch transformers accelerate"
             ) from e
 
         config = self.backend_config
@@ -129,9 +128,7 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
             model_kwargs["attn_implementation"] = "flash_attention_2"
 
         self._processor = AutoProcessor.from_pretrained(config.model)
-        self._backend = AutoModelForImageTextToText.from_pretrained(
-            config.model, **model_kwargs
-        )
+        self._backend = AutoModelForImageTextToText.from_pretrained(config.model, **model_kwargs)
 
         if config.device_map is None:
             self._backend = self._backend.to(self._device)
@@ -143,8 +140,7 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
             from vllm import LLM, SamplingParams
         except ImportError as e:
             raise ImportError(
-                "VLLM backend requires vllm and transformers. "
-                "Install with: uv add vllm transformers"
+                "VLLM backend requires vllm and transformers. Install with: uv add vllm transformers"
             ) from e
 
         config = self.backend_config
@@ -193,10 +189,7 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
             from mlx_vlm.prompt_utils import apply_chat_template
             from mlx_vlm.utils import load_config
         except ImportError as e:
-            raise ImportError(
-                "MLX backend requires mlx and mlx-vlm. "
-                "Install with: uv add mlx mlx-vlm"
-            ) from e
+            raise ImportError("MLX backend requires mlx and mlx-vlm. Install with: uv add mlx mlx-vlm") from e
 
         config = self.backend_config
         self._backend, self._processor = load(config.model)
@@ -209,9 +202,7 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
         try:
             from openai import OpenAI
         except ImportError as e:
-            raise ImportError(
-                "API backend requires openai. Install with: uv add openai"
-            ) from e
+            raise ImportError("API backend requires openai. Install with: uv add openai") from e
 
         config = self.backend_config
         client_kwargs: dict[str, Any] = {
@@ -236,9 +227,7 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
             # Fallback: return raw doctags if conversion fails
             return doctags
 
-    def _prepare_image(
-        self, image: Union[Image.Image, np.ndarray, str, Path]
-    ) -> Image.Image:
+    def _prepare_image(self, image: Union[Image.Image, np.ndarray, str, Path]) -> Image.Image:
         """Convert input to PIL Image."""
         if isinstance(image, Image.Image):
             pil_image = image
@@ -348,9 +337,7 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
         # Decode (exclude prompt)
         prompt_length = inputs.input_ids.shape[1]
         output_ids = generated_ids[:, prompt_length:]
-        doctags = self._processor.batch_decode(output_ids, skip_special_tokens=False)[
-            0
-        ].strip()
+        doctags = self._processor.batch_decode(output_ids, skip_special_tokens=False)[0].strip()
 
         return doctags
 

@@ -39,13 +39,9 @@ class GraniteDoclingTextAPITest(BaseOmnidocsTest):
 
         api_key = os.environ.get("OPENROUTER_API_KEY")
         if not api_key:
-            raise ValueError(
-                "OPENROUTER_API_KEY environment variable required for API backend"
-            )
+            raise ValueError("OPENROUTER_API_KEY environment variable required for API backend")
 
-        return GraniteDoclingTextExtractor(
-            backend=GraniteDoclingTextAPIConfig(api_key=api_key)
-        )
+        return GraniteDoclingTextExtractor(backend=GraniteDoclingTextAPIConfig(api_key=api_key))
 
     def run_extraction(self, extractor: Any, image: Image.Image) -> Any:
         return extractor.extract(image, output_format="markdown")

@@ -4,7 +4,7 @@ Synthetic Document Generation for OmniDocs Testing.
 Creates test images with known content for validation and evaluation.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
@@ -82,11 +82,13 @@ def create_synthetic_document(
         title_bbox = draw.textbbox((margin, y_offset), title_text, font=title_font)
         draw.text((margin, y_offset), title_text, fill="black", font=title_font)
 
-        regions.append(TextRegion(
-            text=title_text,
-            bbox=(margin, y_offset, title_bbox[2], title_bbox[3]),
-            font_size=24,
-        ))
+        regions.append(
+            TextRegion(
+                text=title_text,
+                bbox=(margin, y_offset, title_bbox[2], title_bbox[3]),
+                font_size=24,
+            )
+        )
         y_offset = title_bbox[3] + 30
 
     # Default texts if none provided
@@ -96,8 +98,7 @@ def create_synthetic_document(
             "that can be used for testing text extraction capabilities.",
             "The second paragraph provides additional content. Testing various scenarios "
             "helps ensure robust extraction across different document layouts.",
-            "A third paragraph concludes the main text section. This demonstrates "
-            "multi-paragraph document handling.",
+            "A third paragraph concludes the main text section. This demonstrates multi-paragraph document handling.",
         ]
 
     # Add paragraphs
@@ -128,11 +129,13 @@ def create_synthetic_document(
             line_bbox = draw.textbbox((margin, y_offset), line, font=body_font)
             y_offset = line_bbox[3] + 5
 
-        regions.append(TextRegion(
-            text=text,
-            bbox=(margin, para_start_y, width - margin, y_offset),
-            font_size=14,
-        ))
+        regions.append(
+            TextRegion(
+                text=text,
+                bbox=(margin, para_start_y, width - margin, y_offset),
+                font_size=14,
+            )
+        )
         y_offset += 20
 
     # Add a simple table
@@ -163,11 +166,13 @@ def create_synthetic_document(
                 text_y = y1 + 5
                 draw.text((text_x, text_y), cell_text, fill="black", font=body_font)
 
-                regions.append(TextRegion(
-                    text=cell_text,
-                    bbox=(x1, y1, x2, y2),
-                    font_size=14,
-                ))
+                regions.append(
+                    TextRegion(
+                        text=cell_text,
+                        bbox=(x1, y1, x2, y2),
+                        font_size=14,
+                    )
+                )
 
     return SyntheticDocument(
         image=image,

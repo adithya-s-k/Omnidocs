@@ -33,9 +33,7 @@ class QwenLayoutVLLMTest(BaseOmnidocsTest):
         from omnidocs.tasks.layout_extraction import QwenLayoutDetector
         from omnidocs.tasks.layout_extraction.qwen import QwenLayoutVLLMConfig
 
-        return QwenLayoutDetector(
-            backend=QwenLayoutVLLMConfig(gpu_memory_utilization=0.85)
-        )
+        return QwenLayoutDetector(backend=QwenLayoutVLLMConfig(gpu_memory_utilization=0.85))
 
     def run_extraction(self, extractor: Any, image: Image.Image) -> Any:
         return extractor.extract(image)
