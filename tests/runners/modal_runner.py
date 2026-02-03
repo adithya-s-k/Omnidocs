@@ -564,7 +564,7 @@ def test_granite_docling_pytorch(img_bytes: bytes) -> dict:
         backend=GraniteDoclingTextPyTorchConfig(
             device="cuda",
             torch_dtype="bfloat16",
-            use_flash_attention=True,
+            use_flash_attention=False,  # Use SDPA instead due to flash-attn version mismatch
         )
     )
     load_time = time.time() - start
