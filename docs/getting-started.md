@@ -247,7 +247,44 @@ if page_num < doc.page_count:
 
 ---
 
+## 8. Other Tasks
+
+OmniDocs supports more than just text extraction:
+
+### Layout Analysis
+```python
+from omnidocs.tasks.layout_extraction import DocLayoutYOLO, DocLayoutYOLOConfig
+
+detector = DocLayoutYOLO(config=DocLayoutYOLOConfig(device="cuda"))
+layout = detector.extract(page)
+
+for box in layout.bboxes:
+    print(f"{box.label.value}: {box.confidence:.2f}")
+```
+
+### Table Extraction
+```python
+from omnidocs.tasks.table_extraction import TableFormerExtractor, TableFormerConfig
+
+extractor = TableFormerExtractor(config=TableFormerConfig(device="cuda"))
+result = extractor.extract(table_image)
+df = result.to_dataframe()
+```
+
+### Reading Order
+```python
+from omnidocs.tasks.reading_order import RuleBasedReadingOrderPredictor
+
+predictor = RuleBasedReadingOrderPredictor()
+reading_order = predictor.predict(layout, ocr_result)
+text = reading_order.get_full_text()
+```
+
+---
+
 ## Next Steps
 
 - **[Concepts](concepts.md)** - Understand the architecture
+- **[Tasks](usage/tasks/index.md)** - All available tasks (text, layout, OCR, tables, reading order)
+- **[Models](usage/models/index.md)** - All available models and their configurations
 - **[Usage](usage/index.md)** - Tasks, models, and workflows

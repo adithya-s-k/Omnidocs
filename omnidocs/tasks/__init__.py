@@ -7,12 +7,22 @@ Available task modules:
     - layout_extraction: Detect document structure (titles, tables, figures, etc.)
     - ocr_extraction: Extract text with bounding boxes from images
     - text_extraction: Convert document images to HTML/Markdown
+    - table_extraction: Extract table structure and content
+    - reading_order: Determine logical reading sequence of document elements
 """
 
-from omnidocs.tasks import layout_extraction, ocr_extraction, text_extraction
+from omnidocs.tasks import (
+    layout_extraction,
+    ocr_extraction,
+    reading_order,
+    table_extraction,
+    text_extraction,
+)
 
 __all__ = [
     "layout_extraction",
     "ocr_extraction",
     "text_extraction",
+    "table_extraction",
+    "reading_order",
 ]

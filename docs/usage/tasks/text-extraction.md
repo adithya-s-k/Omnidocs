@@ -72,6 +72,7 @@ result = extractor.extract(image, output_format="html")
 |-------|-------|---------|----------|
 | [Qwen](../models/qwen.md) | 2-3s/page | Excellent | General purpose |
 | [DotsOCR](../models/dotsocr.md) | 3-5s/page | Very Good | Technical docs, layout-aware |
+| [Nanonets OCR2](../models/nanonets.md) | 2-4s/page | Excellent | Document digitization, invoices |
 
 ---
 

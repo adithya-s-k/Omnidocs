@@ -9,15 +9,14 @@
 | Model | Params | PyTorch | VLLM | MLX | API |
 |-------|--------|---------|------|-----|-----|
 | **Qwen3-VL** | 2-32B | ✅ | ✅ | ✅ | ✅ |
-| **DotsOCR** | 1.7B | ✅ | ✅ | ❌ | ❌ |
+| **DotsOCR** | 1.7B | ✅ | ✅ | ❌ | ✅ |
+| **Nanonets OCR2** | 3B | ✅ | ✅ | ✅ | ❌ |
+| Granite-Docling | 258M | 🔜 | 🔜 | ❌ | ❌ |
+| MinerU VL | 1.2B | 🔜 | 🔜 | 🔜 | ❌ |
 | LightOnOCR-2 | 1B | 🔜 | 🔜 | ❌ | ❌ |
 | Chandra | 9B | 🔜 | 🔜 | ❌ | ❌ |
 | olmOCR-2 | 7B | 🔜 | 🔜 | ❌ | 🔜 |
-| MinerU2.5 | 1.2B | 🔜 | 🔜 | 🔜 | ❌ |
-| Granite-Docling | 258M | 🔜 | ❌ | 🔜 | ❌ |
 | DeepSeek-OCR-2 | 3B | 🔜 | 🔜 | 🔜 | 🔜 |
-| PaddleOCR-VL | 900M | 🔜 | ❌ | ❌ | ❌ |
-| OCRFlux | 3B | 🔜 | 🔜 | ❌ | ❌ |
 
 ---
 
@@ -30,8 +29,6 @@
 | **Qwen Layout** | 2-32B | ✅ | ✅ | ✅ | ✅ |
 | Surya Layout | - | 🔜 | ❌ | ❌ | ❌ |
 | Florence-2 | - | 🔜 | ❌ | ❌ | 🔜 |
-| LayoutLMv3 | - | 🔜 | ❌ | ❌ | ❌ |
-| DiT | - | 🔜 | ❌ | ❌ | ❌ |
 
 ---
 
@@ -51,9 +48,17 @@
 
 | Model | Params | PyTorch | VLLM | MLX | API |
 |-------|--------|---------|------|-----|-----|
+| **TableFormer** | - | ✅ | ❌ | ❌ | ❌ |
 | TableTransformer | - | 🔜 | ❌ | ❌ | ❌ |
-| TableFormer | - | 🔜 | ❌ | ❌ | ❌ |
 | Surya-Table | - | 🔜 | ❌ | ❌ | ❌ |
+
+---
+
+## Reading Order Models
+
+| Model | Params | PyTorch | VLLM | MLX | API |
+|-------|--------|---------|------|-----|-----|
+| **Rule-based (R-tree)** | - | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -65,7 +70,8 @@
 | Text Extraction | ✅ |
 | Layout Analysis | ✅ |
 | OCR Extraction | ✅ |
-| Table Extraction | 🔜 |
+| Table Extraction | ✅ |
+| Reading Order | ✅ |
 | Math Recognition | 🔜 |
 | Structured Output | 🔜 |
 | Chart Understanding | 🔜 |
@@ -81,6 +87,18 @@
 | Multi-backend | ✅ |
 | Batch processing | ✅ |
 | Modal deployment | ✅ |
+| Testing framework | ✅ |
+
+---
+
+## Scripts Ready (Pending Integration)
+
+These models have working scripts but aren't yet integrated into OmniDocs:
+
+| Model | Task | Scripts |
+|-------|------|---------|
+| Granite Docling | Text | VLLM, HF, MLX |
+| MinerU VL | Text | VLLM, MLX |
 
 ---
 
@@ -91,9 +109,9 @@ Models being evaluated for future integration:
 ### High Priority
 | Model | Use Case | Why |
 |-------|----------|-----|
-| **Nanonets-OCR2** | LaTeX + structured | Good formula recognition |
 | **Marker** | Full pipeline | Uses Surya, good tables |
 | **Granite Vision 3.3** | Document understanding | IBM, good charts |
+| **Surya** | OCR + Layout | Multi-language, modern |
 
 ### Specialized Use Cases
 | Use Case | Models Under Review |
@@ -103,7 +121,6 @@ Models being evaluated for future integration:
 | Asian Languages | PaddleOCR-VL (109 langs) |
 | Edge/Mobile | Granite-Docling (258M) |
 | Forms & Receipts | DeepSeek-OCR-2 |
-| Multi-column | MinerU2.5 |
 
 ### Framework Integration
 | Framework | Status |
@@ -123,6 +140,7 @@ Models being evaluated for future integration:
 | Chandra | 83.1 | 9B |
 | olmOCR-2 | 82.4 | 7B |
 | DotsOCR | 79.1 | 1.7B |
+| Nanonets OCR2 | ~78 | 3B |
 | DeepSeek-OCR | 75.4 | 3B |
 
 ### Speed (Pages/Second on H100)
@@ -136,9 +154,9 @@ Models being evaluated for future integration:
 
 ## Next Up
 
-1. 🔜 **LightOnOCR-2** - Fastest + SOTA accuracy
-2. 🔜 **DeepSeek-OCR-2** - New visual encoder (Jan 2026)
-3. 🔜 **Table Extraction** - TableTransformer
+1. 🔜 **Granite Docling** - Integration from scripts
+2. 🔜 **MinerU VL** - Integration from scripts
+3. 🔜 **Math Recognition** - UniMERNet or Qwen
 4. 🔜 **Surya** - Multi-language OCR + Layout
 
 ---

@@ -1,0 +1,1 @@
+"""Standalone table extraction tests."""

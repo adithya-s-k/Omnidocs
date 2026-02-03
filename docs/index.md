@@ -33,11 +33,11 @@ print(result.content)
 
 | Task | What You Get | Example Models |
 |------|--------------|----------------|
-| **Text Extraction** | Markdown/HTML from documents | Qwen3-VL, DotsOCR, Chandra |
-| **Layout Analysis** | Bounding boxes for titles, tables, figures | DocLayoutYOLO, Qwen Layout |
-| **OCR** | Text + coordinates | Tesseract, PaddleOCR, Surya |
-| **Table Extraction** | Structured table data | TableTransformer, Qwen |
-| **Math Recognition** | LaTeX from equations | UniMERNet, Qwen |
+| **Text Extraction** | Markdown/HTML from documents | Qwen3-VL, DotsOCR, Nanonets OCR2 |
+| **Layout Analysis** | Bounding boxes for titles, tables, figures | DocLayoutYOLO, RT-DETR, Qwen Layout |
+| **OCR** | Text + coordinates | Tesseract, EasyOCR, PaddleOCR |
+| **Table Extraction** | Structured table data (rows, columns, cells) | TableFormer |
+| **Reading Order** | Logical reading sequence | Rule-based R-tree |
 
 ---
 
@@ -69,19 +69,24 @@ Image → Extractor.extract() → Pydantic Output
 
 | Model | Task | PyTorch | VLLM | MLX | API |
 |-------|------|---------|------|-----|-----|
-| **Qwen3-VL** | Text, Layout | Done | Done | Done | Done |
-| **DotsOCR** | Text | Done | Done | -- | -- |
-| **DocLayoutYOLO** | Layout | Done | -- | -- | -- |
-| **Tesseract** | OCR | Done | -- | -- | -- |
+| **Qwen3-VL** | Text, Layout | ✅ | ✅ | ✅ | ✅ |
+| **DotsOCR** | Text | ✅ | ✅ | -- | ✅ |
+| **Nanonets OCR2** | Text | ✅ | ✅ | ✅ | -- |
+| **DocLayoutYOLO** | Layout | ✅ | -- | -- | -- |
+| **RT-DETR** | Layout | ✅ | -- | -- | -- |
+| **TableFormer** | Table | ✅ | -- | -- | -- |
+| **Tesseract** | OCR | ✅ | -- | -- | -- |
+| **EasyOCR** | OCR | ✅ | -- | -- | -- |
+| **PaddleOCR** | OCR | ✅ | -- | -- | -- |
+| **Rule-based** | Reading Order | ✅ | -- | -- | -- |
 
 ## Coming Soon
 
 | Model | Task | Status |
 |-------|------|--------|
-| LightOnOCR-2 | Text, OCR | Soon |
-| Chandra | Text, Layout | Soon |
-| Table Extraction | Tables | Soon |
-| Surya | OCR, Layout | Soon |
+| Granite Docling | Text | 🔜 Scripts ready |
+| MinerU VL | Text | 🔜 Scripts ready |
+| Surya | OCR, Layout | 🔜 Planned |
 
 See [Roadmap](ROADMAP.md) for full tracking.
 

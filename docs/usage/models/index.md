@@ -12,6 +12,7 @@ All supported models and their configurations.
 |-------|-------|----------|--------|
 | [Qwen](qwen.md) | 2-3s/page | PyTorch, VLLM, MLX, API | ✅ Ready |
 | [DotsOCR](dotsocr.md) | 3-5s/page | PyTorch, VLLM, API | ✅ Ready |
+| [Nanonets OCR2](nanonets.md) | 2-4s/page | PyTorch, VLLM, MLX | ✅ Ready |
 
 ### Layout Analysis
 
@@ -29,17 +30,29 @@ All supported models and their configurations.
 | [EasyOCR](easyocr.md) | 1-2s/page | PyTorch | ✅ Ready |
 | [PaddleOCR](paddleocr.md) | 0.5-1s/page | PaddlePaddle | ✅ Ready |
 
+### Table Extraction
+
+| Model | Speed | Backends | Status |
+|-------|-------|----------|--------|
+| [TableFormer](tableformer.md) | 0.5-1s/table | PyTorch | ✅ Ready |
+
+### Reading Order
+
+| Model | Speed | Backends | Status |
+|-------|-------|----------|--------|
+| Rule-based | <0.1s/page | CPU | ✅ Ready |
+
 ---
 
 ## By Backend
 
 | Backend | Models |
 |---------|--------|
-| **PyTorch** | Qwen, DotsOCR, DocLayoutYOLO, RT-DETR, EasyOCR |
-| **VLLM** | Qwen, DotsOCR |
-| **MLX** | Qwen |
+| **PyTorch** | Qwen, DotsOCR, Nanonets, DocLayoutYOLO, RT-DETR, EasyOCR, TableFormer |
+| **VLLM** | Qwen, DotsOCR, Nanonets |
+| **MLX** | Qwen, Nanonets |
 | **API** | Qwen, DotsOCR |
-| **CPU** | Tesseract, PaddleOCR |
+| **CPU** | Tesseract, PaddleOCR, Rule-based Reading Order |
 
 ---
 
@@ -48,29 +61,24 @@ All supported models and their configurations.
 ### Text Extraction
 | Model | Parameters | Description | Status |
 |-------|------------|-------------|--------|
-| **Chandra** | 9B | High accuracy text extraction | 🔜 Soon |
-| **LightOnOCR-2** | 1B | Fast text extraction | 🔜 Soon |
-| **MinerU** | 1.2B | Layout-aware extraction | 🔜 Soon |
-| **Granite-Docling** | 258M | Edge deployment | 🔜 Planned |
-| **OlmOCR** | 7B | Tables and math | 🔜 Planned |
+| **Granite Docling** | 258M | Edge deployment, fast inference | 🔜 Scripts ready |
+| **MinerU VL** | 1.2B | Layout-aware extraction | 🔜 Scripts ready |
+| **Chandra** | 9B | High accuracy text extraction | 🔜 Planned |
 
 ### Layout Analysis
 | Model | Description | Status |
 |-------|-------------|--------|
-| **SuryaLayout** | Modern layout detection | 🔜 Soon |
-| **VLMLayout** | API-based (GPT-4V, Gemini) | 🔜 Planned |
+| **SuryaLayout** | Modern layout detection | 🔜 Planned |
 
 ### OCR
 | Model | Description | Status |
 |-------|-------------|--------|
-| **SuryaOCR** | Modern multilingual OCR | 🔜 Soon |
-| **QwenOCR** | VLM-based OCR with coordinates | 🔜 Planned |
+| **SuryaOCR** | Modern multilingual OCR | 🔜 Planned |
 
 ### New Tasks
 | Task | Models | Status |
 |------|--------|--------|
-| **Table Extraction** | TableTransformer, Surya | 🔜 Soon |
-| **Math Recognition** | UniMERNet, Qwen | 🔜 Soon |
+| **Math Recognition** | UniMERNet, Qwen | 🔜 Planned |
 | **Structured Output** | VLM (GPT-4V, Gemini) | 🔜 Planned |
 
 See [Roadmap](../../ROADMAP.md) for full tracking.

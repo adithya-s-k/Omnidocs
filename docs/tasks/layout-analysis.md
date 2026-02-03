@@ -9,9 +9,10 @@ Detect document structure: titles, tables, figures, and more.
 | Model | Speed | Labels | Backends |
 |-------|-------|--------|----------|
 | **DocLayoutYOLO** | 0.1-0.2s/page | Fixed (11 types) | PyTorch |
+| **RT-DETR** | 0.3-0.5s/page | Fixed (10 types) | PyTorch |
 | **Qwen Layout** | 2-3s/page | Custom | PyTorch, VLLM, MLX, API |
 
-**Recommendation:** Use DocLayoutYOLO for speed, Qwen Layout for custom labels.
+**Recommendation:** Use DocLayoutYOLO for speed, RT-DETR for more categories, Qwen Layout for custom labels.
 
 ---
 
