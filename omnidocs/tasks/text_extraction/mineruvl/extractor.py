@@ -5,7 +5,6 @@ MinerU VL performs document extraction in two steps:
 2. Content Recognition: Extract text/table/equation content from each region
 """
 
-import time
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Literal, Optional, Union
 
@@ -15,14 +14,13 @@ from PIL import Image
 from ..base import BaseTextExtractor
 from ..models import OutputFormat, TextOutput
 from .utils import (
-    BlockType,
-    ContentBlock,
     DEFAULT_PROMPTS,
     DEFAULT_SAMPLING_PARAMS,
+    SYSTEM_PROMPT,
+    BlockType,
+    ContentBlock,
     MinerUSamplingParams,
     SamplingParams,
-    SYSTEM_PROMPT,
-    convert_otsl_to_html,
     get_rgb_image,
     parse_layout_output,
     prepare_for_extract,
@@ -222,14 +220,10 @@ class MinerUVLTextExtractor(BaseTextExtractor):
         width, height = pil_image.size
 
         # Step 1: Layout detection
-        layout_start = time.time()
         blocks = self._detect_layout(pil_image)
-        layout_time = time.time() - layout_start
 
         # Step 2: Content extraction for each block
-        extract_start = time.time()
         blocks = self._extract_content(pil_image, blocks)
-        extract_time = time.time() - extract_start
 
         # Post-process (OTSL to HTML for tables)
         blocks = simple_post_process(blocks)
@@ -375,7 +369,7 @@ class MinerUVLTextExtractor(BaseTextExtractor):
         """Build raw output string with all block contents."""
         parts = []
         for i, block in enumerate(blocks):
-            parts.append(f"[Block {i+1}] Type: {block.type.value}")
+            parts.append(f"[Block {i + 1}] Type: {block.type.value}")
             parts.append(f"  BBox: {block.bbox}")
             if block.angle:
                 parts.append(f"  Angle: {block.angle}")
@@ -471,7 +465,7 @@ class _TransformersClient:
             output_ids = self.model.generate(**inputs, use_cache=True, **generate_kwargs)
 
             output_ids = output_ids.cpu().tolist()
-            output_ids = [ids[len(in_ids):] for in_ids, ids in zip(inputs.input_ids, output_ids)]
+            output_ids = [ids[len(in_ids) :] for in_ids, ids in zip(inputs.input_ids, output_ids)]
             output_ids = [[id for id in ids if id not in self.skip_token_ids] for ids in output_ids]
 
             output_texts = self.processor.batch_decode(
@@ -562,6 +556,7 @@ class _MLXClient:
         self.max_tokens = max_tokens
 
         from mlx_vlm import generate
+
         self.generate_fn = generate
 
     def _build_messages(self, prompt: str) -> List[dict]:
@@ -694,6 +689,7 @@ class _APIClient:
         sampling_params: List[SamplingParams],
     ) -> List[str]:
         import asyncio
+
         import httpx
 
         async def _async_batch():
@@ -703,6 +699,7 @@ class _APIClient:
                 headers["Authorization"] = f"Bearer {self.api_key}"
 
             async with httpx.AsyncClient(timeout=self.timeout) as client:
+
                 async def fetch_one(idx, image, prompt, sp):
                     async with semaphore:
                         body = self._build_request_body(image, prompt, sp)
@@ -716,8 +713,7 @@ class _APIClient:
                         return idx, data["choices"][0]["message"]["content"]
 
                 tasks = [
-                    fetch_one(i, img, p, sp)
-                    for i, (img, p, sp) in enumerate(zip(images, prompts, sampling_params))
+                    fetch_one(i, img, p, sp) for i, (img, p, sp) in enumerate(zip(images, prompts, sampling_params))
                 ]
                 results = await asyncio.gather(*tasks)
 

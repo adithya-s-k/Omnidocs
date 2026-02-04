@@ -21,11 +21,11 @@ Example:
     ```
 """
 
+from .api import MinerUVLLayoutAPIConfig
 from .detector import MinerUVLLayoutDetector
+from .mlx import MinerUVLLayoutMLXConfig
 from .pytorch import MinerUVLLayoutPyTorchConfig
 from .vllm import MinerUVLLayoutVLLMConfig
-from .mlx import MinerUVLLayoutMLXConfig
-from .api import MinerUVLLayoutAPIConfig
 
 __all__ = [
     "MinerUVLLayoutDetector",

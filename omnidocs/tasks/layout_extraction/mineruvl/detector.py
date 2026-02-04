@@ -10,22 +10,21 @@ from typing import TYPE_CHECKING, List, Union
 import numpy as np
 from PIL import Image
 
-from ..base import BaseLayoutExtractor
-from ..models import BoundingBox, LayoutBox, LayoutLabel, LayoutOutput
-
 # Import utilities from text_extraction module (shared code)
 from ...text_extraction.mineruvl.utils import (
-    BlockType,
-    ContentBlock,
     DEFAULT_PROMPTS,
     DEFAULT_SAMPLING_PARAMS,
+    SYSTEM_PROMPT,
+    BlockType,
+    ContentBlock,
     MinerUSamplingParams,
     SamplingParams,
-    SYSTEM_PROMPT,
     get_rgb_image,
     parse_layout_output,
     prepare_for_layout,
 )
+from ..base import BaseLayoutExtractor
+from ..models import BoundingBox, LayoutBox, LayoutLabel, LayoutOutput
 
 if TYPE_CHECKING:
     from .api import MinerUVLLayoutAPIConfig
@@ -306,18 +305,16 @@ class _TransformersClient:
         image = get_rgb_image(image)
 
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        messages.append({
-            "role": "user",
-            "content": [{"type": "image"}, {"type": "text", "text": prompt}],
-        })
-
-        chat_prompt = self.processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
+        messages.append(
+            {
+                "role": "user",
+                "content": [{"type": "image"}, {"type": "text", "text": prompt}],
+            }
         )
 
-        inputs = self.processor(
-            text=[chat_prompt], images=[image], padding=True, return_tensors="pt"
-        )
+        chat_prompt = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+
+        inputs = self.processor(text=[chat_prompt], images=[image], padding=True, return_tensors="pt")
         inputs = inputs.to(device=self.model.device, dtype=self.model.dtype)
 
         sp = sp or MinerUSamplingParams()
@@ -329,7 +326,7 @@ class _TransformersClient:
         )
 
         output_ids = output_ids.cpu().tolist()
-        output_ids = [ids[len(in_ids):] for in_ids, ids in zip(inputs.input_ids, output_ids)]
+        output_ids = [ids[len(in_ids) :] for in_ids, ids in zip(inputs.input_ids, output_ids)]
         output_ids = [[id for id in ids if id not in self.skip_token_ids] for ids in output_ids]
 
         output_texts = self.processor.batch_decode(
@@ -352,14 +349,14 @@ class _VLLMClient:
         image = get_rgb_image(image)
 
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        messages.append({
-            "role": "user",
-            "content": [{"type": "image"}, {"type": "text", "text": prompt}],
-        })
-
-        chat_prompt = self.tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
+        messages.append(
+            {
+                "role": "user",
+                "content": [{"type": "image"}, {"type": "text", "text": prompt}],
+            }
         )
+
+        chat_prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
         sp = sp or MinerUSamplingParams()
         vllm_sp = VllmSamplingParams(
@@ -383,20 +380,21 @@ class _MLXClient:
         self.processor = processor
         self.max_tokens = max_tokens
         from mlx_vlm import generate
+
         self.generate_fn = generate
 
     def predict(self, image: Image.Image, prompt: str, sp: SamplingParams = None) -> str:
         image = get_rgb_image(image)
 
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        messages.append({
-            "role": "user",
-            "content": [{"type": "image"}, {"type": "text", "text": prompt}],
-        })
-
-        chat_prompt = self.processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
+        messages.append(
+            {
+                "role": "user",
+                "content": [{"type": "image"}, {"type": "text", "text": prompt}],
+            }
         )
+
+        chat_prompt = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
         sp = sp or MinerUSamplingParams()
         response = self.generate_fn(
@@ -430,8 +428,9 @@ class _APIClient:
 
     def predict(self, image: Image.Image, prompt: str, sp: SamplingParams = None) -> str:
         import base64
-        import httpx
         from io import BytesIO
+
+        import httpx
 
         image = get_rgb_image(image)
         buffer = BytesIO()
@@ -440,13 +439,15 @@ class _APIClient:
         image_url = f"data:image/png;base64,{b64}"
 
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        messages.append({
-            "role": "user",
-            "content": [
-                {"type": "image_url", "image_url": {"url": image_url}},
-                {"type": "text", "text": prompt},
-            ],
-        })
+        messages.append(
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": image_url}},
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        )
 
         sp = sp or MinerUSamplingParams()
         body = {

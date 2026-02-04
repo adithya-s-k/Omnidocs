@@ -2,6 +2,19 @@
 
 Contains data structures, parsing, prompts, and post-processing functions
 for MinerU VL document extraction pipeline.
+
+This file contains code adapted from mineru-vl-utils:
+    https://github.com/opendatalab/mineru-vl-utils
+    https://pypi.org/project/mineru-vl-utils/
+
+The original mineru-vl-utils is licensed under AGPL-3.0:
+    Copyright (c) OpenDataLab
+    https://github.com/opendatalab/mineru-vl-utils/blob/main/LICENSE.md
+
+Adapted components:
+    - BlockType enum (from structs.py)
+    - ContentBlock data structure (from structs.py)
+    - OTSL to HTML table conversion (from post_process/otsl2html.py)
 """
 
 import html
@@ -14,7 +27,6 @@ from typing import Dict, List, Literal, Optional, Sequence, Tuple
 
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
 
 # ============= Block Types =============
 
@@ -71,9 +83,7 @@ class ContentBlock(BaseModel):
         max_length=4,
         description="Bounding box [x1, y1, x2, y2] normalized to [0, 1]",
     )
-    angle: Literal[None, 0, 90, 180, 270] = Field(
-        default=None, description="Rotation angle of the block"
-    )
+    angle: Literal[None, 0, 90, 180, 270] = Field(default=None, description="Rotation angle of the block")
     content: Optional[str] = Field(
         default=None,
         description="Extracted content (text, HTML table, LaTeX equation)",
@@ -354,9 +364,7 @@ def convert_otsl_to_html(otsl_content: str) -> str:
     text_parts = re.split(pattern, otsl_content)
     text_parts = [part for part in text_parts if part.strip()]
 
-    split_row_tokens = [
-        list(y) for x, y in itertools.groupby(tokens, lambda z: z == OTSL_NL) if not x
-    ]
+    split_row_tokens = [list(y) for x, y in itertools.groupby(tokens, lambda z: z == OTSL_NL) if not x]
     if not split_row_tokens:
         return ""
 
@@ -401,18 +409,12 @@ def convert_otsl_to_html(otsl_content: str) -> str:
             if i + right_offset < len(text_parts):
                 next_right = text_parts[i + right_offset]
                 if next_right in [OTSL_LCEL, OTSL_XCEL]:
-                    col_span += count_right(
-                        split_row_tokens, c_idx + 1, r_idx, [OTSL_LCEL, OTSL_XCEL]
-                    )
+                    col_span += count_right(split_row_tokens, c_idx + 1, r_idx, [OTSL_LCEL, OTSL_XCEL])
 
-            if r_idx + 1 < len(split_row_tokens) and c_idx < len(
-                split_row_tokens[r_idx + 1]
-            ):
+            if r_idx + 1 < len(split_row_tokens) and c_idx < len(split_row_tokens[r_idx + 1]):
                 next_bottom = split_row_tokens[r_idx + 1][c_idx]
                 if next_bottom in [OTSL_UCEL, OTSL_XCEL]:
-                    row_span += count_down(
-                        split_row_tokens, c_idx, r_idx + 1, [OTSL_UCEL, OTSL_XCEL]
-                    )
+                    row_span += count_down(split_row_tokens, c_idx, r_idx + 1, [OTSL_UCEL, OTSL_XCEL])
 
             table_cells.append(
                 {
@@ -435,12 +437,8 @@ def convert_otsl_to_html(otsl_content: str) -> str:
     grid = [[None for _ in range(num_cols)] for _ in range(num_rows)]
 
     for cell in table_cells:
-        for i in range(
-            cell["start_row"], min(cell["start_row"] + cell["row_span"], num_rows)
-        ):
-            for j in range(
-                cell["start_col"], min(cell["start_col"] + cell["col_span"], num_cols)
-            ):
+        for i in range(cell["start_row"], min(cell["start_row"] + cell["row_span"], num_rows)):
+            for j in range(cell["start_col"], min(cell["start_col"] + cell["col_span"], num_cols)):
                 grid[i][j] = cell
 
     html_parts = []
