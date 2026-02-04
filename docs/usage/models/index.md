@@ -10,6 +10,7 @@ All supported models and their configurations.
 
 | Model | Speed | Backends | Status |
 |-------|-------|----------|--------|
+| [MinerU VL](mineruvl.md) | 3-6s/page | PyTorch, VLLM, MLX, API | ✅ Ready |
 | [Qwen](qwen.md) | 2-3s/page | PyTorch, VLLM, MLX, API | ✅ Ready |
 | [DotsOCR](dotsocr.md) | 3-5s/page | PyTorch, VLLM, API | ✅ Ready |
 | [Nanonets OCR2](nanonets.md) | 2-4s/page | PyTorch, VLLM, MLX | ✅ Ready |
@@ -18,6 +19,7 @@ All supported models and their configurations.
 
 | Model | Speed | Backends | Status |
 |-------|-------|----------|--------|
+| [MinerU VL](mineruvl.md#layout-analysis) | 3-6s/page | PyTorch, VLLM, MLX, API | ✅ Ready |
 | [DocLayoutYOLO](doclayout-yolo.md) | 0.1-0.2s/page | PyTorch | ✅ Ready |
 | [RT-DETR](rtdetr.md) | 0.3-0.5s/page | PyTorch | ✅ Ready |
 | [Qwen Layout](qwen.md#layout-analysis) | 2-3s/page | PyTorch, VLLM, MLX, API | ✅ Ready |
@@ -48,10 +50,10 @@ All supported models and their configurations.
 
 | Backend | Models |
 |---------|--------|
-| **PyTorch** | Qwen, DotsOCR, Nanonets, DocLayoutYOLO, RT-DETR, EasyOCR, TableFormer |
-| **VLLM** | Qwen, DotsOCR, Nanonets |
-| **MLX** | Qwen, Nanonets |
-| **API** | Qwen, DotsOCR |
+| **PyTorch** | MinerU VL, Qwen, DotsOCR, Nanonets, DocLayoutYOLO, RT-DETR, EasyOCR, TableFormer |
+| **VLLM** | MinerU VL, Qwen, DotsOCR, Nanonets |
+| **MLX** | MinerU VL, Qwen, Nanonets |
+| **API** | MinerU VL, Qwen, DotsOCR |
 | **CPU** | Tesseract, PaddleOCR, Rule-based Reading Order |
 
 ---
@@ -62,7 +64,6 @@ All supported models and their configurations.
 | Model | Parameters | Description | Status |
 |-------|------------|-------------|--------|
 | **Granite Docling** | 258M | Edge deployment, fast inference | 🔜 Scripts ready |
-| **MinerU VL** | 1.2B | Layout-aware extraction | 🔜 Scripts ready |
 | **Chandra** | 9B | High accuracy text extraction | 🔜 Planned |
 
 ### Layout Analysis
