@@ -957,6 +957,243 @@ def test_tableformer_gpu(img_bytes: bytes) -> dict:
     }
 
 
+# ============= MINERU VL TESTS =============
+
+
+@app.function(
+    image=VLLM_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_mineruvl_vllm(img_bytes: bytes) -> dict:
+    """Test MinerU VL text extraction with VLLM backend."""
+    import io
+    import os
+    import time
+
+    os.environ["VLLM_USE_V1"] = "0"
+    os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import MinerUVLTextExtractor
+    from omnidocs.tasks.text_extraction.mineruvl import MinerUVLTextVLLMConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing MinerUVLTextExtractor with VLLM backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = MinerUVLTextExtractor(
+        backend=MinerUVLTextVLLMConfig(
+            gpu_memory_utilization=0.85,
+            max_model_len=16384,
+            enforce_eager=True,
+            download_dir=MODEL_CACHE_DIR,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "mineruvl_vllm",
+        "backend": "vllm",
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_mineruvl_pytorch(img_bytes: bytes) -> dict:
+    """Test MinerU VL text extraction with PyTorch backend."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import MinerUVLTextExtractor
+    from omnidocs.tasks.text_extraction.mineruvl import MinerUVLTextPyTorchConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing MinerUVLTextExtractor with PyTorch backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = MinerUVLTextExtractor(
+        backend=MinerUVLTextPyTorchConfig(
+            device="cuda",
+            torch_dtype="float16",
+            use_flash_attention=False,  # Use SDPA instead of flash-attn
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "mineruvl_pytorch",
+        "backend": "pytorch",
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=VLLM_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_mineruvl_layout_vllm(img_bytes: bytes) -> dict:
+    """Test MinerU VL layout detection with VLLM backend."""
+    import io
+    import os
+    import time
+
+    os.environ["VLLM_USE_V1"] = "0"
+    os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+
+    from PIL import Image
+
+    from omnidocs.tasks.layout_extraction import MinerUVLLayoutDetector
+    from omnidocs.tasks.layout_extraction.mineruvl import MinerUVLLayoutVLLMConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing MinerUVLLayoutDetector with VLLM backend")
+    print("=" * 60)
+
+    start = time.time()
+    detector = MinerUVLLayoutDetector(
+        backend=MinerUVLLayoutVLLMConfig(
+            gpu_memory_utilization=0.85,
+            max_model_len=16384,
+            enforce_eager=True,
+            download_dir=MODEL_CACHE_DIR,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = detector.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Detected Layout Elements ---")
+    print(f"Number of boxes: {len(result.bboxes)}")
+    for i, box in enumerate(result.bboxes[:5]):
+        print(f"  {i + 1}. {box.label}: conf={box.confidence:.2f}")
+    if len(result.bboxes) > 5:
+        print(f"  ... and {len(result.bboxes) - 5} more")
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "mineruvl_layout_vllm",
+        "backend": "vllm",
+        "model": "MinerU2.5-2509-1.2B",
+        "num_boxes": len(result.bboxes),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_mineruvl_layout_pytorch(img_bytes: bytes) -> dict:
+    """Test MinerU VL layout detection with PyTorch backend."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.layout_extraction import MinerUVLLayoutDetector
+    from omnidocs.tasks.layout_extraction.mineruvl import MinerUVLLayoutPyTorchConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing MinerUVLLayoutDetector with PyTorch backend")
+    print("=" * 60)
+
+    start = time.time()
+    detector = MinerUVLLayoutDetector(
+        backend=MinerUVLLayoutPyTorchConfig(
+            device="cuda",
+            torch_dtype="float16",
+            use_flash_attention=False,  # Use SDPA instead of flash-attn
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = detector.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Detected Layout Elements ---")
+    print(f"Number of boxes: {len(result.bboxes)}")
+    for i, box in enumerate(result.bboxes[:5]):
+        print(f"  {i + 1}. {box.label}: conf={box.confidence:.2f}")
+    if len(result.bboxes) > 5:
+        print(f"  ... and {len(result.bboxes) - 5} more")
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "mineruvl_layout_pytorch",
+        "backend": "pytorch",
+        "model": "MinerU2.5-2509-1.2B",
+        "num_boxes": len(result.bboxes),
+        "load_time": load_time,
+        "inference_time": inference_time,
+    }
+
+
 # ============= Test Registry =============
 
 AVAILABLE_TESTS = {
@@ -969,11 +1206,15 @@ AVAILABLE_TESTS = {
     "dotsocr_pytorch": test_dotsocr_pytorch,
     "granite_docling_vllm": test_granite_docling_vllm,
     "granite_docling_pytorch": test_granite_docling_pytorch,
+    "mineruvl_vllm": test_mineruvl_vllm,
+    "mineruvl_pytorch": test_mineruvl_pytorch,
     # Layout extraction
     "qwen_layout_vllm": test_qwen_layout_vllm,
     "qwen_layout_pytorch": test_qwen_layout_pytorch,
     "doclayout_yolo_gpu": test_doclayout_yolo_gpu,
     "rtdetr_gpu": test_rtdetr_gpu,
+    "mineruvl_layout_vllm": test_mineruvl_layout_vllm,
+    "mineruvl_layout_pytorch": test_mineruvl_layout_pytorch,
     # OCR extraction
     "easyocr_gpu": test_easyocr_gpu,
     "paddleocr_gpu": test_paddleocr_gpu,

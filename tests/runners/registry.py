@@ -164,6 +164,39 @@ TEST_REGISTRY: List[TestSpec] = [
         gpu_type=None,
         tags=["granite_docling", "ibm", "api"],
     ),
+    # MinerU VL Text Extractor
+    TestSpec(
+        name="mineruvl_text_vllm",
+        module="text_extraction.mineruvl_vllm",
+        backend=Backend.VLLM,
+        task=Task.TEXT,
+        gpu_type="L40S:1",
+        tags=["mineruvl", "vlm"],
+    ),
+    TestSpec(
+        name="mineruvl_text_pytorch",
+        module="text_extraction.mineruvl_pytorch",
+        backend=Backend.PYTORCH_GPU,
+        task=Task.TEXT,
+        gpu_type="A10G:1",
+        tags=["mineruvl", "vlm"],
+    ),
+    TestSpec(
+        name="mineruvl_text_mlx",
+        module="text_extraction.mineruvl_mlx",
+        backend=Backend.MLX,
+        task=Task.TEXT,
+        gpu_type=None,
+        tags=["mineruvl", "vlm", "apple_silicon"],
+    ),
+    TestSpec(
+        name="mineruvl_text_api",
+        module="text_extraction.mineruvl_api",
+        backend=Backend.API,
+        task=Task.TEXT,
+        gpu_type=None,
+        tags=["mineruvl", "vlm", "api"],
+    ),
     # ============================================================
     # LAYOUT EXTRACTION
     # ============================================================
@@ -199,6 +232,39 @@ TEST_REGISTRY: List[TestSpec] = [
         task=Task.LAYOUT,
         gpu_type=None,
         tags=["qwen", "vlm", "api"],
+    ),
+    # MinerU VL Layout Detector
+    TestSpec(
+        name="mineruvl_layout_vllm",
+        module="layout_extraction.mineruvl_vllm",
+        backend=Backend.VLLM,
+        task=Task.LAYOUT,
+        gpu_type="L40S:1",
+        tags=["mineruvl", "vlm"],
+    ),
+    TestSpec(
+        name="mineruvl_layout_pytorch",
+        module="layout_extraction.mineruvl_pytorch",
+        backend=Backend.PYTORCH_GPU,
+        task=Task.LAYOUT,
+        gpu_type="A10G:1",
+        tags=["mineruvl", "vlm"],
+    ),
+    TestSpec(
+        name="mineruvl_layout_mlx",
+        module="layout_extraction.mineruvl_mlx",
+        backend=Backend.MLX,
+        task=Task.LAYOUT,
+        gpu_type=None,
+        tags=["mineruvl", "vlm", "apple_silicon"],
+    ),
+    TestSpec(
+        name="mineruvl_layout_api",
+        module="layout_extraction.mineruvl_api",
+        backend=Backend.API,
+        task=Task.LAYOUT,
+        gpu_type=None,
+        tags=["mineruvl", "vlm", "api"],
     ),
     # DocLayout-YOLO
     TestSpec(
