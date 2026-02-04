@@ -18,7 +18,7 @@ class TestMinerUVLTextPyTorchConfig:
         assert config.model == "opendatalab/MinerU2.5-2509-1.2B"
         assert config.device == "auto"
         assert config.torch_dtype == "float16"
-        assert config.use_flash_attention is True
+        assert config.use_flash_attention is False  # SDPA by default
         assert config.trust_remote_code is True
         assert config.layout_image_size == (1036, 1036)
         assert config.max_new_tokens == 4096
