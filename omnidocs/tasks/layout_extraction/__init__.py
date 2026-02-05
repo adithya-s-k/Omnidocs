@@ -8,6 +8,7 @@ Available Extractors:
     - DocLayoutYOLO: YOLO-based layout detector (fast, accurate)
     - RTDETRLayoutExtractor: Transformer-based detector (more categories)
     - QwenLayoutDetector: VLM-based detector with custom label support (multi-backend)
+    - MinerUVLLayoutDetector: MinerU VL 1.2B layout detector (multi-backend)
 
 Example:
     ```python
@@ -31,6 +32,7 @@ Example:
 
 from .base import BaseLayoutExtractor
 from .doc_layout_yolo import DocLayoutYOLO, DocLayoutYOLOConfig
+from .mineruvl import MinerUVLLayoutDetector
 from .models import (
     DOCLAYOUT_YOLO_CLASS_NAMES,
     DOCLAYOUT_YOLO_MAPPING,
@@ -71,4 +73,6 @@ __all__ = [
     "RTDETRConfig",
     # Qwen3-VL (multi-backend)
     "QwenLayoutDetector",
+    # MinerU VL (multi-backend)
+    "MinerUVLLayoutDetector",
 ]
