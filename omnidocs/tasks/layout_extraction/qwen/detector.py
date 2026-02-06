@@ -28,6 +28,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import numpy as np
 from PIL import Image
 
+from omnidocs.utils.cache import get_model_cache_dir
+
 from ..base import BaseLayoutExtractor
 from ..models import (
     BoundingBox,
@@ -67,19 +69,6 @@ DEFAULT_LAYOUT_LABELS = [
 
 # Coordinate range used by Qwen3-VL (0-999 relative coordinates)
 QWEN_COORD_RANGE = 999
-
-
-def _get_model_cache_dir() -> Path:
-    """
-    Get model cache directory from environment or default.
-
-    Checks OMNIDOCS_MODEL_CACHE environment variable first,
-    falls back to ~/.omnidocs/models.
-    """
-    cache_dir = os.environ.get("OMNIDOCS_MODEL_CACHE", os.path.expanduser("~/.omnidocs/models"))
-    path = Path(cache_dir)
-    path.mkdir(parents=True, exist_ok=True)
-    return path
 
 
 class QwenLayoutDetector(BaseLayoutExtractor):
@@ -176,7 +165,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
             ) from e
 
         config = self.backend_config
-        cache_dir = _get_model_cache_dir()
+        cache_dir = get_model_cache_dir(config.cache_dir)
 
         # Resolve device
         device = self._resolve_device(config.device)
@@ -212,7 +201,7 @@ class QwenLayoutDetector(BaseLayoutExtractor):
             ) from e
 
         config = self.backend_config
-        cache_dir = _get_model_cache_dir()
+        cache_dir = get_model_cache_dir()
 
         # Use config download_dir or default cache
         download_dir = config.download_dir or str(cache_dir)

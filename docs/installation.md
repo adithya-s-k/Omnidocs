@@ -83,6 +83,37 @@ pip install -e .
 
 ---
 
+## Configure Model Cache
+
+OmniDocs provides unified cache directory management for all model weights.
+
+**Set cache directory:**
+```bash
+export OMNIDOCS_MODEL_CACHE=/data/models
+```
+
+**Default cache locations:**
+1. `$OMNIDOCS_MODEL_CACHE` (if set)
+2. `$HF_HOME` (if set)
+3. `~/.cache/huggingface` (default)
+
+**Examples:**
+
+```bash
+# Store models on external SSD
+export OMNIDOCS_MODEL_CACHE=/Volumes/FastSSD/models
+
+# Store in custom directory
+export OMNIDOCS_MODEL_CACHE=/mnt/data/omnidocs-cache
+
+# Check cache location
+python -c "from omnidocs.utils.cache import get_cache_info; import pprint; pprint.pprint(get_cache_info())"
+```
+
+**See also:** [Cache Management Guide](guides/cache-management.md) for advanced configuration.
+
+---
+
 ## Backend-Specific Setup
 
 ### PyTorch Backend

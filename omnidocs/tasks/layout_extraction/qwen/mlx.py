@@ -1,7 +1,7 @@
 """
 MLX backend configuration for Qwen3-VL layout detection.
 """
-
+from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -28,6 +28,10 @@ class QwenLayoutMLXConfig(BaseModel):
         default="mlx-community/Qwen3-VL-8B-Instruct-4bit",
         description="MLX model path or HuggingFace ID. "
         "Recommended: mlx-community/Qwen3-VL-8B-Instruct-4bit (4-bit quantized)",
+    )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Model cache directory. If None, uses OMNIDOCS_MODEL_CACHE env var or default cache.",
     )
     max_tokens: int = Field(
         default=4096,

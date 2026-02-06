@@ -30,6 +30,8 @@ from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 import numpy as np
 from PIL import Image
 
+from omnidocs.utils.cache import get_model_cache_dir
+
 from ..base import BaseTextExtractor
 from ..models import DotsOCRTextOutput, LayoutElement, OutputFormat
 
@@ -67,19 +69,6 @@ content within the bbox.
     - All layout elements must be sorted according to human reading order.
 
 5. Final Output: The entire output must be a single JSON object."""
-
-
-def _get_model_cache_dir() -> Path:
-    """
-    Get model cache directory from environment or default.
-
-    Checks OMNIDOCS_MODEL_CACHE environment variable first,
-    falls back to ~/.omnidocs/models.
-    """
-    cache_dir = os.environ.get("OMNIDOCS_MODEL_CACHE", os.path.expanduser("~/.omnidocs/models"))
-    path = Path(cache_dir)
-    path.mkdir(parents=True, exist_ok=True)
-    return path
 
 
 def _parse_json_output(raw_output: str) -> Optional[list]:
@@ -229,7 +218,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
             ) from e
 
         config = self.backend_config
-        cache_dir = _get_model_cache_dir()
+        cache_dir = get_model_cache_dir(config.cache_dir)
 
         print(f"Loading Dots OCR model: {config.model}")
         print(f"Cache directory: {cache_dir}")

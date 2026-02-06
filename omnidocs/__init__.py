@@ -25,8 +25,16 @@ from omnidocs.utils.aggregation import (
     DocumentResult,
     merge_text_results,
 )
+from omnidocs.utils.cache import (
+    configure_backend_cache,
+    get_cache_info,
+    get_model_cache_dir,
+)
 
 from ._version import __version__
+
+# Configure backend cache directories on import
+configure_backend_cache()
 
 __all__ = [
     "__version__",
@@ -45,4 +53,8 @@ __all__ = [
     "BatchResult",
     "DocumentResult",
     "merge_text_results",
+    # Cache management
+    "get_model_cache_dir",
+    "configure_backend_cache",
+    "get_cache_info",
 ]
