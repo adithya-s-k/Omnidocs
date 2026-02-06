@@ -76,7 +76,7 @@ def configure_backend_cache(cache_dir: Optional[str] = None) -> None:
 
     Sets environment variables used by different backend libraries:
     - HF_HOME: HuggingFace Transformers cache
-    - VLLM_CACHE_DIR: VLLM cache (uses HF_HOME by default)
+    - TRANSFORMERS_CACHE: Legacy Transformers cache (for compatibility)
 
     This should be called once on package import or before creating extractors.
 

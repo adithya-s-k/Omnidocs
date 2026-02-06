@@ -304,7 +304,7 @@ cp -r ~/.cache/huggingface/* /data/unified-cache/
 Ensure cache directory is writable:
 
 ```bash
-chmod -R 755 /data/models
+chmod -R u+rwX,go+rX /data/models
 chown -R $USER:$USER /data/models
 ```
 

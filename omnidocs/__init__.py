@@ -34,7 +34,15 @@ from omnidocs.utils.cache import (
 from ._version import __version__
 
 # Configure backend cache directories on import
-configure_backend_cache()
+try:
+    configure_backend_cache()
+except (OSError, PermissionError) as e:
+    import warnings
+    warnings.warn(
+        f"Failed to configure model cache directory: {e}. "
+        "Set OMNIDOCS_MODEL_CACHE to a writable path.",
+        stacklevel=1,
+    )
 
 __all__ = [
     "__version__",

@@ -3,7 +3,6 @@ Tests for cache utility functions.
 """
 
 import os
-from pathlib import Path
 
 from omnidocs.utils.cache import configure_backend_cache, get_cache_info, get_model_cache_dir
 
@@ -40,14 +39,23 @@ class TestGetModelCacheDir:
         assert result == cache_dir
         assert result.exists()
 
-    def test_default_cache_dir(self, monkeypatch):
+    def test_default_cache_dir(self, tmp_path, monkeypatch):
         """Test default cache directory when no env vars set."""
         monkeypatch.delenv("OMNIDOCS_MODEL_CACHE", raising=False)
         monkeypatch.delenv("HF_HOME", raising=False)
 
+        # Mock os.path.expanduser to use tmp_path instead of real home
+        def mock_expanduser(path):
+            if path.startswith("~"):
+                return str(tmp_path) + path[1:]
+            return path
+
+        import os
+        monkeypatch.setattr(os.path, "expanduser", mock_expanduser)
+
         result = get_model_cache_dir()
 
-        expected = Path.home() / ".cache" / "huggingface"
+        expected = tmp_path / ".cache" / "huggingface"
         assert result == expected
         assert result.exists()
 
@@ -62,9 +70,10 @@ class TestGetModelCacheDir:
         assert result.exists()
         assert result.is_dir()
 
-    def test_expanduser(self, monkeypatch):
+    def test_expanduser(self, tmp_path, monkeypatch):
         """Test that ~ is expanded to home directory."""
-        monkeypatch.setenv("OMNIDOCS_MODEL_CACHE", "~/test_cache")
+        # Use tmp_path to avoid creating directories in real home
+        monkeypatch.setenv("OMNIDOCS_MODEL_CACHE", str(tmp_path / "test_cache"))
 
         result = get_model_cache_dir()
 

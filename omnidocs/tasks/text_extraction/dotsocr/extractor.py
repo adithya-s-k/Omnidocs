@@ -22,7 +22,6 @@ Example:
 """
 
 import json
-import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
@@ -273,8 +272,13 @@ class DotsOCRTextExtractor(BaseTextExtractor):
             raise ImportError("VLLM backend requires vllm. Install with: uv add vllm") from e
 
         config = self.backend_config
+        cache_dir = get_model_cache_dir()
+
+        # Use config download_dir or default cache
+        download_dir = config.download_dir or str(cache_dir)
 
         print(f"Loading Dots OCR with VLLM: {config.model}")
+        print(f"Download directory: {download_dir}")
 
         # Initialize VLLM
         self._backend = LLM(
@@ -286,6 +290,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
             dtype=config.dtype,
             enforce_eager=config.enforce_eager,
             disable_custom_all_reduce=config.disable_custom_all_reduce,
+            download_dir=download_dir,
         )
 
         # Store sampling params class for later use

@@ -192,6 +192,12 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
             raise ImportError("MLX backend requires mlx and mlx-vlm. Install with: uv add mlx mlx-vlm") from e
 
         config = self.backend_config
+
+        # Set HF_HOME if cache_dir is specified (MLX respects HF_HOME)
+        if config.cache_dir:
+            import os
+            os.environ["HF_HOME"] = config.cache_dir
+
         self._backend, self._processor = load(config.model)
         self._mlx_config = load_config(config.model)
         self._apply_chat_template = apply_chat_template

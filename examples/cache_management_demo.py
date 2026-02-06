@@ -6,6 +6,7 @@ and the cache utility functions.
 """
 
 import os
+
 from omnidocs.utils.cache import get_cache_info, get_model_cache_dir
 
 print("=" * 60)
@@ -38,7 +39,7 @@ print("\n4. Environment Variable Override:")
 print("-" * 60)
 os.environ["OMNIDOCS_MODEL_CACHE"] = "/tmp/env-cache"
 env_cache = get_model_cache_dir()
-print(f"  Set OMNIDOCS_MODEL_CACHE=/tmp/env-cache")
+print("  Set OMNIDOCS_MODEL_CACHE=/tmp/env-cache")
 print(f"  Resolved cache: {env_cache}")
 
 # 5. Show backend-specific usage
