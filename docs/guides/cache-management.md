@@ -203,7 +203,8 @@ FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
 ENV OMNIDOCS_MODEL_CACHE=/app/models
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
-RUN pip install omnidocs[pytorch]
+RUN apt-get update && apt-get install -y python3 python3-pip && rm -rf /var/lib/apt/lists/*
+RUN python3 -m pip install omnidocs[pytorch]
 
 VOLUME /app/models
 ```
@@ -224,7 +225,7 @@ from pathlib import Path
 
 cache_dir = get_model_cache_dir()
 
-def get_cache_size(directory: Path) -> int:
+def get_cache_size(directory: Path) -> float:
     """Get total size of cache directory in GB."""
     total = sum(f.stat().st_size for f in directory.rglob('*') if f.is_file())
     return total / (1024 ** 3)  # Convert to GB
