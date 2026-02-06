@@ -182,7 +182,7 @@ class QwenTextExtractor(BaseTextExtractor):
             ) from e
 
         config = self.backend_config
-        cache_dir = get_model_cache_dir(config.cache_dir)
+        cache_dir = get_model_cache_dir()
 
         # Resolve device
         device = self._resolve_device(config.device)

@@ -233,8 +233,8 @@ class QwenLayoutDetector(BaseLayoutExtractor):
 
         # Set HF_HOME if cache_dir is specified (MLX respects HF_HOME)
         if config.cache_dir:
-            import os
-            os.environ.setdefault("HF_HOME", config.cache_dir)
+
+            os.environ["HF_HOME"] = config.cache_dir
 
         self._backend, self._processor = load(config.model)
         self._mlx_config = load_config(config.model)
