@@ -182,7 +182,7 @@ class QwenTextExtractor(BaseTextExtractor):
             ) from e
 
         config = self.backend_config
-        cache_dir = get_model_cache_dir()
+        cache_dir = get_model_cache_dir(config.cache_dir)
 
         # Resolve device
         device = self._resolve_device(config.device)
@@ -250,8 +250,7 @@ class QwenTextExtractor(BaseTextExtractor):
 
         # Set HF_HOME if cache_dir is specified (MLX respects HF_HOME)
         if config.cache_dir:
-            import os
-            os.environ.setdefault("HF_HOME", config.cache_dir)
+            os.environ["HF_HOME"] = config.cache_dir
 
         self._backend, self._processor = load(config.model)
         self._mlx_config = load_config(config.model)
