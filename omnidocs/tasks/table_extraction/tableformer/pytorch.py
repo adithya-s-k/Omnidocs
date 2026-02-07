@@ -21,6 +21,7 @@ from omnidocs.tasks.table_extraction.models import (
 from omnidocs.tasks.table_extraction.tableformer.config import (
     TableFormerConfig,
 )
+from omnidocs.utils.cache import get_model_cache_dir
 
 if TYPE_CHECKING:
     from omnidocs.tasks.ocr_extraction.models import OCROutput
@@ -116,9 +117,11 @@ class TableFormerExtractor(BaseTableExtractor):
         else:
             from huggingface_hub import snapshot_download
 
+            cache_dir = get_model_cache_dir()
             download_path = snapshot_download(
                 repo_id=self.config.repo_id,
                 revision=self.config.revision,
+                cache_dir=str(cache_dir),
             )
             mode_dir = self.config.mode.value
             artifacts_path = Path(download_path) / "model_artifacts" / "tableformer" / mode_dir

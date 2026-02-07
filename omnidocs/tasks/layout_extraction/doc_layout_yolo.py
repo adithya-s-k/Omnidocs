@@ -7,7 +7,6 @@ and technical documents.
 Model: juliozhao/DocLayout-YOLO-DocStructBench
 """
 
-import os
 from pathlib import Path
 from typing import Optional, Union
 
@@ -16,6 +15,7 @@ from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...cache import add_reference, get_cache_key, get_cached, set_cached
+from ...utils.cache import get_model_cache_dir
 from .base import BaseLayoutExtractor
 from .models import (
     DOCLAYOUT_YOLO_CLASS_NAMES,
@@ -48,7 +48,7 @@ class DocLayoutYOLOConfig(BaseModel):
     )
     model_path: Optional[str] = Field(
         default=None,
-        description="Custom path to model weights. If None, uses OMNIDOCS_MODELS_DIR env var or ~/.omnidocs/models/",
+        description="Custom path to model weights. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
     img_size: int = Field(
         default=1024,
@@ -132,10 +132,7 @@ class DocLayoutYOLO(BaseLayoutExtractor):
         if model_path:
             return Path(model_path)
 
-        # Check environment variable
-        models_dir = os.environ.get("OMNIDOCS_MODELS_DIR", os.path.expanduser("~/.omnidocs/models"))
-
-        return Path(models_dir) / "doclayout_yolo"
+        return get_model_cache_dir() / "doclayout_yolo"
 
     def _download_model(self) -> Path:
         """Download model from HuggingFace Hub if not present."""

@@ -50,6 +50,10 @@ class DotsOCRVLLMConfig(BaseModel):
     disable_custom_all_reduce: bool = Field(
         default=False, description="Disable custom all-reduce for tensor parallelism"
     )
+    download_dir: str | None = Field(
+        default=None,
+        description="Model download directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
+    )
 
     class Config:
         extra = "forbid"  # Raise error on unknown params

@@ -50,6 +50,10 @@ class QwenLayoutPyTorchConfig(BaseModel):
         default=False,
         description="Use Flash Attention 2 for faster inference. Requires flash-attn package to be installed.",
     )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
+    )
     max_new_tokens: int = Field(
         default=4096,
         ge=256,

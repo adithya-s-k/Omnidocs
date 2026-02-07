@@ -2,6 +2,8 @@
 MLX backend configuration for Nanonets OCR2-3B text extraction.
 """
 
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -28,6 +30,10 @@ class NanonetsTextMLXConfig(BaseModel):
         default="mlx-community/Nanonets-OCR2-3B-bf16",
         description="MLX model path or HuggingFace ID. "
         "Default: mlx-community/Nanonets-OCR2-3B-bf16 (bfloat16 precision)",
+    )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
     max_tokens: int = Field(
         default=4096,

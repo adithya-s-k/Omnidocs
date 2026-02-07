@@ -1,5 +1,7 @@
 """MLX backend configuration for Granite Docling text extraction (Apple Silicon)."""
 
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -13,6 +15,10 @@ class GraniteDoclingTextMLXConfig(BaseModel):
     model: str = Field(
         default="ibm-granite/granite-docling-258M-mlx",
         description="MLX model path or HuggingFace ID",
+    )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
     max_tokens: int = Field(
         default=4096,

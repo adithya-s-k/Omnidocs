@@ -27,6 +27,8 @@ from typing import TYPE_CHECKING, Any, Dict, Literal, Union
 import numpy as np
 from PIL import Image
 
+from omnidocs.utils.cache import get_model_cache_dir
+
 from ....cache import add_reference, get_cache_key, get_cached, set_cached
 from ..base import BaseTextExtractor
 from ..models import OutputFormat, TextOutput
@@ -50,19 +52,6 @@ QWEN_PROMPTS = {
     "html": "qwenvl html",
     "markdown": "qwenvl markdown",
 }
-
-
-def _get_model_cache_dir() -> Path:
-    """
-    Get model cache directory from environment or default.
-
-    Checks OMNIDOCS_MODEL_CACHE environment variable first,
-    falls back to ~/.omnidocs/models.
-    """
-    cache_dir = os.environ.get("OMNIDOCS_MODEL_CACHE", os.path.expanduser("~/.omnidocs/models"))
-    path = Path(cache_dir)
-    path.mkdir(parents=True, exist_ok=True)
-    return path
 
 
 def _clean_html_output(html_output: str) -> str:
@@ -229,7 +218,7 @@ class QwenTextExtractor(BaseTextExtractor):
             ) from e
 
         config = self.backend_config
-        cache_dir = _get_model_cache_dir()
+        cache_dir = get_model_cache_dir(config.cache_dir)
 
         # Resolve device
         device = self._resolve_device(config.device)
@@ -265,7 +254,7 @@ class QwenTextExtractor(BaseTextExtractor):
             ) from e
 
         config = self.backend_config
-        cache_dir = _get_model_cache_dir()
+        cache_dir = get_model_cache_dir()
 
         # Use config download_dir or default cache
         download_dir = config.download_dir or str(cache_dir)
@@ -294,6 +283,10 @@ class QwenTextExtractor(BaseTextExtractor):
             raise ImportError("MLX backend requires mlx and mlx-vlm. Install with: uv add mlx mlx-vlm") from e
 
         config = self.backend_config
+
+        # Set HF_HOME if cache_dir is specified (MLX respects HF_HOME)
+        if config.cache_dir:
+            os.environ["HF_HOME"] = config.cache_dir
 
         self._backend, self._processor = load(config.model)
         self._mlx_config = load_config(config.model)

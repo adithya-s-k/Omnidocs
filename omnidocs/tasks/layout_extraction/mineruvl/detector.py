@@ -12,6 +12,7 @@ from PIL import Image
 
 # Import cache and utilities
 from ....cache import add_reference, get_cache_key, get_cached, set_cached
+from ....utils.cache import get_model_cache_dir
 from ...text_extraction.mineruvl.utils import (
     DEFAULT_PROMPTS,
     DEFAULT_SAMPLING_PARAMS,
@@ -148,6 +149,7 @@ class MinerUVLLayoutDetector(BaseLayoutExtractor):
         from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
 
         config = self.backend_config
+        cache_dir = get_model_cache_dir(config.cache_dir)
 
         if config.device == "auto":
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -165,6 +167,7 @@ class MinerUVLLayoutDetector(BaseLayoutExtractor):
         model_kwargs = {
             "trust_remote_code": config.trust_remote_code,
             "torch_dtype": dtype,
+            "cache_dir": str(cache_dir),
         }
         if device == "cuda":
             if config.use_flash_attention:
@@ -185,6 +188,7 @@ class MinerUVLLayoutDetector(BaseLayoutExtractor):
         processor = AutoProcessor.from_pretrained(
             config.model,
             trust_remote_code=config.trust_remote_code,
+            cache_dir=str(cache_dir),
         )
 
         self._client = _TransformersClient(model, processor, config.max_new_tokens)
@@ -195,6 +199,10 @@ class MinerUVLLayoutDetector(BaseLayoutExtractor):
         from vllm import LLM
 
         config = self.backend_config
+        cache_dir = get_model_cache_dir()
+
+        # Use config download_dir or default cache
+        download_dir = config.download_dir or str(cache_dir)
 
         llm = LLM(
             model=config.model,
@@ -202,7 +210,7 @@ class MinerUVLLayoutDetector(BaseLayoutExtractor):
             tensor_parallel_size=config.tensor_parallel_size,
             gpu_memory_utilization=config.gpu_memory_utilization,
             max_model_len=config.max_model_len,
-            download_dir=config.download_dir,
+            download_dir=download_dir,
             disable_custom_all_reduce=config.disable_custom_all_reduce,
             enforce_eager=config.enforce_eager,
         )
@@ -212,9 +220,16 @@ class MinerUVLLayoutDetector(BaseLayoutExtractor):
 
     def _load_mlx_backend(self) -> None:
         """Load MLX backend (Apple Silicon)."""
+        import os
+
         from mlx_vlm import load
 
         config = self.backend_config
+
+        # Set HF_HOME if cache_dir is specified (MLX respects HF_HOME)
+        if config.cache_dir:
+            os.environ["HF_HOME"] = config.cache_dir
+
         model, processor = load(config.model)
 
         self._client = _MLXClient(model, processor, config.max_tokens)

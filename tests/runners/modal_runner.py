@@ -39,6 +39,7 @@ VLLM_IMAGE = (
     .env(
         {
             "HF_HUB_ENABLE_HF_TRANSFER": "1",
+            "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR,
             "HF_HOME": MODEL_CACHE_DIR,
             "VLLM_USE_V1": "0",
         }
@@ -65,6 +66,7 @@ PYTORCH_IMAGE = (
     .env(
         {
             "HF_HUB_ENABLE_HF_TRANSFER": "1",
+            "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR,
             "HF_HOME": MODEL_CACHE_DIR,
         }
     )

@@ -41,6 +41,10 @@ class DotsOCRPyTorchConfig(BaseModel):
         default="flash_attention_2",
         description="Attention implementation (flash_attention_2 recommended for speed)",
     )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
+    )
 
     class Config:
         extra = "forbid"  # Raise error on unknown params

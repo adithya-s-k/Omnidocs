@@ -22,13 +22,14 @@ Example:
 """
 
 import json
-import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
 import numpy as np
 from PIL import Image
+
+from omnidocs.utils.cache import get_model_cache_dir
 
 from ....cache import add_reference, get_cache_key, get_cached, set_cached
 from ..base import BaseTextExtractor
@@ -68,19 +69,6 @@ content within the bbox.
     - All layout elements must be sorted according to human reading order.
 
 5. Final Output: The entire output must be a single JSON object."""
-
-
-def _get_model_cache_dir() -> Path:
-    """
-    Get model cache directory from environment or default.
-
-    Checks OMNIDOCS_MODEL_CACHE environment variable first,
-    falls back to ~/.omnidocs/models.
-    """
-    cache_dir = os.environ.get("OMNIDOCS_MODEL_CACHE", os.path.expanduser("~/.omnidocs/models"))
-    path = Path(cache_dir)
-    path.mkdir(parents=True, exist_ok=True)
-    return path
 
 
 def _parse_json_output(raw_output: str) -> Optional[list]:
@@ -256,7 +244,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
             ) from e
 
         config = self.backend_config
-        cache_dir = _get_model_cache_dir()
+        cache_dir = get_model_cache_dir(config.cache_dir)
 
         print(f"Loading Dots OCR model: {config.model}")
         print(f"Cache directory: {cache_dir}")
@@ -270,7 +258,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         self._processor = AutoProcessor.from_pretrained(
             config.model,
             trust_remote_code=config.trust_remote_code,
-            cache_dir=cache_dir,
+            cache_dir=str(cache_dir),
         )
 
         # Restore validation
@@ -279,7 +267,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         # Load model (Dots OCR uses AutoModelForCausalLM)
         model_kwargs: Dict[str, Any] = {
             "trust_remote_code": config.trust_remote_code,
-            "cache_dir": cache_dir,
+            "cache_dir": str(cache_dir),
         }
 
         # Set dtype
@@ -311,8 +299,13 @@ class DotsOCRTextExtractor(BaseTextExtractor):
             raise ImportError("VLLM backend requires vllm. Install with: uv add vllm") from e
 
         config = self.backend_config
+        cache_dir = get_model_cache_dir()
+
+        # Use config download_dir or default cache
+        download_dir = config.download_dir or str(cache_dir)
 
         print(f"Loading Dots OCR with VLLM: {config.model}")
+        print(f"Download directory: {download_dir}")
 
         # Initialize VLLM
         self._backend = LLM(
@@ -324,6 +317,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
             dtype=config.dtype,
             enforce_eager=config.enforce_eager,
             disable_custom_all_reduce=config.disable_custom_all_reduce,
+            download_dir=download_dir,
         )
 
         # Store sampling params class for later use

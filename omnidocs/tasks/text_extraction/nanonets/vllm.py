@@ -66,7 +66,7 @@ class NanonetsTextVLLMConfig(BaseModel):
     )
     download_dir: Optional[str] = Field(
         default=None,
-        description="Directory to download model weights. If None, uses OMNIDOCS_MODEL_CACHE env var or default cache.",
+        description="Directory to download model weights. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
     disable_custom_all_reduce: bool = Field(
         default=False,

@@ -45,6 +45,10 @@ class MinerUVLTextPyTorchConfig(BaseModel):
         default=True,
         description="Trust remote code from HuggingFace",
     )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
+    )
     layout_image_size: Tuple[int, int] = Field(
         default=(1036, 1036),
         description="Resize image to this size for layout detection",

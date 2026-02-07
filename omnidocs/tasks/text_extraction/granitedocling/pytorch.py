@@ -32,6 +32,10 @@ class GraniteDoclingTextPyTorchConfig(BaseModel):
         default=True,
         description="Use flash attention 2 if available",
     )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
+    )
     max_new_tokens: int = Field(
         default=8192,
         ge=256,

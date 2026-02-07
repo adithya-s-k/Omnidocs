@@ -48,6 +48,10 @@ class NanonetsTextPyTorchConfig(BaseModel):
         default=False,
         description="Use SDPA attention for faster inference.",
     )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
+    )
     max_new_tokens: int = Field(
         default=4096,
         ge=256,

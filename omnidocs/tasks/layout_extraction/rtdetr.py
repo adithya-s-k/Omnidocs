@@ -7,7 +7,6 @@ Uses HuggingFace Transformers implementation.
 Model: HuggingPanda/docling-layout
 """
 
-import os
 from pathlib import Path
 from typing import Optional, Union
 
@@ -16,6 +15,7 @@ from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...cache import add_reference, get_cache_key, get_cached, set_cached
+from ...utils.cache import get_model_cache_dir
 from .base import BaseLayoutExtractor
 from .models import (
     RTDETR_MAPPING,
@@ -47,7 +47,7 @@ class RTDETRConfig(BaseModel):
     )
     model_path: Optional[str] = Field(
         default=None,
-        description="Custom path to model. If None, uses OMNIDOCS_MODELS_DIR env var or ~/.omnidocs/models/",
+        description="Custom path to model. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
     model_name: str = Field(
         default="HuggingPanda/docling-layout",
@@ -130,10 +130,7 @@ class RTDETRLayoutExtractor(BaseLayoutExtractor):
         if model_path:
             return Path(model_path)
 
-        # Check environment variable
-        models_dir = os.environ.get("OMNIDOCS_MODELS_DIR", os.path.expanduser("~/.omnidocs/models"))
-
-        return Path(models_dir) / "rtdetr_layout"
+        return get_model_cache_dir() / "rtdetr_layout"
 
     def _load_model(self) -> None:
         """Load RT-DETR model from HuggingFace or local cache.

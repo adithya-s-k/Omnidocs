@@ -39,8 +39,24 @@ from omnidocs.utils.aggregation import (
     DocumentResult,
     merge_text_results,
 )
+from omnidocs.utils.cache import (
+    configure_backend_cache,
+    get_model_cache_dir,
+    get_storage_info,
+)
 
 from ._version import __version__
+
+# Configure backend cache directories on import
+try:
+    configure_backend_cache()
+except (OSError, PermissionError) as e:
+    import warnings
+
+    warnings.warn(
+        f"Failed to configure model cache directory: {e}. Set OMNIDOCS_MODELS_DIR to a writable path.",
+        stacklevel=1,
+    )
 
 __all__ = [
     "__version__",
@@ -71,4 +87,8 @@ __all__ = [
     "list_cached_keys",
     "set_cache_config",
     "get_cache_config",
+    # Cache directory management
+    "get_model_cache_dir",
+    "configure_backend_cache",
+    "get_storage_info",
 ]
