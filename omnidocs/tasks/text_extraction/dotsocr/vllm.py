@@ -52,7 +52,7 @@ class DotsOCRVLLMConfig(BaseModel):
     )
     download_dir: str | None = Field(
         default=None,
-        description="Model download directory. If None, uses OMNIDOCS_MODEL_CACHE env var or default cache.",
+        description="Model download directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
 
     class Config:

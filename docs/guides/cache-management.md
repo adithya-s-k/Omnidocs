@@ -48,16 +48,20 @@ extractor = QwenTextExtractor(
 )
 ```
 
-### Backend-Specific Variables
+### How It Works
 
-OmniDocs automatically configures backend-specific cache variables:
+When you `import omnidocs`, it calls `configure_backend_cache()` which **overwrites** `HF_HOME` and `TRANSFORMERS_CACHE` with the resolved cache directory. This ensures every backend (PyTorch, VLLM, MLX, `hf_hub_download`, `snapshot_download`) downloads to the same location.
 
 | Backend | Environment Variable | Set By OmniDocs |
 |---------|---------------------|-----------------|
-| PyTorch/Transformers | `HF_HOME` | ✅ Yes |
-| VLLM | `HF_HOME` + `download_dir` | ✅ Yes |
-| MLX | `HF_HOME` | ✅ Yes |
+| PyTorch/Transformers | `HF_HOME` | ✅ Overwritten |
+| VLLM | `HF_HOME` + `download_dir` | ✅ Overwritten |
+| MLX | `HF_HOME` | ✅ Overwritten |
+| HuggingFace Hub | `HF_HOME` | ✅ Overwritten |
 | API | N/A (no local cache) | - |
+
+!!! note
+    `OMNIDOCS_MODELS_DIR` **overwrites** any existing `HF_HOME` value. If you set `OMNIDOCS_MODELS_DIR`, all model downloads will go there regardless of what `HF_HOME` was previously set to.
 
 ## Per-Backend Configuration
 

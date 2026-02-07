@@ -97,7 +97,7 @@ IMAGE = (
     .env({
         "HF_HUB_ENABLE_HF_TRANSFER": "1",
         "HF_HOME": "/data/.cache",
-        "OMNIDOCS_MODEL_CACHE": MODEL_CACHE_DIR,
+        "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR,
     })
 )
 

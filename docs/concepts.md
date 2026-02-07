@@ -394,6 +394,8 @@ All models in OmniDocs support caching:
 
 For a detailed guide on using the cache, see the [Model Cache Guide](guides/model-cache.md).
 
+To control where models are downloaded on disk, see the [Cache Management Guide](guides/cache-management.md).
+
 ---
 
 ## Trade-offs

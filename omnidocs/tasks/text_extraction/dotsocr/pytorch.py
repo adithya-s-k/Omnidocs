@@ -43,7 +43,7 @@ class DotsOCRPyTorchConfig(BaseModel):
     )
     cache_dir: Optional[str] = Field(
         default=None,
-        description="Model cache directory. If None, uses OMNIDOCS_MODEL_CACHE env var or default cache.",
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
 
     class Config:

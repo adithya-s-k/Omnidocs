@@ -33,7 +33,7 @@ class NanonetsTextMLXConfig(BaseModel):
     )
     cache_dir: Optional[str] = Field(
         default=None,
-        description="Model cache directory. If None, uses OMNIDOCS_MODEL_CACHE env var or default cache.",
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
     max_tokens: int = Field(
         default=4096,
