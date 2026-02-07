@@ -30,6 +30,7 @@ from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 import numpy as np
 from PIL import Image
 
+from ....cache import add_reference, get_cache_key, get_cached, set_cached
 from ..base import BaseTextExtractor
 from ..models import DotsOCRTextOutput, LayoutElement, OutputFormat
 
@@ -200,8 +201,28 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Load appropriate backend based on config type."""
+        """Load appropriate backend based on config type.
+
+        Uses unified model cache with reference counting to share models.
+        """
         config_type = type(self.backend_config).__name__
+
+        # Check cache first (skip API backend which has no model to cache)
+        if config_type != "DotsOCRAPIConfig":
+            cache_key = get_cache_key(self.backend_config)
+            self._cache_key = cache_key
+            cached = get_cached(cache_key)
+            if cached is not None:
+                if config_type == "DotsOCRPyTorchConfig":
+                    self._model, self._processor = cached
+                elif config_type == "DotsOCRVLLMConfig":
+                    (self._backend,) = cached
+                    from vllm import SamplingParams
+
+                    self._sampling_params_class = SamplingParams
+                add_reference(cache_key, self)
+                self._loaded = True
+                return
 
         if config_type == "DotsOCRPyTorchConfig":
             self._load_pytorch_backend()
@@ -214,6 +235,12 @@ class DotsOCRTextExtractor(BaseTextExtractor):
                 f"Unknown backend config: {config_type}. "
                 f"Expected one of: DotsOCRPyTorchConfig, DotsOCRVLLMConfig, DotsOCRAPIConfig"
             )
+
+        # Cache the loaded model (skip API)
+        if config_type == "DotsOCRPyTorchConfig":
+            set_cached(cache_key, (self._model, self._processor), owner=self)
+        elif config_type == "DotsOCRVLLMConfig":
+            set_cached(cache_key, (self._backend,), owner=self)
 
         self._loaded = True
 
