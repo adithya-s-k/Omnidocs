@@ -15,6 +15,7 @@ import numpy as np
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...cache import add_reference, get_cache_key, get_cached, set_cached
 from .base import BaseLayoutExtractor
 from .models import (
     DOCLAYOUT_YOLO_CLASS_NAMES,
@@ -163,7 +164,19 @@ class DocLayoutYOLO(BaseLayoutExtractor):
         return Path(downloaded_path)
 
     def _load_model(self) -> None:
-        """Load DocLayout-YOLO model."""
+        """Load DocLayout-YOLO model.
+
+        Uses unified model cache with reference counting to share models.
+        """
+        # Check cache first
+        cache_key = get_cache_key(self.config)
+        self._cache_key = cache_key
+        cached = get_cached(cache_key)
+        if cached is not None:
+            (self._model,) = cached
+            add_reference(cache_key, self)
+            return
+
         try:
             from doclayout_yolo import YOLOv10
         except ImportError:
@@ -176,6 +189,9 @@ class DocLayoutYOLO(BaseLayoutExtractor):
 
         # Load model
         self._model = YOLOv10(str(model_file))
+
+        # Cache the loaded model
+        set_cached(cache_key, (self._model,), owner=self)
 
     def extract(self, image: Union[Image.Image, np.ndarray, str, Path]) -> LayoutOutput:
         """
