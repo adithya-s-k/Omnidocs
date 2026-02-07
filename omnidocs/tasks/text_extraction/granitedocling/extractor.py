@@ -216,7 +216,7 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
                 pass  # Older VLLM versions
 
         self._backend = LLM(**llm_kwargs)
-        self._processor = AutoProcessor.from_pretrained(config.model)
+        self._processor = AutoProcessor.from_pretrained(config.model, cache_dir=str(cache_dir))
         self._sampling_params_class = SamplingParams
 
     def _load_mlx_backend(self) -> None:

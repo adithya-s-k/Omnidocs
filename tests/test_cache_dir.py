@@ -7,6 +7,8 @@ Verifies that OMNIDOCS_MODELS_DIR overwrites HF_HOME so every backend
 
 import os
 
+import pytest
+
 from omnidocs.utils.cache import configure_backend_cache, get_model_cache_dir, get_storage_info
 
 
@@ -141,10 +143,12 @@ class TestGetStorageInfo:
         assert result["omnidocs_models_dir_env"] is None
 
 
+@pytest.mark.slow
 class TestHFDownloadRespectsDir:
     """Verify that HuggingFace downloads actually land in OMNIDOCS_MODELS_DIR.
 
     Uses a tiny model (hf-internal-testing/tiny-random-gpt2) so download is fast.
+    Marked slow because they require network access.
     """
 
     def test_hf_hub_download_uses_cache_dir(self, tmp_path, monkeypatch):

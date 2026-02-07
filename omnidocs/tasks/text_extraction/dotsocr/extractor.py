@@ -258,7 +258,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         self._processor = AutoProcessor.from_pretrained(
             config.model,
             trust_remote_code=config.trust_remote_code,
-            cache_dir=cache_dir,
+            cache_dir=str(cache_dir),
         )
 
         # Restore validation
@@ -267,7 +267,7 @@ class DotsOCRTextExtractor(BaseTextExtractor):
         # Load model (Dots OCR uses AutoModelForCausalLM)
         model_kwargs: Dict[str, Any] = {
             "trust_remote_code": config.trust_remote_code,
-            "cache_dir": cache_dir,
+            "cache_dir": str(cache_dir),
         }
 
         # Set dtype
