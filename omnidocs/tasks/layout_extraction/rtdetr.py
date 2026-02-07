@@ -15,6 +15,7 @@ import numpy as np
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...cache import add_reference, get_cache_key, get_cached, set_cached
 from .base import BaseLayoutExtractor
 from .models import (
     RTDETR_MAPPING,
@@ -135,7 +136,19 @@ class RTDETRLayoutExtractor(BaseLayoutExtractor):
         return Path(models_dir) / "rtdetr_layout"
 
     def _load_model(self) -> None:
-        """Load RT-DETR model from HuggingFace or local cache."""
+        """Load RT-DETR model from HuggingFace or local cache.
+
+        Uses unified model cache with reference counting to share models.
+        """
+        # Check cache first
+        cache_key = get_cache_key(self.config)
+        self._cache_key = cache_key
+        cached = get_cached(cache_key)
+        if cached is not None:
+            self._model, self._processor = cached
+            add_reference(cache_key, self)
+            return
+
         try:
             from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
         except ImportError:
@@ -163,6 +176,9 @@ class RTDETRLayoutExtractor(BaseLayoutExtractor):
         # Move to device and set eval mode
         self._model = self._model.to(self._device)
         self._model.eval()
+
+        # Cache the loaded model
+        set_cached(cache_key, (self._model, self._processor), owner=self)
 
     def extract(self, image: Union[Image.Image, np.ndarray, str, Path]) -> LayoutOutput:
         """

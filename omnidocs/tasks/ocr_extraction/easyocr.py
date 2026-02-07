@@ -22,6 +22,7 @@ import numpy as np
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...cache import add_reference, get_cache_key, get_cached, set_cached
 from .base import BaseOCRExtractor
 from .models import BoundingBox, OCRGranularity, OCROutput, TextBlock
 
@@ -107,7 +108,19 @@ class EasyOCR(BaseOCRExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Initialize EasyOCR reader."""
+        """Initialize EasyOCR reader.
+
+        Uses unified model cache with reference counting to share models.
+        """
+        # Check cache first
+        cache_key = get_cache_key(self.config)
+        self._cache_key = cache_key
+        cached = get_cached(cache_key)
+        if cached is not None:
+            (self._reader,) = cached
+            add_reference(cache_key, self)
+            return
+
         try:
             import easyocr
         except ImportError:
@@ -128,6 +141,9 @@ class EasyOCR(BaseOCRExtractor):
             verbose=False,
             quantize=self.config.quantize,
         )
+
+        # Cache the loaded reader
+        set_cached(cache_key, (self._reader,), owner=self)
 
     def extract(
         self,

@@ -12,6 +12,7 @@ Task-oriented tutorials for common OmniDocs workflows.
 | [Layout Analysis](layout-analysis.md) | Detect titles, tables, figures | 5 min |
 | [OCR Extraction](ocr-extraction.md) | Get text with coordinates | 5 min |
 | [Batch Processing](batch-processing.md) | Process 100+ documents | 10 min |
+| [Model Cache](model-cache.md) | Share models across extractors | 5 min |
 | [Modal Deployment](deployment-modal.md) | Deploy to cloud GPUs | 15 min |
 
 ---

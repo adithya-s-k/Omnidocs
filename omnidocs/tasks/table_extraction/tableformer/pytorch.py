@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Union
 import numpy as np
 from PIL import Image
 
+from omnidocs.cache import add_reference, get_cache_key, get_cached, set_cached
 from omnidocs.tasks.table_extraction.base import BaseTableExtractor
 from omnidocs.tasks.table_extraction.models import (
     BoundingBox,
@@ -86,7 +87,19 @@ class TableFormerExtractor(BaseTableExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Load TableFormer model."""
+        """Load TableFormer model.
+
+        Uses unified model cache with reference counting to share models.
+        """
+        # Check cache first
+        cache_key = get_cache_key(self.config)
+        self._cache_key = cache_key
+        cached = get_cached(cache_key)
+        if cached is not None:
+            self._predictor, self._model_config = cached
+            add_reference(cache_key, self)
+            return
+
         # Lazy import
         try:
             from docling_ibm_models.tableformer.data_management.tf_predictor import (
@@ -120,6 +133,9 @@ class TableFormerExtractor(BaseTableExtractor):
             device=self._device,
             num_threads=self.config.num_threads,
         )
+
+        # Cache the loaded model
+        set_cached(cache_key, (self._predictor, self._model_config), owner=self)
 
     def _build_predictor_config(self, save_dir: str) -> Dict:
         """Build configuration dict for TFPredictor."""

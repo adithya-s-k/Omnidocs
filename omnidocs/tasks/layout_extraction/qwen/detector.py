@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import numpy as np
 from PIL import Image
 
+from ....cache import add_reference, get_cache_key, get_cached, set_cached
 from ..base import BaseLayoutExtractor
 from ..models import (
     BoundingBox,
@@ -144,8 +145,39 @@ class QwenLayoutDetector(BaseLayoutExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Load appropriate backend based on config type."""
+        """Load appropriate backend based on config type.
+
+        Uses unified model cache with reference counting to share models.
+        """
         config_type = type(self.backend_config).__name__
+
+        # Check cache first (skip API backend which has no model to cache)
+        if config_type != "QwenLayoutAPIConfig":
+            cache_key = get_cache_key(self.backend_config)
+            self._cache_key = cache_key
+            cached = get_cached(cache_key)
+            if cached is not None:
+                self._backend, self._processor = cached
+                add_reference(cache_key, self)
+                # Re-import lightweight helpers needed for inference
+                if config_type in ("QwenLayoutPyTorchConfig", "QwenLayoutVLLMConfig"):
+                    from qwen_vl_utils import process_vision_info
+
+                    self._process_vision_info = process_vision_info
+                if config_type == "QwenLayoutVLLMConfig":
+                    from vllm import SamplingParams
+
+                    self._sampling_params_class = SamplingParams
+                elif config_type == "QwenLayoutMLXConfig":
+                    from mlx_vlm import generate
+                    from mlx_vlm.prompt_utils import apply_chat_template
+                    from mlx_vlm.utils import load_config
+
+                    self._mlx_config = load_config(self.backend_config.model)
+                    self._apply_chat_template = apply_chat_template
+                    self._generate = generate
+                self._loaded = True
+                return
 
         if config_type == "QwenLayoutPyTorchConfig":
             self._load_pytorch_backend()
@@ -161,6 +193,10 @@ class QwenLayoutDetector(BaseLayoutExtractor):
                 f"Expected one of: QwenLayoutPyTorchConfig, QwenLayoutVLLMConfig, "
                 f"QwenLayoutMLXConfig, QwenLayoutAPIConfig"
             )
+
+        # Cache the loaded model (skip API)
+        if config_type != "QwenLayoutAPIConfig":
+            set_cached(cache_key, (self._backend, self._processor), owner=self)
 
         self._loaded = True
 

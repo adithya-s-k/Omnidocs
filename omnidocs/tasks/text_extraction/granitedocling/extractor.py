@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal, Union
 import numpy as np
 from PIL import Image
 
+from omnidocs.cache import add_reference, get_cache_key, get_cached, set_cached
 from omnidocs.tasks.text_extraction.base import BaseTextExtractor
 from omnidocs.tasks.text_extraction.models import OutputFormat, TextOutput
 
@@ -70,8 +71,35 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Load model based on backend config type."""
+        """Load model based on backend config type.
+
+        Uses unified model cache with reference counting to share models.
+        """
         config_type = type(self.backend_config).__name__
+
+        # Check cache first (skip API backend which has no model to cache)
+        if config_type != "GraniteDoclingTextAPIConfig":
+            cache_key = get_cache_key(self.backend_config)
+            self._cache_key = cache_key
+            cached = get_cached(cache_key)
+            if cached is not None:
+                self._backend, self._processor = cached
+                add_reference(cache_key, self)
+                # Re-import lightweight helpers needed for inference
+                if config_type == "GraniteDoclingTextVLLMConfig":
+                    from vllm import SamplingParams
+
+                    self._sampling_params_class = SamplingParams
+                elif config_type == "GraniteDoclingTextMLXConfig":
+                    from mlx_vlm import generate
+                    from mlx_vlm.prompt_utils import apply_chat_template
+                    from mlx_vlm.utils import load_config
+
+                    self._mlx_config = load_config(self.backend_config.model)
+                    self._apply_chat_template = apply_chat_template
+                    self._generate = generate
+                self._loaded = True
+                return
 
         if config_type == "GraniteDoclingTextPyTorchConfig":
             self._load_pytorch_backend()
@@ -88,6 +116,10 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
                 "GraniteDoclingTextVLLMConfig, GraniteDoclingTextMLXConfig, "
                 "GraniteDoclingTextAPIConfig"
             )
+
+        # Cache the loaded model (skip API)
+        if config_type != "GraniteDoclingTextAPIConfig":
+            set_cached(cache_key, (self._backend, self._processor), owner=self)
 
         self._loaded = True
 

@@ -21,6 +21,7 @@ import numpy as np
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...cache import add_reference, get_cache_key, get_cached, set_cached
 from .base import BaseOCRExtractor
 from .models import BoundingBox, OCRGranularity, OCROutput, TextBlock
 
@@ -115,7 +116,19 @@ class PaddleOCR(BaseOCRExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Initialize PaddleOCR engine."""
+        """Initialize PaddleOCR engine.
+
+        Uses unified model cache with reference counting to share models.
+        """
+        # Check cache first
+        cache_key = get_cache_key(self.config)
+        self._cache_key = cache_key
+        cached = get_cached(cache_key)
+        if cached is not None:
+            (self._ocr,) = cached
+            add_reference(cache_key, self)
+            return
+
         # Check paddlepaddle
         try:
             import paddle  # noqa: F401
@@ -138,6 +151,9 @@ class PaddleOCR(BaseOCRExtractor):
             lang=self._lang,
             device=self.config.device,
         )
+
+        # Cache the loaded engine
+        set_cached(cache_key, (self._ocr,), owner=self)
 
     def extract(self, image: Union[Image.Image, np.ndarray, str, Path]) -> OCROutput:
         """
