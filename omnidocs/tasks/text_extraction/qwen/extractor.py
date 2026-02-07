@@ -29,6 +29,7 @@ from PIL import Image
 
 from omnidocs.utils.cache import get_model_cache_dir
 
+from ....cache import add_reference, get_cache_key, get_cached, set_cached
 from ..base import BaseTextExtractor
 from ..models import OutputFormat, TextOutput
 
@@ -150,8 +151,39 @@ class QwenTextExtractor(BaseTextExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Load appropriate backend based on config type."""
+        """Load appropriate backend based on config type.
+
+        Uses unified model cache with reference counting to share models.
+        """
         config_type = type(self.backend_config).__name__
+
+        # Check cache first (skip API backend which has no model to cache)
+        if config_type != "QwenTextAPIConfig":
+            cache_key = get_cache_key(self.backend_config)
+            self._cache_key = cache_key
+            cached = get_cached(cache_key)
+            if cached is not None:
+                self._backend, self._processor = cached
+                add_reference(cache_key, self)
+                # Re-import lightweight helpers needed for inference
+                if config_type in ("QwenTextPyTorchConfig", "QwenTextVLLMConfig"):
+                    from qwen_vl_utils import process_vision_info
+
+                    self._process_vision_info = process_vision_info
+                if config_type == "QwenTextVLLMConfig":
+                    from vllm import SamplingParams
+
+                    self._sampling_params_class = SamplingParams
+                elif config_type == "QwenTextMLXConfig":
+                    from mlx_vlm import generate
+                    from mlx_vlm.prompt_utils import apply_chat_template
+                    from mlx_vlm.utils import load_config
+
+                    self._mlx_config = load_config(self.backend_config.model)
+                    self._apply_chat_template = apply_chat_template
+                    self._generate = generate
+                self._loaded = True
+                return
 
         if config_type == "QwenTextPyTorchConfig":
             self._load_pytorch_backend()
@@ -167,6 +199,10 @@ class QwenTextExtractor(BaseTextExtractor):
                 f"Expected one of: QwenTextPyTorchConfig, QwenTextVLLMConfig, "
                 f"QwenTextMLXConfig, QwenTextAPIConfig"
             )
+
+        # Cache the loaded model (skip API)
+        if config_type != "QwenTextAPIConfig":
+            set_cached(cache_key, (self._backend, self._processor), owner=self)
 
         self._loaded = True
 

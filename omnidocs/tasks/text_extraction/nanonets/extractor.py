@@ -28,6 +28,7 @@ from PIL import Image
 
 from omnidocs.utils.cache import get_model_cache_dir
 
+from ....cache import add_reference, get_cache_key, get_cached, set_cached
 from ..base import BaseTextExtractor
 from ..models import OutputFormat, TextOutput
 
@@ -116,8 +117,36 @@ class NanonetsTextExtractor(BaseTextExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Load appropriate backend based on config type."""
+        """Load appropriate backend based on config type.
+
+        Uses unified model cache with reference counting to share models.
+        """
         config_type = type(self.backend_config).__name__
+
+        # Check cache first
+        cache_key = get_cache_key(self.backend_config)
+        self._cache_key = cache_key
+        cached = get_cached(cache_key)
+        if cached is not None:
+            self._backend, self._processor = cached
+            add_reference(cache_key, self)
+            # Re-import lightweight helpers needed for inference
+            if config_type == "NanonetsTextVLLMConfig":
+                from qwen_vl_utils import process_vision_info
+                from vllm import SamplingParams
+
+                self._process_vision_info = process_vision_info
+                self._sampling_params_class = SamplingParams
+            elif config_type == "NanonetsTextMLXConfig":
+                from mlx_vlm import generate
+                from mlx_vlm.prompt_utils import apply_chat_template
+                from mlx_vlm.utils import load_config
+
+                self._mlx_config = load_config(self.backend_config.model)
+                self._apply_chat_template = apply_chat_template
+                self._generate = generate
+            self._loaded = True
+            return
 
         if config_type == "NanonetsTextPyTorchConfig":
             self._load_pytorch_backend()
@@ -130,6 +159,9 @@ class NanonetsTextExtractor(BaseTextExtractor):
                 f"Unknown backend config: {config_type}. "
                 f"Expected one of: NanonetsTextPyTorchConfig, NanonetsTextVLLMConfig, NanonetsTextMLXConfig"
             )
+
+        # Cache the loaded model
+        set_cached(cache_key, (self._backend, self._processor), owner=self)
 
         self._loaded = True
 
@@ -212,7 +244,7 @@ class NanonetsTextExtractor(BaseTextExtractor):
 
         # Set HF_HOME if cache_dir is specified (MLX respects HF_HOME)
         if config.cache_dir:
-            os.environ.setdefault("HF_HOME", config.cache_dir)
+            os.environ["HF_HOME"] = config.cache_dir
 
         self._backend, self._processor = load(config.model)
         self._mlx_config = load_config(config.model)

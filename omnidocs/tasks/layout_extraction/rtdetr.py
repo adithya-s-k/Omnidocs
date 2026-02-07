@@ -7,7 +7,6 @@ Uses HuggingFace Transformers implementation.
 Model: HuggingPanda/docling-layout
 """
 
-import os
 from pathlib import Path
 from typing import Optional, Union
 
@@ -15,6 +14,8 @@ import numpy as np
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...cache import add_reference, get_cache_key, get_cached, set_cached
+from ...utils.cache import get_model_cache_dir
 from .base import BaseLayoutExtractor
 from .models import (
     RTDETR_MAPPING,
@@ -46,7 +47,7 @@ class RTDETRConfig(BaseModel):
     )
     model_path: Optional[str] = Field(
         default=None,
-        description="Custom path to model. If None, uses OMNIDOCS_MODELS_DIR env var or ~/.omnidocs/models/",
+        description="Custom path to model. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
     model_name: str = Field(
         default="HuggingPanda/docling-layout",
@@ -129,13 +130,22 @@ class RTDETRLayoutExtractor(BaseLayoutExtractor):
         if model_path:
             return Path(model_path)
 
-        # Check environment variable
-        models_dir = os.environ.get("OMNIDOCS_MODELS_DIR", os.path.expanduser("~/.omnidocs/models"))
-
-        return Path(models_dir) / "rtdetr_layout"
+        return get_model_cache_dir() / "rtdetr_layout"
 
     def _load_model(self) -> None:
-        """Load RT-DETR model from HuggingFace or local cache."""
+        """Load RT-DETR model from HuggingFace or local cache.
+
+        Uses unified model cache with reference counting to share models.
+        """
+        # Check cache first
+        cache_key = get_cache_key(self.config)
+        self._cache_key = cache_key
+        cached = get_cached(cache_key)
+        if cached is not None:
+            self._model, self._processor = cached
+            add_reference(cache_key, self)
+            return
+
         try:
             from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
         except ImportError:
@@ -163,6 +173,9 @@ class RTDETRLayoutExtractor(BaseLayoutExtractor):
         # Move to device and set eval mode
         self._model = self._model.to(self._device)
         self._model.eval()
+
+        # Cache the loaded model
+        set_cached(cache_key, (self._model, self._processor), owner=self)
 
     def extract(self, image: Union[Image.Image, np.ndarray, str, Path]) -> LayoutOutput:
         """

@@ -1,6 +1,7 @@
 """
 MLX backend configuration for Nanonets OCR2-3B text extraction.
 """
+
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field

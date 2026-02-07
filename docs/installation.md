@@ -89,11 +89,11 @@ OmniDocs provides unified cache directory management for all model weights.
 
 **Set cache directory:**
 ```bash
-export OMNIDOCS_MODEL_CACHE=/data/models
+export OMNIDOCS_MODELS_DIR=/data/models
 ```
 
 **Default cache locations:**
-1. `$OMNIDOCS_MODEL_CACHE` (if set)
+1. `$OMNIDOCS_MODELS_DIR` (if set)
 2. `$HF_HOME` (if set)
 3. `~/.cache/huggingface` (default)
 
@@ -101,13 +101,13 @@ export OMNIDOCS_MODEL_CACHE=/data/models
 
 ```bash
 # Store models on external SSD
-export OMNIDOCS_MODEL_CACHE=/Volumes/FastSSD/models
+export OMNIDOCS_MODELS_DIR=/Volumes/FastSSD/models
 
 # Store in custom directory
-export OMNIDOCS_MODEL_CACHE=/mnt/data/omnidocs-cache
+export OMNIDOCS_MODELS_DIR=/mnt/data/omnidocs-cache
 
 # Check cache location
-python -c "from omnidocs.utils.cache import get_cache_info; import pprint; pprint.pprint(get_cache_info())"
+python -c "from omnidocs.utils.cache import get_storage_info; import pprint; pprint.pprint(get_storage_info())"
 ```
 
 **See also:** [Cache Management Guide](guides/cache-management.md) for advanced configuration.

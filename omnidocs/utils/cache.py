@@ -1,23 +1,24 @@
 """
 Unified model cache directory management for OmniDocs.
 
-This module provides a centralized way to manage model cache directories
-across all backends (PyTorch, VLLM, MLX, API).
+When OMNIDOCS_MODELS_DIR is set, ALL model downloads (PyTorch, VLLM, MLX,
+snapshot_download) go into that directory. It overwrites HF_HOME so every
+backend respects the same path.
 
 Environment Variables:
-    OMNIDOCS_MODEL_CACHE: Primary cache directory for all OmniDocs models.
-                          Falls back to HF_HOME or ~/.cache/huggingface if not set.
+    OMNIDOCS_MODELS_DIR: Primary cache directory for all OmniDocs models.
+                         Overwrites HF_HOME when set.
     HF_HOME: HuggingFace cache directory (used as fallback).
 
 Example:
+    ```bash
+    export OMNIDOCS_MODELS_DIR=/data/models
+    ```
+
     ```python
-    from omnidocs.utils.cache import get_model_cache_dir, configure_backend_cache
+    from omnidocs.utils.cache import get_model_cache_dir
 
-    # Get unified cache directory
-    cache_dir = get_model_cache_dir()
-
-    # Configure all backend environment variables
-    configure_backend_cache()
+    cache_dir = get_model_cache_dir()  # -> /data/models
     ```
 """
 
@@ -32,7 +33,7 @@ def get_model_cache_dir(custom_dir: Optional[str] = None) -> Path:
 
     Priority order:
     1. custom_dir parameter (if provided)
-    2. OMNIDOCS_MODEL_CACHE environment variable
+    2. OMNIDOCS_MODELS_DIR environment variable
     3. HF_HOME environment variable
     4. Default: ~/.cache/huggingface
 
@@ -43,25 +44,12 @@ def get_model_cache_dir(custom_dir: Optional[str] = None) -> Path:
     Returns:
         Path object pointing to the cache directory.
         Directory is created if it doesn't exist.
-
-    Example:
-        ```python
-        # Use default
-        cache = get_model_cache_dir()
-
-        # Use custom directory
-        cache = get_model_cache_dir("/data/models")
-
-        # Use environment variable
-        os.environ["OMNIDOCS_MODEL_CACHE"] = "/mnt/ssd/models"
-        cache = get_model_cache_dir()
-        ```
     """
     if custom_dir:
         cache_dir = custom_dir
     else:
         cache_dir = os.environ.get(
-            "OMNIDOCS_MODEL_CACHE",
+            "OMNIDOCS_MODELS_DIR",
             os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface")),
         )
 
@@ -74,55 +62,31 @@ def configure_backend_cache(cache_dir: Optional[str] = None) -> None:
     """
     Configure cache directories for all backends.
 
-    Sets environment variables used by different backend libraries:
-    - HF_HOME: HuggingFace Transformers cache
-    - TRANSFORMERS_CACHE: Legacy Transformers cache (for compatibility)
+    When OMNIDOCS_MODELS_DIR is set (or cache_dir is passed), this OVERWRITES
+    HF_HOME and TRANSFORMERS_CACHE so every backend downloads to the same place.
 
-    This should be called once on package import or before creating extractors.
+    This is called automatically on ``import omnidocs``.
 
     Args:
         cache_dir: Optional cache directory path. If None, uses get_model_cache_dir().
-
-    Example:
-        ```python
-        # Configure with default
-        configure_backend_cache()
-
-        # Configure with custom path
-        configure_backend_cache("/data/models")
-        ```
-
-    Note:
-        Only sets environment variables if they are not already set.
-        Existing values are preserved.
     """
     cache_path = str(get_model_cache_dir(cache_dir))
 
-    # Set HF_HOME for HuggingFace/Transformers (used by PyTorch, MLX)
-    os.environ.setdefault("HF_HOME", cache_path)
-
-    # VLLM uses HF_HOME by default, but we can set explicit cache if needed
-    # This is primarily for future extensibility
-    os.environ.setdefault("TRANSFORMERS_CACHE", cache_path)
+    # Overwrite HF_HOME so PyTorch, MLX, VLLM, and snapshot_download all use it
+    os.environ["HF_HOME"] = cache_path
+    os.environ["TRANSFORMERS_CACHE"] = cache_path
 
 
-def get_cache_info() -> dict:
+def get_storage_info() -> dict:
     """
-    Get current cache configuration information.
+    Get current cache directory configuration information.
 
     Returns:
-        Dictionary containing cache paths and environment variable values.
-
-    Example:
-        ```python
-        info = get_cache_info()
-        print(f"Using cache: {info['omnidocs_cache']}")
-        print(f"HF_HOME: {info['hf_home']}")
-        ```
+        Dictionary with cache paths and environment variable values.
     """
     return {
         "omnidocs_cache": str(get_model_cache_dir()),
-        "omnidocs_model_cache_env": os.environ.get("OMNIDOCS_MODEL_CACHE"),
+        "omnidocs_models_dir_env": os.environ.get("OMNIDOCS_MODELS_DIR"),
         "hf_home": os.environ.get("HF_HOME"),
         "transformers_cache": os.environ.get("TRANSFORMERS_CACHE"),
     }

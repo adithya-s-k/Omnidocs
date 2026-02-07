@@ -1,6 +1,7 @@
 """
 MLX backend configuration for Qwen3-VL layout detection.
 """
+
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field

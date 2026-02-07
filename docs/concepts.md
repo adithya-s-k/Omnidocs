@@ -318,6 +318,84 @@ extractor = QwenTextExtractor(backend=backend)
 
 ---
 
+## Model Cache
+
+OmniDocs includes a unified model cache that automatically shares loaded models across extractors. When two extractors use the same underlying model (e.g., text extraction and layout detection both using Qwen3-VL), the model is loaded once and shared.
+
+### How It Works
+
+```python
+from omnidocs.tasks.text_extraction import QwenTextExtractor
+from omnidocs.tasks.text_extraction.qwen import QwenTextMLXConfig
+from omnidocs.tasks.layout_extraction import QwenLayoutDetector
+from omnidocs.tasks.layout_extraction.qwen import QwenLayoutMLXConfig
+
+# First extractor loads the model (~30s)
+text_extractor = QwenTextExtractor(backend=QwenTextMLXConfig())
+
+# Second extractor reuses the cached model (instant)
+layout_detector = QwenLayoutDetector(backend=QwenLayoutMLXConfig())
+```
+
+The cache normalizes config class names to detect sharing opportunities. `QwenTextMLXConfig` and `QwenLayoutMLXConfig` both resolve to the same cache key because they use the same model and backend settings.
+
+### Cache Features
+
+| Feature | Description |
+|---------|-------------|
+| **Cross-task sharing** | Text + layout extractors share one model |
+| **LRU eviction** | Oldest unused models evicted when cache is full |
+| **Reference counting** | Models stay cached while any extractor uses them |
+| **Thread-safe** | Safe for concurrent access |
+| **Runtime param exclusion** | `max_tokens`, `temperature` don't affect cache key |
+
+### Configuration
+
+```python
+from omnidocs import set_cache_config, get_cache_info, clear_cache
+
+# Set max cached models (default: 10)
+set_cache_config(max_entries=5)
+
+# Check what's cached
+info = get_cache_info()
+print(f"Cached models: {info['num_entries']}")
+
+# Clear all cached models
+clear_cache()
+```
+
+### What Gets Shared
+
+Models share cache when they have the same:
+
+- Model family (Qwen, MinerUVL, etc.)
+- Backend type (PyTorch, VLLM, MLX)
+- Model loading parameters (model name, device, dtype, GPU memory settings)
+
+Parameters that only affect inference (`max_tokens`, `temperature`, `max_new_tokens`) are excluded from the cache key, so a text extractor with `max_tokens=8192` and a layout detector with `max_tokens=4096` still share the same model.
+
+### Supported Models
+
+All models in OmniDocs support caching:
+
+| Model | Cross-task sharing |
+|-------|-------------------|
+| **Qwen3-VL** | Text + Layout share model |
+| **MinerU VL** | Text + Layout share model |
+| **Nanonets OCR2** | Single-task cache |
+| **Granite Docling** | Single-task cache |
+| **DotsOCR** | Single-task cache |
+| **RT-DETR** | Single-task cache |
+| **DocLayout-YOLO** | Single-task cache |
+| **PaddleOCR** | Single-task cache |
+| **EasyOCR** | Single-task cache |
+| **TableFormer** | Single-task cache |
+
+For a detailed guide on using the cache, see the [Model Cache Guide](guides/model-cache.md).
+
+---
+
 ## Trade-offs
 
 | Choice | Option A | Option B |
@@ -337,3 +415,4 @@ extractor = QwenTextExtractor(backend=backend)
 | **Configs** | Single-backend: `config=`, Multi-backend: `backend=` |
 | **Backends** | PyTorch (dev), VLLM (prod), MLX (Mac), API (cloud) |
 | **Document** | Stateless, lazy-loaded, user manages results |
+| **Model Cache** | Auto-shares models across extractors, LRU eviction |

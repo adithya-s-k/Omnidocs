@@ -11,8 +11,8 @@ from .aggregation import (
 )
 from .cache import (
     configure_backend_cache,
-    get_cache_info,
     get_model_cache_dir,
+    get_storage_info,
 )
 
 __all__ = [
@@ -21,5 +21,5 @@ __all__ = [
     "merge_text_results",
     "get_model_cache_dir",
     "configure_backend_cache",
-    "get_cache_info",
+    "get_storage_info",
 ]

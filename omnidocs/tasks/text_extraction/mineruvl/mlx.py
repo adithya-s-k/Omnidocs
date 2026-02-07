@@ -1,6 +1,6 @@
 """MLX backend configuration for MinerU VL text extraction (Apple Silicon)."""
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -28,6 +28,10 @@ class MinerUVLTextMLXConfig(BaseModel):
     model: str = Field(
         default="opendatalab/MinerU2.5-2509-1.2B",
         description="Model ID (will be converted to MLX format)",
+    )
+    cache_dir: Optional[str] = Field(
+        default=None,
+        description="Model cache directory. If None, uses OMNIDOCS_MODELS_DIR env var or default cache.",
     )
     max_tokens: int = Field(
         default=4096,

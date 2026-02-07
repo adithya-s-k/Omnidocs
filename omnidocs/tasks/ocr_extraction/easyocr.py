@@ -22,6 +22,8 @@ import numpy as np
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...cache import add_reference, get_cache_key, get_cached, set_cached
+from ...utils.cache import get_model_cache_dir
 from .base import BaseOCRExtractor
 from .models import BoundingBox, OCRGranularity, OCROutput, TextBlock
 
@@ -107,27 +109,42 @@ class EasyOCR(BaseOCRExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Initialize EasyOCR reader."""
+        """Initialize EasyOCR reader.
+
+        Uses unified model cache with reference counting to share models.
+        """
+        # Check cache first
+        cache_key = get_cache_key(self.config)
+        self._cache_key = cache_key
+        cached = get_cached(cache_key)
+        if cached is not None:
+            (self._reader,) = cached
+            add_reference(cache_key, self)
+            return
+
         try:
             import easyocr
         except ImportError:
             raise ImportError("easyocr is required for EasyOCR. Install with: pip install easyocr")
 
-        # Create model directory if specified
-        if self.config.model_storage_directory:
-            os.makedirs(self.config.model_storage_directory, exist_ok=True)
+        # Resolve model storage directory
+        storage_dir = self.config.model_storage_directory or str(get_model_cache_dir() / "easyocr")
+        os.makedirs(storage_dir, exist_ok=True)
 
         # Initialize reader
         self._reader = easyocr.Reader(
             lang_list=self.config.languages,
             gpu=self.config.gpu,
-            model_storage_directory=self.config.model_storage_directory,
+            model_storage_directory=storage_dir,
             download_enabled=self.config.download_enabled,
             detector=self.config.detector,
             recognizer=self.config.recognizer,
             verbose=False,
             quantize=self.config.quantize,
         )
+
+        # Cache the loaded reader
+        set_cached(cache_key, (self._reader,), owner=self)
 
     def extract(
         self,

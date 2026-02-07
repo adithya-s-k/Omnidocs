@@ -134,6 +134,7 @@ nav:
     - Reading Order:
       - usage/tasks/reading-order.md
     - Batch Processing: usage/batch-processing.md
+    - Model Cache: guides/model-cache.md
     - Deployment: usage/deployment.md
 
   - API Reference: reference/

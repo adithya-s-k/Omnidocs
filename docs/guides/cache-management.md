@@ -13,22 +13,22 @@ OmniDocs provides unified cache directory management for all model weights acros
 
 ## Quick Start
 
-Set the `OMNIDOCS_MODEL_CACHE` environment variable to control where all models are stored:
+Set the `OMNIDOCS_MODELS_DIR` environment variable to control where all models are stored:
 
 ```bash
-export OMNIDOCS_MODEL_CACHE=/data/models
+export OMNIDOCS_MODELS_DIR=/data/models
 ```
 
 All backends will now use `/data/models` for model storage.
 
 ## Environment Variables
 
-### OMNIDOCS_MODEL_CACHE
+### OMNIDOCS_MODELS_DIR
 
 Primary cache directory for all OmniDocs models.
 
 **Priority order:**
-1. `OMNIDOCS_MODEL_CACHE` (if set)
+1. `OMNIDOCS_MODELS_DIR` (if set)
 2. `HF_HOME` (if set)
 3. Default: `~/.cache/huggingface`
 
@@ -36,7 +36,7 @@ Primary cache directory for all OmniDocs models.
 
 ```bash
 # Store models on external drive
-export OMNIDOCS_MODEL_CACHE=/Volumes/FastSSD/models
+export OMNIDOCS_MODELS_DIR=/Volumes/FastSSD/models
 
 # Use in your code
 from omnidocs import Document
@@ -99,7 +99,8 @@ MLX uses `HF_HOME` environment variable (set automatically by OmniDocs):
 from omnidocs.tasks.text_extraction import QwenTextExtractor
 from omnidocs.tasks.text_extraction.qwen import QwenTextMLXConfig
 
-# MLX respects OMNIDOCS_MODEL_CACHE via HF_HOME
+# MLX respects OMNIDOCS_MODELS_DIR via HF_HOME
+# Can also use cache_dir parameter for per-backend override
 extractor = QwenTextExtractor(
     backend=QwenTextMLXConfig(
         model="mlx-community/Qwen3-VL-8B-Instruct-4bit"
@@ -134,16 +135,16 @@ configure_backend_cache()
 configure_backend_cache("/data/models")
 ```
 
-### Get Cache Info
+### Get Storage Info
 
 ```python
-from omnidocs.utils.cache import get_cache_info
+from omnidocs.utils.cache import get_storage_info
 
-info = get_cache_info()
+info = get_storage_info()
 print(info)
 # {
 #     'omnidocs_cache': '/data/models',
-#     'omnidocs_model_cache_env': '/data/models',
+#     'omnidocs_models_dir_env': '/data/models',
 #     'hf_home': '/data/models',
 #     'transformers_cache': '/data/models'
 # }
@@ -155,7 +156,7 @@ print(info)
 
 ```bash
 # Store models on fast SSD
-export OMNIDOCS_MODEL_CACHE=/Volumes/FastSSD/omnidocs-models
+export OMNIDOCS_MODELS_DIR=/Volumes/FastSSD/omnidocs-models
 python my_script.py
 ```
 
@@ -170,7 +171,7 @@ IMAGE = (
     modal.Image.from_registry("nvidia/cuda:12.4.0-devel-ubuntu22.04", add_python="3.12")
     .uv_pip_install("omnidocs[pytorch]")
     .env({
-        "OMNIDOCS_MODEL_CACHE": "/data/.cache",
+        "OMNIDOCS_MODELS_DIR": "/data/.cache",
         "HF_HUB_ENABLE_HF_TRANSFER": "1",
     })
 )
@@ -200,7 +201,7 @@ def process_document(pdf_path: str):
 ```dockerfile
 FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
 
-ENV OMNIDOCS_MODEL_CACHE=/app/models
+ENV OMNIDOCS_MODELS_DIR=/app/models
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
 RUN apt-get update && apt-get install -y python3 python3-pip && rm -rf /var/lib/apt/lists/*
@@ -239,7 +240,7 @@ Use a single cache for multiple projects:
 
 ```bash
 # In ~/.bashrc or ~/.zshrc
-export OMNIDOCS_MODEL_CACHE=/shared/ml-models/omnidocs
+export OMNIDOCS_MODELS_DIR=/shared/ml-models/omnidocs
 
 # All projects use same cache
 cd project1 && python script1.py
@@ -252,13 +253,13 @@ Point cache to SSD for faster loading:
 
 ```bash
 # Slow (HDD)
-export OMNIDOCS_MODEL_CACHE=/mnt/hdd/models
+export OMNIDOCS_MODELS_DIR=/mnt/hdd/models
 
 # Fast (SSD)
-export OMNIDOCS_MODEL_CACHE=/mnt/ssd/models
+export OMNIDOCS_MODELS_DIR=/mnt/ssd/models
 
 # Even faster (NVMe)
-export OMNIDOCS_MODEL_CACHE=/mnt/nvme/models
+export OMNIDOCS_MODELS_DIR=/mnt/nvme/models
 ```
 
 ### Cloud Storage Considerations
@@ -279,10 +280,10 @@ export OMNIDOCS_MODEL_CACHE=/mnt/nvme/models
 Check environment variables:
 
 ```python
-from omnidocs.utils.cache import get_cache_info
+from omnidocs.utils.cache import get_storage_info
 import pprint
 
-pprint.pprint(get_cache_info())
+pprint.pprint(get_storage_info())
 ```
 
 ### Disk full due to duplicate models
@@ -294,7 +295,7 @@ Consolidate to one cache:
 find ~ -name "huggingface" -type d
 
 # Set unified cache
-export OMNIDOCS_MODEL_CACHE=/data/unified-cache
+export OMNIDOCS_MODELS_DIR=/data/unified-cache
 
 # Optionally copy existing models
 cp -r ~/.cache/huggingface/* /data/unified-cache/
@@ -311,7 +312,7 @@ chown -R $USER:$USER /data/models
 
 ## Migration Guide
 
-### From HF_HOME to OMNIDOCS_MODEL_CACHE
+### From HF_HOME to OMNIDOCS_MODELS_DIR
 
 Before (old way):
 ```bash
@@ -320,11 +321,11 @@ export HF_HOME=/data/models
 
 After (new way):
 ```bash
-export OMNIDOCS_MODEL_CACHE=/data/models
+export OMNIDOCS_MODELS_DIR=/data/models
 # HF_HOME is set automatically by OmniDocs
 ```
 
-Both work, but `OMNIDOCS_MODEL_CACHE` is recommended for clarity.
+Both work, but `OMNIDOCS_MODELS_DIR` is recommended for clarity.
 
 ### From Per-Backend Configs
 
@@ -338,7 +339,7 @@ vllm_config = QwenTextVLLMConfig(download_dir="/data/vllm-models")
 After (new way):
 ```bash
 # Unified cache via environment variable
-export OMNIDOCS_MODEL_CACHE=/data/models
+export OMNIDOCS_MODELS_DIR=/data/models
 ```
 
 ```python
