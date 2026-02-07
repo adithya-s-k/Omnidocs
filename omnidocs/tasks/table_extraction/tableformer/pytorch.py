@@ -12,7 +12,6 @@ from PIL import Image
 
 from omnidocs.cache import add_reference, get_cache_key, get_cached, set_cached
 from omnidocs.tasks.table_extraction.base import BaseTableExtractor
-from omnidocs.utils.cache import get_model_cache_dir
 from omnidocs.tasks.table_extraction.models import (
     BoundingBox,
     CellType,
@@ -22,6 +21,7 @@ from omnidocs.tasks.table_extraction.models import (
 from omnidocs.tasks.table_extraction.tableformer.config import (
     TableFormerConfig,
 )
+from omnidocs.utils.cache import get_model_cache_dir
 
 if TYPE_CHECKING:
     from omnidocs.tasks.ocr_extraction.models import OCROutput
