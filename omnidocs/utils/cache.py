@@ -76,6 +76,18 @@ def configure_backend_cache(cache_dir: Optional[str] = None) -> None:
     os.environ["HF_HOME"] = cache_path
     os.environ["TRANSFORMERS_CACHE"] = cache_path
 
+    # huggingface_hub caches HF_HUB_CACHE at import time, so if it's already
+    # imported we must patch the constants directly for hf_hub_download etc.
+    import sys
+
+    if "huggingface_hub.constants" in sys.modules:
+        import huggingface_hub.constants as hf_constants
+
+        hub_cache = os.path.join(cache_path, "hub")
+        hf_constants.HF_HOME = cache_path
+        hf_constants.HF_HUB_CACHE = hub_cache
+        hf_constants.HUGGINGFACE_HUB_CACHE = hub_cache
+
 
 def get_storage_info() -> dict:
     """
