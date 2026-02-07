@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING, List, Union
 import numpy as np
 from PIL import Image
 
-# Import utilities from text_extraction module (shared code)
+# Import cache and utilities
+from ....cache import add_reference, get_cache_key, get_cached, set_cached
 from ...text_extraction.mineruvl.utils import (
     DEFAULT_PROMPTS,
     DEFAULT_SAMPLING_PARAMS,
@@ -106,9 +107,24 @@ class MinerUVLLayoutDetector(BaseLayoutExtractor):
         self._load_model()
 
     def _load_model(self) -> None:
-        """Load VLM client based on backend config."""
+        """Load VLM client based on backend config.
+
+        Uses unified model cache with reference counting to share models.
+        """
         config_type = type(self.backend_config).__name__
 
+        # Check cache first (except for API backend which has no model to cache)
+        if config_type != "MinerUVLLayoutAPIConfig":
+            cache_key = get_cache_key(self.backend_config)
+            self._cache_key = cache_key  # Store for reference tracking
+            cached = get_cached(cache_key)
+            if cached is not None:
+                self._client, self._layout_size = cached
+                add_reference(cache_key, self)  # Track this detector as a user
+                self._loaded = True
+                return
+
+        # Load model based on backend type
         if config_type == "MinerUVLLayoutPyTorchConfig":
             self._load_pytorch_backend()
         elif config_type == "MinerUVLLayoutVLLMConfig":
@@ -119,6 +135,10 @@ class MinerUVLLayoutDetector(BaseLayoutExtractor):
             self._load_api_backend()
         else:
             raise TypeError(f"Unknown backend config: {config_type}")
+
+        # Cache the loaded model with reference counting (except API)
+        if config_type != "MinerUVLLayoutAPIConfig":
+            set_cached(cache_key, (self._client, self._layout_size), owner=self)
 
         self._loaded = True
 
