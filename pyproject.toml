@@ -24,6 +24,7 @@ dependencies = [
     "docling-ibm-models>=3.4.0",
     "hf-transfer>=0.1.0",
     "huggingface-hub>=0.36.0",
+    "litellm>=1.81.9",
     "numpy>=2.2.6",
     "opencv-contrib-python>=4.10.0",
     "pdfplumber>=0.11.9",
@@ -60,11 +61,8 @@ mlx = [
     "mlx>=0.20.0",
     "mlx-vlm>=0.1.0",
 ]
-api = [
-    "openai>=1.0.0",
-]
 all = [
-    "omnidocs[pytorch,vllm,api]",
+    "omnidocs[pytorch,vllm]",
 ]
 
 [dependency-groups]
