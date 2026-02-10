@@ -50,8 +50,7 @@ class VLMAPIConfig(BaseModel):
     )
     api_base: Optional[str] = Field(
         default=None,
-        description="Override base URL. Usually not needed — litellm knows "
-        "provider endpoints from the model prefix.",
+        description="Override base URL. Usually not needed — litellm knows provider endpoints from the model prefix.",
     )
     max_tokens: int = Field(
         default=8192,
@@ -72,8 +71,7 @@ class VLMAPIConfig(BaseModel):
     )
     api_version: Optional[str] = Field(
         default=None,
-        description="API version string. Required for Azure OpenAI "
-        "(e.g., '2025-01-01-preview').",
+        description="API version string. Required for Azure OpenAI (e.g., '2025-01-01-preview').",
     )
     extra_headers: Optional[dict[str, str]] = Field(
         default=None,

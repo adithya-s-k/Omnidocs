@@ -85,7 +85,10 @@ def _parse_layout_response(raw_output: str, image_size: tuple[int, int]) -> List
         pass
 
     # Fallback: regex extraction
-    pattern = r'\{"bbox"\s*:\s*\[(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\]\s*,\s*"label"\s*:\s*"([^"]+)"\}'
+    pattern = (
+        r'\{"bbox"\s*:\s*\[(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,'
+        r'\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\]\s*,\s*"label"\s*:\s*"([^"]+)"\}'
+    )
     matches = re.findall(pattern, output)
 
     results = []
