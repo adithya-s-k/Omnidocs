@@ -49,6 +49,7 @@ from .models import (
 )
 from .qwen import QwenLayoutDetector
 from .rtdetr import RTDETRConfig, RTDETRLayoutExtractor
+from .vlm import VLMLayoutDetector
 
 __all__ = [
     # Base
@@ -75,4 +76,6 @@ __all__ = [
     "QwenLayoutDetector",
     # MinerU VL (multi-backend)
     "MinerUVLLayoutDetector",
+    # VLM (provider-agnostic API)
+    "VLMLayoutDetector",
 ]
