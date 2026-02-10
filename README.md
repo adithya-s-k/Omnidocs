@@ -267,7 +267,7 @@ config = VLMAPIConfig(
 )
 ```
 
-See the [VLM API docs](https://adithya-s-k.github.io/Omnidocs/usage/models/vlm-api/) for full provider setup and model lists.
+See the [VLM API docs](https://adithya-s-k.github.io/Omnidocs/latest/usage/models/vlm-api/) for full provider setup and model lists.
 
 ---
 
