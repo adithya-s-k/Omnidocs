@@ -33,8 +33,9 @@ print(result.content)
 
 | Task | What You Get | Example Models |
 |------|--------------|----------------|
-| **Text Extraction** | Markdown/HTML from documents | Qwen3-VL, DotsOCR, Nanonets OCR2 |
-| **Layout Analysis** | Bounding boxes for titles, tables, figures | DocLayoutYOLO, RT-DETR, Qwen Layout |
+| **Text Extraction** | Markdown/HTML from documents | VLM API, Qwen3-VL, MinerU VL, DotsOCR, Nanonets OCR2 |
+| **Layout Analysis** | Bounding boxes for titles, tables, figures | VLM API, DocLayoutYOLO, RT-DETR, MinerU VL, Qwen Layout |
+| **Structured Extraction** | Typed Pydantic objects from documents | VLM API (any cloud provider) |
 | **OCR** | Text + coordinates | Tesseract, EasyOCR, PaddleOCR |
 | **Table Extraction** | Structured table data (rows, columns, cells) | TableFormer |
 | **Reading Order** | Logical reading sequence | Rule-based R-tree |
@@ -61,7 +62,7 @@ Image → Extractor.extract() → Pydantic Output
 | **PyTorch** | `pip install omnidocs[pytorch]` | Development, single GPU |
 | **VLLM** | `pip install omnidocs[vllm]` | Production, high throughput |
 | **MLX** | `pip install omnidocs[mlx]` | Apple Silicon (M1/M2/M3) |
-| **API** | `pip install omnidocs[api]` | No GPU, cloud-based |
+| **API** | `pip install omnidocs` | No GPU, cloud-based (included by default) |
 
 ---
 
@@ -69,7 +70,10 @@ Image → Extractor.extract() → Pydantic Output
 
 | Model | Task | PyTorch | VLLM | MLX | API |
 |-------|------|---------|------|-----|-----|
+| **[VLM API](usage/models/vlm-api.md)** | Text, Layout, Structured | -- | -- | -- | ✅ |
 | **Qwen3-VL** | Text, Layout | ✅ | ✅ | ✅ | ✅ |
+| **MinerU VL** | Text, Layout | ✅ | ✅ | ✅ | ✅ |
+| **Granite Docling** | Text | ✅ | ✅ | ✅ | ✅ |
 | **DotsOCR** | Text | ✅ | ✅ | -- | ✅ |
 | **Nanonets OCR2** | Text | ✅ | ✅ | ✅ | -- |
 | **DocLayoutYOLO** | Layout | ✅ | -- | -- | -- |
@@ -84,8 +88,6 @@ Image → Extractor.extract() → Pydantic Output
 
 | Model | Task | Status |
 |-------|------|--------|
-| Granite Docling | Text | 🔜 Scripts ready |
-| MinerU VL | Text | 🔜 Scripts ready |
 | Surya | OCR, Layout | 🔜 Planned |
 
 See [Roadmap](ROADMAP.md) for full tracking.
@@ -128,6 +130,17 @@ from omnidocs.tasks.text_extraction import QwenTextExtractor
 from omnidocs.tasks.text_extraction.qwen import QwenPyTorchConfig  # or VLLMConfig, MLXConfig, APIConfig
 
 extractor = QwenTextExtractor(backend=QwenPyTorchConfig(device="cuda"))
+result = extractor.extract(image, output_format="markdown")
+```
+
+### VLM API (Any Cloud Provider, No GPU)
+```python
+from omnidocs.vlm import VLMAPIConfig
+from omnidocs.tasks.text_extraction import VLMTextExtractor
+
+# Works with Gemini, OpenRouter, Azure, OpenAI, self-hosted VLLM
+config = VLMAPIConfig(model="gemini/gemini-2.5-flash")
+extractor = VLMTextExtractor(config=config)
 result = extractor.extract(image, output_format="markdown")
 ```
 
