@@ -194,16 +194,19 @@ class TestGraniteDoclingTextMLXConfig:
 class TestGraniteDoclingTextAPIConfig:
     """Tests for GraniteDoclingTextAPIConfig."""
 
-    def test_api_key_required(self):
-        """Test that api_key is required."""
+    def test_default_values(self):
+        """Test default configuration values (api_key optional with litellm)."""
         from omnidocs.tasks.text_extraction.granitedocling import (
             GraniteDoclingTextAPIConfig,
         )
 
-        with pytest.raises(ValidationError) as exc_info:
-            GraniteDoclingTextAPIConfig()
+        config = GraniteDoclingTextAPIConfig()
 
-        assert "api_key" in str(exc_info.value)
+        assert config.model == "openrouter/ibm-granite/granite-docling-258M"
+        assert config.api_key is None
+        assert config.api_base is None
+        assert config.max_tokens == 8192
+        assert config.timeout == 180
 
     def test_with_api_key(self):
         """Test configuration with api_key."""
@@ -214,7 +217,6 @@ class TestGraniteDoclingTextAPIConfig:
         config = GraniteDoclingTextAPIConfig(api_key="test-key")
 
         assert config.api_key == "test-key"
-        assert config.base_url == "https://openrouter.ai/api/v1"
         assert config.max_tokens == 8192
         assert config.timeout == 180
 
@@ -226,13 +228,13 @@ class TestGraniteDoclingTextAPIConfig:
 
         config = GraniteDoclingTextAPIConfig(
             api_key="my-key",
-            base_url="https://custom.api.com/v1",
+            api_base="https://custom.api.com/v1",
             max_tokens=4096,
             timeout=300,
         )
 
         assert config.api_key == "my-key"
-        assert config.base_url == "https://custom.api.com/v1"
+        assert config.api_base == "https://custom.api.com/v1"
         assert config.max_tokens == 4096
         assert config.timeout == 300
 

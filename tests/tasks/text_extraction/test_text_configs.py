@@ -75,14 +75,17 @@ class TestQwenTextMLXConfig:
 class TestQwenTextAPIConfig:
     """Tests for QwenTextAPIConfig."""
 
-    def test_api_key_required(self):
-        """Test that api_key is required."""
+    def test_default_values(self):
+        """Test default configuration values (api_key optional with litellm)."""
         from omnidocs.tasks.text_extraction.qwen import QwenTextAPIConfig
 
-        with pytest.raises(ValidationError) as exc_info:
-            QwenTextAPIConfig()
+        config = QwenTextAPIConfig()
 
-        assert "api_key" in str(exc_info.value)
+        assert config.model == "openrouter/qwen/qwen3-vl-8b-instruct"
+        assert config.api_key is None
+        assert config.api_base is None
+        assert config.max_tokens == 8192
+        assert config.timeout == 180
 
     def test_with_api_key(self):
         """Test configuration with api_key."""
