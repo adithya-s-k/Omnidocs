@@ -114,15 +114,20 @@ nav:
     - usage/index.md
     - Text Extraction:
       - usage/tasks/text-extraction.md
+      - VLM API: usage/models/vlm-api.md
       - MinerU VL: usage/models/mineruvl.md
       - Qwen: usage/models/qwen.md
       - DotsOCR: usage/models/dotsocr.md
       - Nanonets OCR2: usage/models/nanonets.md
     - Layout Analysis:
       - usage/tasks/layout-analysis.md
+      - VLM API: usage/models/vlm-api.md
       - MinerU VL: usage/models/mineruvl.md
       - DocLayoutYOLO: usage/models/doclayout-yolo.md
       - RT-DETR: usage/models/rtdetr.md
+    - Structured Extraction:
+      - usage/tasks/structured-extraction.md
+      - VLM API: usage/models/vlm-api.md
     - OCR:
       - usage/tasks/ocr.md
       - Tesseract: usage/models/tesseract.md

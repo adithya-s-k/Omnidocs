@@ -13,6 +13,7 @@ Tasks define **what** you want to extract. Models define **how**.
 | [OCR](ocr.md) | Image | Text + coordinates | ✅ Ready |
 | [Table Extraction](table-extraction.md) | Table image | Structured table data | ✅ Ready |
 | [Reading Order](reading-order.md) | Layout + OCR | Ordered elements | ✅ Ready |
+| [Structured Extraction](structured-extraction.md) | Image + Schema | Typed Pydantic objects | ✅ Ready |
 
 ---
 
@@ -33,6 +34,9 @@ Tasks define **what** you want to extract. Models define **how**.
 **"I need elements in reading order"**
 → [Reading Order](reading-order.md)
 
+**"I want typed data from invoices/forms"**
+→ [Structured Extraction](structured-extraction.md)
+
 ---
 
 ## Upcoming Tasks
@@ -42,6 +46,5 @@ Tasks define **what** you want to extract. Models define **how**.
 | **Math Recognition** | LaTeX from equations | 🔜 Soon |
 | **Chart Understanding** | Data extraction from charts | 🔜 Planned |
 | **Image Captioning** | Caption figures and images | 🔜 Planned |
-| **Structured Output** | Extract data with custom schemas | 🔜 Planned |
 
 See [Roadmap](../../ROADMAP.md) for full tracking.

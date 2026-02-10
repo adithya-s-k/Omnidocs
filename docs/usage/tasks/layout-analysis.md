@@ -52,6 +52,7 @@ for elem in result.elements:
 | [DocLayoutYOLO](../models/doclayout-yolo.md) | 0.1-0.2s/page | Fixed (11) | Speed |
 | [RT-DETR](../models/rtdetr.md) | 0.3-0.5s/page | Fixed (11) | Accuracy |
 | [Qwen Layout](../models/qwen.md#layout-analysis) | 2-3s/page | **Custom** | Flexibility |
+| [VLM API](../models/vlm-api.md) | Varies | **Custom** | No GPU, any cloud provider |
 
 ---
 
@@ -233,4 +234,3 @@ content = [e for e in result.elements
 | Model | Description | Status |
 |-------|-------------|--------|
 | **SuryaLayout** | Modern layout detection | 🔜 Soon |
-| **VLMLayout** | API-based layout (GPT-4V, Gemini) | 🔜 Planned |
