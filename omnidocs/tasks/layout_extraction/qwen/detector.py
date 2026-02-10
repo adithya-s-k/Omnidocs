@@ -277,22 +277,8 @@ class QwenLayoutDetector(BaseLayoutExtractor):
         self._generate = generate
 
     def _load_api_backend(self) -> None:
-        """Load API backend."""
-        try:
-            from openai import OpenAI
-        except ImportError as e:
-            raise ImportError("API backend requires openai. Install with: uv add openai") from e
-
-        config = self.backend_config
-
-        client_kwargs: Dict[str, Any] = {
-            "base_url": config.base_url,
-            "api_key": config.api_key,
-        }
-        if config.extra_headers:
-            client_kwargs["default_headers"] = config.extra_headers
-
-        self._backend = OpenAI(**client_kwargs)
+        """Load API backend (litellm-based, no client to create)."""
+        pass
 
     def _resolve_device(self, device: str) -> str:
         """Resolve device, auto-detecting if needed."""
@@ -604,32 +590,18 @@ class QwenLayoutDetector(BaseLayoutExtractor):
                 os.unlink(temp_path)
 
     def _infer_api(self, image: Image.Image, prompt: str) -> str:
-        """Run inference with API backend."""
-        import base64
-        import io
-
-        buffered = io.BytesIO()
-        image.save(buffered, format="PNG")
-        img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        image_url = f"data:image/png;base64,{img_base64}"
-
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image_url", "image_url": {"url": image_url}},
-                    {"type": "text", "text": prompt},
-                ],
-            }
-        ]
+        """Run inference with API backend via litellm."""
+        from omnidocs.vlm import VLMAPIConfig, vlm_completion
 
         config = self.backend_config
-        response = self._backend.chat.completions.create(
+        vlm_config = VLMAPIConfig(
             model=config.model,
-            messages=messages,
+            api_key=config.api_key,
+            api_base=config.api_base,
             max_tokens=config.max_tokens,
             temperature=config.temperature,
             timeout=config.timeout,
+            api_version=config.api_version,
+            extra_headers=config.extra_headers,
         )
-
-        return response.choices[0].message.content
+        return vlm_completion(vlm_config, prompt, image)

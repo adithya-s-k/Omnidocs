@@ -1,5 +1,7 @@
 """
 API backend configuration for Qwen3-VL layout detection.
+
+Uses litellm for provider-agnostic inference (OpenRouter, Gemini, Azure, etc.).
 """
 
 from typing import Optional
@@ -11,39 +13,44 @@ class QwenLayoutAPIConfig(BaseModel):
     """
     API backend configuration for Qwen layout detection.
 
-    This backend uses OpenAI-compatible APIs (OpenRouter, Novita AI, etc.)
-    for serverless inference without local GPU.
-    Requires: openai
+    Uses litellm for provider-agnostic API access. Supports OpenRouter,
+    Gemini, Azure, OpenAI, and any other litellm-compatible provider.
+
+    API keys can be passed directly or read from environment variables.
 
     Example:
         ```python
-        import os
+        # OpenRouter (reads OPENROUTER_API_KEY from env)
         config = QwenLayoutAPIConfig(
-                model="qwen/qwen3-vl-8b-instruct",
-                api_key=os.environ["OPENROUTER_API_KEY"],
-                base_url="https://openrouter.ai/api/v1",
-            )
+            model="openrouter/qwen/qwen3-vl-8b-instruct",
+        )
+
+        # With explicit key
+        config = QwenLayoutAPIConfig(
+            model="openrouter/qwen/qwen3-vl-8b-instruct",
+            api_key=os.environ["OPENROUTER_API_KEY"],
+            api_base="https://openrouter.ai/api/v1",
+        )
         ```
     """
 
     model: str = Field(
-        default="qwen/qwen3-vl-8b-instruct",
-        description="API model identifier. Format varies by provider. OpenRouter: 'qwen/qwen3-vl-8b-instruct'",
+        default="openrouter/qwen/qwen3-vl-8b-instruct",
+        description="Model identifier in litellm format with provider prefix. "
+        "Examples: 'openrouter/qwen/qwen3-vl-8b-instruct', 'openrouter/qwen/qwen3-vl-32b-instruct'",
     )
-    api_key: str = Field(
-        ...,
-        description="API key for authentication. Required.",
+    api_key: Optional[str] = Field(
+        default=None,
+        description="API key for authentication. If None, litellm reads from environment variables.",
     )
-    base_url: str = Field(
-        default="https://openrouter.ai/api/v1",
-        description="API base URL. "
-        "OpenRouter: 'https://openrouter.ai/api/v1', "
-        "Novita AI: 'https://api.novita.ai/v3/openai'",
+    api_base: Optional[str] = Field(
+        default=None,
+        description="Override base URL. Usually not needed — litellm knows provider endpoints.",
     )
     max_tokens: int = Field(
         default=4096,
         ge=256,
-        le=16384,
+        le=131072,
         description="Maximum number of tokens to generate.",
     )
     temperature: float = Field(
@@ -56,6 +63,10 @@ class QwenLayoutAPIConfig(BaseModel):
         default=120,
         ge=10,
         description="Request timeout in seconds.",
+    )
+    api_version: Optional[str] = Field(
+        default=None,
+        description="API version string. Required for Azure OpenAI.",
     )
     extra_headers: Optional[dict[str, str]] = Field(
         default=None,

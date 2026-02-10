@@ -164,14 +164,17 @@ class TestQwenLayoutMLXConfig:
 class TestQwenLayoutAPIConfig:
     """Tests for QwenLayoutAPIConfig."""
 
-    def test_api_key_required(self):
-        """Test that api_key is required."""
+    def test_default_values(self):
+        """Test default configuration values (api_key optional with litellm)."""
         from omnidocs.tasks.layout_extraction.qwen import QwenLayoutAPIConfig
 
-        with pytest.raises(ValidationError) as exc_info:
-            QwenLayoutAPIConfig()
+        config = QwenLayoutAPIConfig()
 
-        assert "api_key" in str(exc_info.value)
+        assert config.model == "openrouter/qwen/qwen3-vl-8b-instruct"
+        assert config.api_key is None
+        assert config.api_base is None
+        assert config.max_tokens == 4096
+        assert config.timeout == 120
 
     def test_with_api_key(self):
         """Test configuration with api_key."""
@@ -180,21 +183,20 @@ class TestQwenLayoutAPIConfig:
         config = QwenLayoutAPIConfig(api_key="test-key")
 
         assert config.api_key == "test-key"
-        assert config.model == "qwen/qwen3-vl-8b-instruct"
-        assert config.base_url == "https://openrouter.ai/api/v1"
+        assert config.model == "openrouter/qwen/qwen3-vl-8b-instruct"
         assert config.max_tokens == 4096
         assert config.timeout == 120
 
-    def test_custom_base_url(self):
-        """Test custom base_url."""
+    def test_custom_api_base(self):
+        """Test custom api_base."""
         from omnidocs.tasks.layout_extraction.qwen import QwenLayoutAPIConfig
 
         config = QwenLayoutAPIConfig(
             api_key="test-key",
-            base_url="https://api.novita.ai/v3/openai",
+            api_base="https://api.novita.ai/v3/openai",
         )
 
-        assert config.base_url == "https://api.novita.ai/v3/openai"
+        assert config.api_base == "https://api.novita.ai/v3/openai"
 
     def test_extra_headers(self):
         """Test extra_headers field."""

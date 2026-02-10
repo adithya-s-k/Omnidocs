@@ -242,21 +242,8 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
         self._generate = generate
 
     def _load_api_backend(self) -> None:
-        """Load API backend for remote inference."""
-        try:
-            from openai import OpenAI
-        except ImportError as e:
-            raise ImportError("API backend requires openai. Install with: uv add openai") from e
-
-        config = self.backend_config
-        client_kwargs: dict[str, Any] = {
-            "base_url": config.base_url,
-            "api_key": config.api_key,
-        }
-        if config.extra_headers:
-            client_kwargs["default_headers"] = config.extra_headers
-
-        self._backend = OpenAI(**client_kwargs)
+        """Load API backend (litellm-based, no client to create)."""
+        pass
 
     def _convert_doctags_to_markdown(self, doctags: str, image: Image.Image) -> str:
         """Convert DocTags output to Markdown using docling_core."""
@@ -454,38 +441,21 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
                 os.unlink(temp_path)
 
     def _infer_api(self, image: Image.Image) -> str:
-        """API inference via OpenAI-compatible endpoint."""
-        import base64
-        from io import BytesIO
+        """API inference via litellm."""
+        from omnidocs.vlm import VLMAPIConfig, vlm_completion
 
         config = self.backend_config
-
-        # Encode image to base64
-        buffer = BytesIO()
-        image.save(buffer, format="PNG")
-        base64_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
-
-        # Create request
-        response = self._backend.chat.completions.create(
+        vlm_config = VLMAPIConfig(
             model=config.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/png;base64,{base64_image}"},
-                        },
-                        {"type": "text", "text": GRANITE_DOCLING_PROMPT},
-                    ],
-                }
-            ],
+            api_key=config.api_key,
+            api_base=config.api_base,
             max_tokens=config.max_tokens,
             temperature=config.temperature,
             timeout=config.timeout,
+            api_version=config.api_version,
+            extra_headers=config.extra_headers,
         )
-
-        return response.choices[0].message.content
+        return vlm_completion(vlm_config, GRANITE_DOCLING_PROMPT, image)
 
     def _extract_plain_text(self, content: str) -> str:
         """Extract plain text from markdown content."""

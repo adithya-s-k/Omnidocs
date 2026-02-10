@@ -32,6 +32,7 @@ from .mineruvl import MinerUVLTextExtractor
 from .models import DotsOCRTextOutput, LayoutElement, OutputFormat, TextOutput
 from .nanonets import NanonetsTextExtractor
 from .qwen import QwenTextExtractor
+from .vlm import VLMTextExtractor
 
 __all__ = [
     # Base
@@ -47,4 +48,5 @@ __all__ = [
     "NanonetsTextExtractor",
     "GraniteDoclingTextExtractor",
     "MinerUVLTextExtractor",
+    "VLMTextExtractor",
 ]

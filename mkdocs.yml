@@ -108,6 +108,7 @@ nav:
     - index.md
     - Installation: installation.md
     - Getting Started: getting-started.md
+    - VLM API: usage/models/vlm-api.md
     - Concepts: concepts.md
 
   - Usage:
@@ -123,6 +124,8 @@ nav:
       - MinerU VL: usage/models/mineruvl.md
       - DocLayoutYOLO: usage/models/doclayout-yolo.md
       - RT-DETR: usage/models/rtdetr.md
+    - Structured Extraction:
+      - usage/tasks/structured-extraction.md
     - OCR:
       - usage/tasks/ocr.md
       - Tesseract: usage/models/tesseract.md

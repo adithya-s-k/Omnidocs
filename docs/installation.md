@@ -45,9 +45,6 @@ pip install omnidocs[vllm]
 # Core + MLX (Apple Silicon)
 pip install omnidocs[mlx]
 
-# Core + API support
-pip install omnidocs[api]
-
 # Everything
 pip install omnidocs[all]
 ```
@@ -59,9 +56,11 @@ pip install omnidocs[all]
 | `pytorch` | PyTorch, Transformers, Accelerate | Local GPU inference |
 | `vllm` | VLLM, PyTorch | Production, high throughput |
 | `mlx` | MLX, mlx-lm | Apple Silicon (M1/M2/M3) |
-| `api` | LiteLLM, httpx | Cloud-based, no GPU |
 | `ocr` | Tesseract bindings, EasyOCR, PaddleOCR | OCR tasks |
 | `all` | All of the above | Full functionality |
+
+!!! note "API support included by default"
+    LiteLLM is now a core dependency. Cloud API access (Gemini, OpenRouter, Azure, OpenAI) works with a base `pip install omnidocs` -- no extra needed.
 
 ---
 
@@ -180,22 +179,38 @@ print(f"MLX installed, default device: {mx.default_device()}")
 
 ### API Backend
 
-No GPU required - uses cloud APIs.
+No GPU required -- uses cloud VLMs via LiteLLM (included by default).
 
 ```bash
-pip install omnidocs[api]
+pip install omnidocs
 ```
 
 **Supported providers:**
+
+- Google Gemini
 - OpenRouter
-- Together AI
-- Fireworks AI
-- Any OpenAI-compatible API
+- Azure OpenAI
+- OpenAI
+- Any OpenAI-compatible API (including self-hosted VLLM)
 
 **Setup:**
+```bash
+# Set the env var for your provider
+export GOOGLE_API_KEY=...        # Gemini
+export OPENROUTER_API_KEY=...    # OpenRouter
+export AZURE_API_KEY=...         # Azure
+export OPENAI_API_KEY=...        # OpenAI
+```
+
+**Verify:**
 ```python
-import os
-os.environ["OPENROUTER_API_KEY"] = "your-key"
+from omnidocs.vlm import VLMAPIConfig
+from omnidocs.tasks.text_extraction import VLMTextExtractor
+
+config = VLMAPIConfig(model="gemini/gemini-2.5-flash")
+extractor = VLMTextExtractor(config=config)
+result = extractor.extract("document.png")
+print(result.content[:200])
 ```
 
 ---

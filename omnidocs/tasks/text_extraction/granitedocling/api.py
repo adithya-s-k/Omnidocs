@@ -1,4 +1,8 @@
-"""API backend configuration for Granite Docling text extraction."""
+"""
+API backend configuration for Granite Docling text extraction.
+
+Uses litellm for provider-agnostic inference (OpenRouter, Gemini, Azure, etc.).
+"""
 
 from typing import Optional
 
@@ -6,27 +10,39 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class GraniteDoclingTextAPIConfig(BaseModel):
-    """Configuration for Granite Docling text extraction via API.
+    """
+    Configuration for Granite Docling text extraction via API.
 
-    Uses OpenAI-compatible API endpoints (LiteLLM, OpenRouter, etc.).
+    Uses litellm for provider-agnostic API access. Supports OpenRouter,
+    Gemini, Azure, OpenAI, and any other litellm-compatible provider.
+
+    API keys can be passed directly or read from environment variables.
+
+    Example:
+        ```python
+        # OpenRouter
+        config = GraniteDoclingTextAPIConfig(
+            model="openrouter/ibm-granite/granite-docling-258M",
+        )
+        ```
     """
 
     model: str = Field(
-        default="ibm-granite/granite-docling-258M",
-        description="API model identifier",
+        default="openrouter/ibm-granite/granite-docling-258M",
+        description="Model identifier in litellm format with provider prefix.",
     )
-    api_key: str = Field(
-        ...,
-        description="API key for authentication. Required.",
+    api_key: Optional[str] = Field(
+        default=None,
+        description="API key for authentication. If None, litellm reads from environment variables.",
     )
-    base_url: str = Field(
-        default="https://openrouter.ai/api/v1",
-        description="API base URL",
+    api_base: Optional[str] = Field(
+        default=None,
+        description="Override base URL. Usually not needed — litellm knows provider endpoints.",
     )
     max_tokens: int = Field(
         default=8192,
         ge=256,
-        le=16384,
+        le=131072,
         description="Maximum tokens to generate",
     )
     temperature: float = Field(
@@ -39,6 +55,10 @@ class GraniteDoclingTextAPIConfig(BaseModel):
         default=180,
         ge=10,
         description="Request timeout in seconds",
+    )
+    api_version: Optional[str] = Field(
+        default=None,
+        description="API version string. Required for Azure OpenAI.",
     )
     extra_headers: Optional[dict[str, str]] = Field(
         default=None,
