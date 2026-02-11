@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
+
 if TYPE_CHECKING:
     from PIL import Image
 
@@ -360,6 +361,19 @@ class BoundingBox(BaseModel):
             y2=self.y2 / NORMALIZED_SIZE * image_height,
         )
 
+    def __repr_args__(self):
+        def fmt(v):
+            return int(v) if float(v).is_integer() else v
+        
+        return [
+            ("x1", fmt(self.x1)),
+            ("y1", fmt(self.y1)),
+            ("x2", fmt(self.x2)),
+            ("y2", fmt(self.y2)),
+            ("width", fmt(self.width)),
+            ("height", fmt(self.height)),
+        ]
+
 
 # ============= Layout Box Model =============
 
@@ -400,6 +414,17 @@ class LayoutBox(BaseModel):
         """
         return self.bbox.to_normalized(image_width, image_height)
 
+    def __repr_args__(self):
+        def fmt(v):
+            return int(v) if isinstance(v, float) and v.is_integer() else v
+        
+        bbox_list = [fmt(v) for v in self.bbox.to_list()]
+
+        return [
+            ("label", self.label.value),
+            ("confidence", round(self.confidence, 3)),
+            ("bbox", bbox_list),
+        ]
 
 # ============= Visualization Colors =============
 
@@ -433,6 +458,13 @@ class LayoutOutput(BaseModel):
     model_name: Optional[str] = Field(default=None, description="Name of the model used")
 
     model_config = ConfigDict(extra="forbid")
+
+    def __repr_args__(self):
+        return [
+            ("elements", len(self.bboxes)),
+            ("labels", self.labels_found),
+            ("image_size", (self.image_width, self.image_height)),
+        ]
 
     @property
     def element_count(self) -> int:
