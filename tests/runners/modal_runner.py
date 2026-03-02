@@ -1196,6 +1196,120 @@ def test_mineruvl_layout_pytorch(img_bytes: bytes) -> dict:
     }
 
 
+@app.function(
+    image=VLLM_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_lighton_vllm(img_bytes: bytes) -> dict:
+    """Test LightOn text extraction with VLLM backend."""
+    import io
+    import os
+    import time
+
+    os.environ["VLLM_USE_V1"] = "0"
+    os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import LightOnTextExtractor
+    from omnidocs.tasks.text_extraction.lighton import LightOnTextVLLMConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing LightOnTextExtractor with VLLM backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = LightOnTextExtractor(
+        backend=LightOnTextVLLMConfig(
+            model="lightonai/LightOnOCR-2-1B",
+            gpu_memory_utilization=0.85,
+            max_model_len=16384,
+            enforce_eager=True,
+            download_dir=MODEL_CACHE_DIR,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "lighton_vllm",
+        "backend": "vllm",
+        "model": "LightOnOCR-2-1B",
+        "load_time": load_time,
+        "inference_time": inference_time,
+        "content_length": len(result.content),
+    }
+
+
+@app.function(
+    image=PYTORCH_IMAGE,
+    gpu="L4:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def test_lighton_pytorch(img_bytes: bytes) -> dict:
+    """Test LightOn text extraction with PyTorch backend."""
+    import io
+    import time
+
+    from PIL import Image
+
+    from omnidocs.tasks.text_extraction import LightOnTextExtractor
+    from omnidocs.tasks.text_extraction.lighton import LightOnTextPyTorchConfig
+
+    img = Image.open(io.BytesIO(img_bytes))
+
+    print("=" * 60)
+    print("Testing LightOnTextExtractor with PyTorch backend")
+    print("=" * 60)
+
+    start = time.time()
+    extractor = LightOnTextExtractor(
+        backend=LightOnTextPyTorchConfig(
+            device="cuda",
+            torch_dtype="bfloat16",
+            use_flash_attention=False,
+        )
+    )
+    load_time = time.time() - start
+    print(f"Model load time: {load_time:.2f}s")
+
+    start = time.time()
+    result = extractor.extract(img)
+    inference_time = time.time() - start
+    print(f"Inference time: {inference_time:.2f}s")
+
+    print("\n--- Extracted Content ---")
+    print(result.content[:500] if len(result.content) > 500 else result.content)
+    print("---")
+
+    return {
+        "status": "success",
+        "test": "lighton_pytorch",
+        "backend": "pytorch",
+        "model": "LightOnOCR-2-1B",
+        "load_time": load_time,
+        "inference_time": inference_time,
+        "content_length": len(result.content),
+    }
+
+
 # ============= Test Registry =============
 
 AVAILABLE_TESTS = {
@@ -1210,6 +1324,8 @@ AVAILABLE_TESTS = {
     "granite_docling_pytorch": test_granite_docling_pytorch,
     "mineruvl_vllm": test_mineruvl_vllm,
     "mineruvl_pytorch": test_mineruvl_pytorch,
+    "lighton_vllm": test_lighton_vllm,
+    "lighton_pytorch": test_lighton_pytorch,
     # Layout extraction
     "qwen_layout_vllm": test_qwen_layout_vllm,
     "qwen_layout_pytorch": test_qwen_layout_pytorch,
