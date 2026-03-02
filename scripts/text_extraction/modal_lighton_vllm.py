@@ -7,7 +7,7 @@ IMAGE = (
         "pip install uv",
         "uv pip install --system torch torchvision --index-url https://download.pytorch.org/whl/cu124",
         "uv pip install --system vllm",
-        "uv pip install --system pillow pypdfium2 requests"
+        "uv pip install --system pillow pypdfium2 requests",
     )
 )
 
@@ -20,25 +20,32 @@ app = modal.App("lighton-ocr-vllm")
     timeout=600,
 )
 def run_lighton_ocr(image_url: str):
-    import subprocess
-    import time
-    import requests
     import base64
     import socket
-    from PIL import Image
+    import subprocess
+    import time
     from io import BytesIO
 
-    MODEL = "lightonai/LightOnOCR-2-1B"
+    import requests
+    from PIL import Image
+
+    model = "lightonai/LightOnOCR-2-1B"
 
     #  Start vLLM server
     server = subprocess.Popen(
         [
-            "vllm", "serve", MODEL,
-            "--host", "0.0.0.0",
-            "--port", "8000",
-            "--limit-mm-per-prompt", '{"image": 1}',
-            "--mm-processor-cache-gb", "0",
-            "--no-enable-prefix-caching"
+            "vllm",
+            "serve",
+            model,
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+            "--limit-mm-per-prompt",
+            '{"image": 1}',
+            "--mm-processor-cache-gb",
+            "0",
+            "--no-enable-prefix-caching",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -72,22 +79,16 @@ def run_lighton_ocr(image_url: str):
 
     # Call OpenAI-style endpoint
     payload = {
-        "model": MODEL,
-        "messages": [{
-            "role": "user",
-            "content": [
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/png;base64,{image_base64}"
-                    }
-                },
-                {
-                    "type": "text",
-                    "text": "Transcribe this document."
-                }
-            ]
-        }],
+        "model": model,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}},
+                    {"type": "text", "text": "Transcribe this document."},
+                ],
+            }
+        ],
         "max_tokens": 4096,
         "temperature": 0.2,
         "top_p": 0.9,
@@ -108,12 +109,13 @@ def run_lighton_ocr(image_url: str):
 
     return output_text
 
+
 @app.local_entrypoint()
 def main():
     target_url = "https://huggingface.co/datasets/hf-internal-testing/fixtures_ocr/resolve/main/SROIE-receipt.jpeg"
     result = run_lighton_ocr.remote(target_url)
 
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("OCR RESULT:")
-    print("="*50)
+    print("=" * 50)
     print(result)

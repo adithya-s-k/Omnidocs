@@ -7,38 +7,32 @@ This script uses transformers library for cross-platform compatibility.
 For GPU acceleration on Windows/Linux, ensure torch with CUDA is installed.
 """
 
-import sys
 import subprocess
-from pathlib import Path
+import sys
+
+import torch
+from PIL import Image, ImageDraw
+
 
 def install_dependencies():
     """Install required dependencies if not already installed."""
-    required_packages = [
-        "transformers>=4.57.6",
-        "pillow",
-        "numpy",
-        "torch",
-        "huggingface_hub",
-        "accelerate"
-    ]
-    
+    required_packages = ["transformers>=4.57.6", "pillow", "numpy", "torch", "huggingface_hub", "accelerate"]
+
     try:
         import transformers
+
+        temp = transformers.__version__
+        print(f"Transformers version {temp} is installed.")
         print("Dependencies check passed.")
     except ImportError:
         print("Installing required dependencies...")
-        subprocess.check_call([
-            sys.executable, "-m", "pip", "install",
-            *required_packages
-        ])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", *required_packages])
         print("Dependencies installed successfully.")
+
 
 # Install dependencies first
 install_dependencies()
 
-from PIL import Image, ImageDraw
-import numpy as np
-import torch
 
 try:
     from transformers import LightOnOcrForConditionalGeneration, LightOnOcrProcessor
@@ -55,20 +49,17 @@ print(f"Using device: {device}")
 
 print(f"\nLoading model: {MODEL_NAME}...")
 try:
-    processor = LightOnOcrProcessor.from_pretrained(
-        MODEL_NAME,
-        trust_remote_code=True
-    )
+    processor = LightOnOcrProcessor.from_pretrained(MODEL_NAME, trust_remote_code=True)
     model = LightOnOcrForConditionalGeneration.from_pretrained(
         MODEL_NAME,
         trust_remote_code=True,
         torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
-        device_map="auto" if device == "cuda" else None
+        device_map="auto" if device == "cuda" else None,
     )
-    
+
     if device == "cpu":
         model = model.to(device)
-    
+
     print("Model loaded successfully!")
 except Exception as e:
     print(f"Error loading model: {e}")
@@ -95,21 +86,14 @@ print("-" * 60)
 try:
     # Prepare inputs
     inputs = processor(image, return_tensors="pt").to(device)
-    
+
     print("Processing image...")
     # Generate output
-    generated_ids = model.generate(
-        **inputs,
-        max_new_tokens=2048,
-        do_sample=False
-    )
-    
+    generated_ids = model.generate(**inputs, max_new_tokens=2048, do_sample=False)
+
     # Decode result
-    result_text = processor.decode(
-        generated_ids[0],
-        skip_special_tokens=True
-    )
-    
+    result_text = processor.decode(generated_ids[0], skip_special_tokens=True)
+
     print("\n" + "=" * 60)
     print("EXTRACTION RESULT:")
     print("=" * 60)
@@ -117,9 +101,10 @@ try:
     print("\n" + "=" * 60)
     print(f"Total output length: {len(result_text)} characters")
     print("Inference completed successfully!")
-    
+
 except Exception as e:
     print(f"Error during inference: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
