@@ -103,7 +103,10 @@ def run_lighton_ocr(image_url: str):
 @app.local_entrypoint()
 def main():
     # target_url = "https://target.scene7.com/is/image/Target/ScreenShot2022-03-22at125438PM-220322-1647972511350?scl=1&qlt=80&fmt=png"
-    target_url = "https://huggingface.co/datasets/hf-internal-testing/fixtures_ocr/resolve/main/SROIE-receipt.jpeg"
+    # target_url = "https://huggingface.co/datasets/hf-internal-testing/fixtures_ocr/resolve/main/SROIE-receipt.jpeg"
+    # target_url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQt3PLwQx_EyfrzI8D-dOCLdqPkCo-F3hDGTg&s"
+    target_url = "https://towardsdatascience.com/wp-content/uploads/2024/05/16Vy32tUuqtAwz24CfS83wg-1.png"
+    # target_url = "https://images.examples.com/wp-content/uploads/2017/06/Short-Essay-for-high-school-Students-Edit-Download-10-16-2024_07_23_PM.png"
     result = run_lighton_ocr.remote(target_url)
     print("\n" + "="*50)
     print("OCR RESULT:")
