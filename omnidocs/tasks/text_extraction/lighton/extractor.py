@@ -10,14 +10,13 @@ from typing import TYPE_CHECKING, Literal, Union
 import numpy as np
 from PIL import Image
 
-from ....cache import add_reference, get_cache_key, get_cached, set_cached
+from ....cache import add_reference, get_cache_key, get_cached
 from ....utils.cache import get_model_cache_dir
 from ..base import BaseTextExtractor
 from ..models import OutputFormat, TextOutput
 from .utils import simple_post_process
 
 if TYPE_CHECKING:
-    from .api import LightOnTextAPIConfig
     from .mlx import LightOnTextMLXConfig
     from .pytorch import LightOnTextPyTorchConfig
     from .vllm import LightOnTextVLLMConfig
@@ -27,7 +26,6 @@ LightOnTextBackendConfig = Union[
     "LightOnTextPyTorchConfig",
     "LightOnTextVLLMConfig",
     "LightOnTextMLXConfig",
-    "LightOnTextAPIConfig",
 ]
 
 
@@ -86,19 +84,18 @@ class LightOnTextExtractor(BaseTextExtractor):
         config_type = type(self.backend_config).__name__
 
         # Check cache first (except for API backend which has no model to cache)
-        if config_type != "LightOnTextAPIConfig":
-            cache_key = get_cache_key(self.backend_config)
-            self._cache_key = cache_key
-            cached = get_cached(cache_key)
-            if cached is not None:
-                client_data = cached
-                if isinstance(client_data, tuple):
-                    self._client, self._processor = client_data
-                else:
-                    self._client = client_data
-                add_reference(cache_key, self)
-                self._loaded = True
-                return
+        cache_key = get_cache_key(self.backend_config)
+        self._cache_key = cache_key
+        cached = get_cached(cache_key)
+        if cached is not None:
+            client_data = cached
+            if isinstance(client_data, tuple):
+                self._client, self._processor = client_data
+            else:
+                self._client = client_data
+            add_reference(cache_key, self)
+            self._loaded = True
+            return
 
         # Load model based on backend type
         if config_type == "LightOnTextPyTorchConfig":
@@ -107,17 +104,8 @@ class LightOnTextExtractor(BaseTextExtractor):
             self._load_vllm_backend()
         elif config_type == "LightOnTextMLXConfig":
             self._load_mlx_backend()
-        elif config_type == "LightOnTextAPIConfig":
-            self._load_api_backend()
         else:
             raise TypeError(f"Unknown backend config: {config_type}")
-
-        # Cache the loaded model (except API)
-        if config_type != "LightOnTextAPIConfig":
-            if self._processor is not None:
-                set_cached(cache_key, (self._client, self._processor), owner=self)
-            else:
-                set_cached(cache_key, self._client, owner=self)
 
         self._loaded = True
 
@@ -202,16 +190,6 @@ class LightOnTextExtractor(BaseTextExtractor):
         model, processor = load(config.model, cache_dir=config.cache_dir)
         self._client = _MLXClient(model, processor, config.max_tokens)
 
-    def _load_api_backend(self) -> None:
-        """Load API backend."""
-        from openai import OpenAI
-
-        config = self.backend_config
-        self._client = OpenAI(
-            api_key=config.api_key,
-            base_url=config.api_base,
-        )
-
     def extract(
         self,
         image: Union[Image.Image, np.ndarray, str, Path],
@@ -242,8 +220,6 @@ class LightOnTextExtractor(BaseTextExtractor):
             raw_output = self._extract_vllm(image_obj)
         elif config_type == "LightOnTextMLXConfig":
             raw_output = self._extract_mlx(image_obj)
-        elif config_type == "LightOnTextAPIConfig":
-            raw_output = self._extract_api(image_obj)
         else:
             raise TypeError(f"Unknown backend: {config_type}")
 
@@ -331,41 +307,6 @@ class LightOnTextExtractor(BaseTextExtractor):
         )
 
         return response
-
-    def _extract_api(self, image: Image.Image) -> str:
-        """Extract text using API backend."""
-        import base64
-        from io import BytesIO
-
-        # Encode image to base64
-        buffered = BytesIO()
-        image.save(buffered, format="PNG")
-        image_b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-
-        # Call API
-        response = self._client.chat.completions.create(
-            model=self.backend_config.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{image_b64}",
-                            },
-                        },
-                        {
-                            "type": "text",
-                            "text": "Transcribe this document.",
-                        },
-                    ],
-                }
-            ],
-            max_tokens=self.backend_config.max_new_tokens,
-        )
-
-        return response.choices[0].message.content
 
     def _markdown_to_html(self, markdown_text: str) -> str:
         """Convert markdown to HTML (basic conversion)."""

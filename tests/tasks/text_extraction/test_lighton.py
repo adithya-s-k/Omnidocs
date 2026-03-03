@@ -95,28 +95,6 @@ class TestLightOnTextMLXConfig:
         assert config.max_tokens == 2048
 
 
-class TestLightOnTextAPIConfig:
-    """Test API config validation."""
-
-    def test_default_config(self):
-        from omnidocs.tasks.text_extraction.lighton import LightOnTextAPIConfig
-
-        config = LightOnTextAPIConfig()
-        assert config.model == "lightonai/LightOnOCR-2-1B"
-        assert config.api_base == "http://localhost:8000/v1"
-        assert config.max_new_tokens == 4096
-
-    def test_custom_config(self):
-        from omnidocs.tasks.text_extraction.lighton import LightOnTextAPIConfig
-
-        config = LightOnTextAPIConfig(
-            api_base="http://example.com:8000/v1",
-            api_key="sk-test-key",
-        )
-        assert config.api_base == "http://example.com:8000/v1"
-        assert config.api_key == "sk-test-key"
-
-
 class TestLightOnTextExtractorInit:
     """Test extractor initialization with different configs."""
 
@@ -146,14 +124,6 @@ class TestLightOnTextExtractorInit:
 
         config = LightOnTextMLXConfig()
         assert isinstance(config, LightOnTextMLXConfig)
-
-    def test_api_backend_config_type(self):
-        from omnidocs.tasks.text_extraction.lighton import (
-            LightOnTextAPIConfig,
-        )
-
-        config = LightOnTextAPIConfig()
-        assert isinstance(config, LightOnTextAPIConfig)
 
 
 class TestLightOnUtilFunctions:

@@ -20,7 +20,6 @@ Example:
     ```
 """
 
-from .api import LightOnTextAPIConfig
 from .extractor import LightOnTextExtractor
 from .mlx import LightOnTextMLXConfig
 from .pytorch import LightOnTextPyTorchConfig
@@ -33,5 +32,4 @@ __all__ = [
     "LightOnTextPyTorchConfig",
     "LightOnTextVLLMConfig",
     "LightOnTextMLXConfig",
-    "LightOnTextAPIConfig",
 ]
