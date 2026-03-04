@@ -155,9 +155,9 @@ class GraniteDoclingTextExtractor(BaseTextExtractor):
             model_kwargs["device_map"] = config.device_map
 
         if config.torch_dtype != "auto":
-            model_kwargs["torch_dtype"] = getattr(torch, config.torch_dtype)
+            model_kwargs["dtype"] = getattr(torch, config.torch_dtype)
         else:
-            model_kwargs["torch_dtype"] = torch.bfloat16
+            model_kwargs["dtype"] = torch.bfloat16
 
         if config.use_flash_attention:
             model_kwargs["attn_implementation"] = "flash_attention_2"

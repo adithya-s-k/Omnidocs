@@ -1,1 +1,0 @@
-"""Standalone text extraction tests."""

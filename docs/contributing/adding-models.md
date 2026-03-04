@@ -186,7 +186,7 @@ IMAGE = (
     # Base dependencies (cached across scripts)
     .uv_pip_install(
         "torch",
-        "transformers==4.57.6",
+        "transformers",
         "pillow",
         "huggingface_hub[hf_transfer]",
         "accelerate",

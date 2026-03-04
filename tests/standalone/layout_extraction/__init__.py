@@ -1,1 +1,0 @@
-"""Standalone layout extraction tests."""
