@@ -1,1 +1,0 @@
-"""Standalone reading order tests."""

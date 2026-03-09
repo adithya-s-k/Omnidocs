@@ -3252,7 +3252,7 @@ requires-dist = [
     { name = "timm", specifier = ">=1.0.24" },
     { name = "torch", specifier = ">=2.6" },
     { name = "torchvision" },
-    { name = "transformers", specifier = ">=4.57.6,<5.0.0" },
+    { name = "transformers", specifier = ">=4.49.0,<5.0.0" },
     { name = "vllm", marker = "extra == 'all'", specifier = ">=0.6.0" },
     { name = "vllm", marker = "extra == 'vllm'", specifier = ">=0.6.0" },
 ]
@@ -3302,13 +3302,13 @@ pytorch = [
     { name = "accelerate", specifier = ">=1.12.0" },
     { name = "qwen-vl-utils", specifier = ">=0.0.14" },
     { name = "torch", specifier = ">=2.6" },
-    { name = "transformers", specifier = ">=4.57.6,<5.0.0" },
+    { name = "transformers", specifier = ">=4.49.0,<5.0.0" },
 ]
 vllm = [
     { name = "accelerate", specifier = ">=1.12.0" },
     { name = "qwen-vl-utils", specifier = ">=0.0.14" },
     { name = "torch", specifier = ">=2.6" },
-    { name = "transformers", specifier = ">=4.57.6,<5.0.0" },
+    { name = "transformers", specifier = ">=4.49.0,<5.0.0" },
     { name = "vllm", specifier = ">=0.6.0" },
 ]
 

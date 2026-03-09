@@ -272,11 +272,11 @@ class DotsOCRTextExtractor(BaseTextExtractor):
 
         # Set dtype
         if config.torch_dtype == "float16":
-            model_kwargs["torch_dtype"] = torch.float16
+            model_kwargs["dtype"] = torch.float16
         elif config.torch_dtype == "bfloat16":
-            model_kwargs["torch_dtype"] = torch.bfloat16
+            model_kwargs["dtype"] = torch.bfloat16
         elif config.torch_dtype == "float32":
-            model_kwargs["torch_dtype"] = torch.float32
+            model_kwargs["dtype"] = torch.float32
 
         # Set attention implementation
         if config.attn_implementation != "eager":

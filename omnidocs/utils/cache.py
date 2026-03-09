@@ -63,7 +63,7 @@ def configure_backend_cache(cache_dir: Optional[str] = None) -> None:
     Configure cache directories for all backends.
 
     When OMNIDOCS_MODELS_DIR is set (or cache_dir is passed), this OVERWRITES
-    HF_HOME and TRANSFORMERS_CACHE so every backend downloads to the same place.
+    HF_HOME so every backend downloads to the same place.
 
     This is called automatically on ``import omnidocs``.
 
@@ -74,7 +74,6 @@ def configure_backend_cache(cache_dir: Optional[str] = None) -> None:
 
     # Overwrite HF_HOME so PyTorch, MLX, VLLM, and snapshot_download all use it
     os.environ["HF_HOME"] = cache_path
-    os.environ["TRANSFORMERS_CACHE"] = cache_path
 
     # huggingface_hub caches HF_HUB_CACHE at import time, so if it's already
     # imported we must patch the constants directly for hf_hub_download etc.
@@ -100,5 +99,4 @@ def get_storage_info() -> dict:
         "omnidocs_cache": str(get_model_cache_dir()),
         "omnidocs_models_dir_env": os.environ.get("OMNIDOCS_MODELS_DIR"),
         "hf_home": os.environ.get("HF_HOME"),
-        "transformers_cache": os.environ.get("TRANSFORMERS_CACHE"),
     }
