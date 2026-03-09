@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """DotsOCR text extraction - API backend (LiteLLM)."""
-import sys, os
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from helpers import Timer, check_api_keys, create_test_image, print_result, verify_text_result

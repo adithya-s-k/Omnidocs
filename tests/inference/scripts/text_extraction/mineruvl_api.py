@@ -6,9 +6,9 @@ against it. Validates both VLLM online serving and the omnidocs API backend.
 
 Requires: GPU container with vllm installed (runs on Modal via modal_runner).
 """
+import os
 import subprocess
 import sys
-import os
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

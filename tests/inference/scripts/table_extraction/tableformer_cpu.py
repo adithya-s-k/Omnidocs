@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """TableFormer table extraction - CPU."""
-import sys, os
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from helpers import Timer, create_table_image, print_result, verify_table_result

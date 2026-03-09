@@ -320,7 +320,7 @@ def _get_runner(spec):
     """Get the appropriate Modal function for a test spec."""
     import sys
     sys.path.insert(0, str(SCRIPT_DIR))
-    from registry import Backend, Task
+    from registry import Task
 
     if spec.gpu_type is None:
         return run_cpu_test
