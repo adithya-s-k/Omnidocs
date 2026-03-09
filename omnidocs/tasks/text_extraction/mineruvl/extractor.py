@@ -148,7 +148,7 @@ class MinerUVLTextExtractor(BaseTextExtractor):
         # Load model
         model_kwargs = {
             "trust_remote_code": config.trust_remote_code,
-            "torch_dtype": dtype,
+            "dtype": dtype,
             "cache_dir": str(cache_dir),
         }
         if device == "cuda":

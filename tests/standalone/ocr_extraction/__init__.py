@@ -1,1 +1,0 @@
-"""Standalone OCR extraction tests."""

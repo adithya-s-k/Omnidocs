@@ -89,16 +89,6 @@ class TestConfigureBackendCache:
         # Must be overwritten to the OMNIDOCS_MODELS_DIR value
         assert os.environ["HF_HOME"] == str(cache_dir)
 
-    def test_overwrites_transformers_cache(self, tmp_path, monkeypatch):
-        """TRANSFORMERS_CACHE is overwritten too."""
-        cache_dir = tmp_path / "cache"
-        monkeypatch.setenv("OMNIDOCS_MODELS_DIR", str(cache_dir))
-        monkeypatch.setenv("TRANSFORMERS_CACHE", "/old/path")
-
-        configure_backend_cache()
-
-        assert os.environ["TRANSFORMERS_CACHE"] == str(cache_dir)
-
     def test_custom_cache_dir_param(self, tmp_path, monkeypatch):
         """cache_dir parameter overrides environment."""
         custom_dir = tmp_path / "custom"
@@ -106,7 +96,6 @@ class TestConfigureBackendCache:
         configure_backend_cache(str(custom_dir))
 
         assert os.environ["HF_HOME"] == str(custom_dir)
-        assert os.environ["TRANSFORMERS_CACHE"] == str(custom_dir)
 
 
 class TestGetStorageInfo:
@@ -120,7 +109,7 @@ class TestGetStorageInfo:
         assert "omnidocs_cache" in result
         assert "omnidocs_models_dir_env" in result
         assert "hf_home" in result
-        assert "transformers_cache" in result
+        # transformers_cache was removed (deprecated by HuggingFace, HF_HOME is sufficient)
 
     def test_storage_info_accuracy(self, tmp_path, monkeypatch):
         """Returned values match actual env vars."""
