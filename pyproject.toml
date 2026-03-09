@@ -21,7 +21,6 @@ classifiers = [
 ]
 dependencies = [
     "doclayout-yolo>=0.0.4",
-    "docling-ibm-models>=3.4.0",
     "hf-transfer>=0.1.0",
     "huggingface-hub>=0.36.0",
     "litellm>=1.81.9",
@@ -36,7 +35,7 @@ dependencies = [
     "timm>=1.0.24",
     "torch>=2.6",
     "torchvision",
-    "transformers>=4.57.6,<5.0.0",
+    "transformers>=4.57.6",
 ]
 
 [project.urls]
@@ -61,8 +60,11 @@ mlx = [
     "mlx>=0.20.0",
     "mlx-vlm>=0.1.0",
 ]
+table = [
+    "docling-ibm-models>=3.4.0",
+]
 all = [
-    "omnidocs[pytorch,vllm]",
+    "omnidocs[pytorch,vllm,table]",
 ]
 
 [dependency-groups]
@@ -109,7 +111,7 @@ pytorch = [
     "accelerate>=1.12.0",
     "qwen-vl-utils>=0.0.14",
     "torch>=2.6",
-    "transformers>=4.57.6,<5.0.0",
+    "transformers>=4.57.6",
 ]
 vllm = [
     {include-group = "pytorch"},

@@ -108,7 +108,8 @@ class TableFormerExtractor(BaseTableExtractor):
             )
         except ImportError:
             raise ImportError(
-                "docling-ibm-models is required for TableFormerExtractor. Install with: pip install docling-ibm-models"
+                "TableFormer requires docling-ibm-models. "
+                "Install it with: pip install omnidocs[table]"
             )
 
         # Get artifacts path
