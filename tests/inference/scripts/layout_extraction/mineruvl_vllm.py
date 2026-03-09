@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """MinerU VL layout detection - VLLM backend."""
+
 import os
 import sys
 
@@ -28,9 +29,12 @@ with Timer("Inference") as t_infer:
     result = detector.extract(img)
 
 verify_layout_result(result)
-print_result("mineruvl_layout_vllm", {
-    "model": "MinerU2.5-2509-1.2B",
-    "num_boxes": len(result.bboxes),
-    "load_time": f"{t_load.elapsed:.2f}s",
-    "inference_time": f"{t_infer.elapsed:.2f}s",
-})
+print_result(
+    "mineruvl_layout_vllm",
+    {
+        "model": "MinerU2.5-2509-1.2B",
+        "num_boxes": len(result.bboxes),
+        "load_time": f"{t_load.elapsed:.2f}s",
+        "inference_time": f"{t_infer.elapsed:.2f}s",
+    },
+)

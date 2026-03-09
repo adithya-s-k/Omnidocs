@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Rule-based reading order prediction."""
+
 import os
 import sys
 
@@ -36,10 +37,13 @@ with Timer("Reading order") as t_order:
     )
 
 verify_reading_order_result(result)
-print_result("reading_order_rule_based", {
-    "model": "RuleBased",
-    "num_elements": len(result.elements),
-    "layout_time": f"{t_layout.elapsed:.2f}s",
-    "ocr_time": f"{t_ocr.elapsed:.2f}s",
-    "order_time": f"{t_order.elapsed:.2f}s",
-})
+print_result(
+    "reading_order_rule_based",
+    {
+        "model": "RuleBased",
+        "num_elements": len(result.elements),
+        "layout_time": f"{t_layout.elapsed:.2f}s",
+        "ocr_time": f"{t_ocr.elapsed:.2f}s",
+        "order_time": f"{t_order.elapsed:.2f}s",
+    },
+)

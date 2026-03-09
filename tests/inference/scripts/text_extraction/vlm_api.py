@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """VLM text extraction - API backend (LiteLLM / Gemini)."""
+
 import os
 import sys
 
@@ -24,9 +25,12 @@ with Timer("Inference") as t_infer:
     result = extractor.extract(img)
 
 verify_text_result(result)
-print_result("vlm_text_api", {
-    "model": result.model_name,
-    "content_length": len(result.content),
-    "load_time": f"{t_load.elapsed:.2f}s",
-    "inference_time": f"{t_infer.elapsed:.2f}s",
-})
+print_result(
+    "vlm_text_api",
+    {
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": f"{t_load.elapsed:.2f}s",
+        "inference_time": f"{t_infer.elapsed:.2f}s",
+    },
+)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """EasyOCR - GPU."""
+
 import os
 import sys
 
@@ -17,9 +18,12 @@ with Timer("Inference") as t_infer:
     result = extractor.extract(img)
 
 verify_ocr_result(result)
-print_result("easyocr_gpu", {
-    "model": "EasyOCR",
-    "num_blocks": len(result.text_blocks),
-    "load_time": f"{t_load.elapsed:.2f}s",
-    "inference_time": f"{t_infer.elapsed:.2f}s",
-})
+print_result(
+    "easyocr_gpu",
+    {
+        "model": "EasyOCR",
+        "num_blocks": len(result.text_blocks),
+        "load_time": f"{t_load.elapsed:.2f}s",
+        "inference_time": f"{t_infer.elapsed:.2f}s",
+    },
+)

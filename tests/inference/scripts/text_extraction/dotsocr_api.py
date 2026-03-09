@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """DotsOCR text extraction - API backend (LiteLLM)."""
+
 import os
 import sys
 
@@ -14,17 +15,18 @@ from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
 from omnidocs.tasks.text_extraction.dotsocr import DotsOCRAPIConfig
 
 with Timer("Model load") as t_load:
-    extractor = DotsOCRTextExtractor(
-        backend=DotsOCRAPIConfig()
-    )
+    extractor = DotsOCRTextExtractor(backend=DotsOCRAPIConfig())
 
 with Timer("Inference") as t_infer:
     result = extractor.extract(img)
 
 verify_text_result(result)
-print_result("dotsocr_text_api", {
-    "model": "dots.ocr",
-    "content_length": len(result.content),
-    "load_time": f"{t_load.elapsed:.2f}s",
-    "inference_time": f"{t_infer.elapsed:.2f}s",
-})
+print_result(
+    "dotsocr_text_api",
+    {
+        "model": "dots.ocr",
+        "content_length": len(result.content),
+        "load_time": f"{t_load.elapsed:.2f}s",
+        "inference_time": f"{t_infer.elapsed:.2f}s",
+    },
+)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """TableFormer table extraction - GPU."""
+
 import os
 import sys
 
@@ -17,9 +18,12 @@ with Timer("Inference") as t_infer:
     result = extractor.extract(img)
 
 verify_table_result(result)
-print_result("tableformer_gpu", {
-    "model": "TableFormer",
-    "num_tables": len(result.tables),
-    "load_time": f"{t_load.elapsed:.2f}s",
-    "inference_time": f"{t_infer.elapsed:.2f}s",
-})
+print_result(
+    "tableformer_gpu",
+    {
+        "model": "TableFormer",
+        "num_tables": len(result.tables),
+        "load_time": f"{t_load.elapsed:.2f}s",
+        "inference_time": f"{t_infer.elapsed:.2f}s",
+    },
+)

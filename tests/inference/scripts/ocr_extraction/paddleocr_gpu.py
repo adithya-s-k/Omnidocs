@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """PaddleOCR - GPU."""
+
 import os
 import sys
 
@@ -17,9 +18,12 @@ with Timer("Inference") as t_infer:
     result = extractor.extract(img)
 
 verify_ocr_result(result)
-print_result("paddleocr_gpu", {
-    "model": "PaddleOCR",
-    "num_blocks": len(result.text_blocks),
-    "load_time": f"{t_load.elapsed:.2f}s",
-    "inference_time": f"{t_infer.elapsed:.2f}s",
-})
+print_result(
+    "paddleocr_gpu",
+    {
+        "model": "PaddleOCR",
+        "num_blocks": len(result.text_blocks),
+        "load_time": f"{t_load.elapsed:.2f}s",
+        "inference_time": f"{t_infer.elapsed:.2f}s",
+    },
+)

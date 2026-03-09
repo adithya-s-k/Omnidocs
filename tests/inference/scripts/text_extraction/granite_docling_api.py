@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Granite Docling text extraction - API backend (LiteLLM)."""
+
 import os
 import sys
 
@@ -14,17 +15,18 @@ from omnidocs.tasks.text_extraction import GraniteDoclingTextExtractor
 from omnidocs.tasks.text_extraction.granitedocling import GraniteDoclingTextAPIConfig
 
 with Timer("Model load") as t_load:
-    extractor = GraniteDoclingTextExtractor(
-        backend=GraniteDoclingTextAPIConfig()
-    )
+    extractor = GraniteDoclingTextExtractor(backend=GraniteDoclingTextAPIConfig())
 
 with Timer("Inference") as t_infer:
     result = extractor.extract(img)
 
 verify_text_result(result)
-print_result("granite_docling_text_api", {
-    "model": result.model_name,
-    "content_length": len(result.content),
-    "load_time": f"{t_load.elapsed:.2f}s",
-    "inference_time": f"{t_infer.elapsed:.2f}s",
-})
+print_result(
+    "granite_docling_text_api",
+    {
+        "model": result.model_name,
+        "content_length": len(result.content),
+        "load_time": f"{t_load.elapsed:.2f}s",
+        "inference_time": f"{t_infer.elapsed:.2f}s",
+    },
+)

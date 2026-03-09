@@ -35,9 +35,7 @@ MODEL_CACHE_DIR = "/data/.cache"
 # --- VLLM Image ---
 cuda_vllm = "12.8.1"
 VLLM_IMAGE = (
-    modal.Image.from_registry(
-        f"nvidia/cuda:{cuda_vllm}-devel-ubuntu24.04", add_python="3.12"
-    )
+    modal.Image.from_registry(f"nvidia/cuda:{cuda_vllm}-devel-ubuntu24.04", add_python="3.12")
     .apt_install("libopenmpi-dev", "libnuma-dev", "libgl1", "libglib2.0-0")
     .run_commands("pip install uv")
     .run_commands("uv pip install vllm --system")
@@ -73,9 +71,7 @@ flash_attn_wheel = (
     "flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp312-cp312-linux_x86_64.whl"
 )
 PYTORCH_IMAGE = (
-    modal.Image.from_registry(
-        f"nvidia/cuda:{cuda_pytorch}-devel-ubuntu24.04", add_python="3.12"
-    )
+    modal.Image.from_registry(f"nvidia/cuda:{cuda_pytorch}-devel-ubuntu24.04", add_python="3.12")
     .apt_install("libglib2.0-0", "libgl1", "libglx-mesa0", "libgl1-mesa-dri")
     .run_commands("pip install uv")
     .add_local_dir(
@@ -103,12 +99,14 @@ PYTORCH_IMAGE = (
 
 # --- OCR Image (extends PyTorch with tesseract) ---
 OCR_IMAGE = (
-    modal.Image.from_registry(
-        f"nvidia/cuda:{cuda_pytorch}-devel-ubuntu24.04", add_python="3.12"
-    )
+    modal.Image.from_registry(f"nvidia/cuda:{cuda_pytorch}-devel-ubuntu24.04", add_python="3.12")
     .apt_install(
-        "libglib2.0-0", "libgl1", "libglx-mesa0", "libgl1-mesa-dri",
-        "tesseract-ocr", "libtesseract-dev",
+        "libglib2.0-0",
+        "libgl1",
+        "libglx-mesa0",
+        "libgl1-mesa-dri",
+        "tesseract-ocr",
+        "libtesseract-dev",
     )
     .run_commands("pip install uv")
     .add_local_dir(
@@ -138,8 +136,12 @@ OCR_IMAGE = (
 CPU_IMAGE = (
     modal.Image.debian_slim(python_version="3.12")
     .apt_install(
-        "libglib2.0-0", "libgl1", "libglx-mesa0", "libgl1-mesa-dri",
-        "tesseract-ocr", "libtesseract-dev",
+        "libglib2.0-0",
+        "libgl1",
+        "libglx-mesa0",
+        "libgl1-mesa-dri",
+        "tesseract-ocr",
+        "libtesseract-dev",
     )
     .run_commands("pip install uv")
     .add_local_dir(
@@ -216,7 +218,7 @@ def _execute_script(script_module: str) -> dict:
     for line in output.split("\n"):
         if line.startswith("__RESULT_JSON__:"):
             try:
-                result = json.loads(line[len("__RESULT_JSON__:"):])
+                result = json.loads(line[len("__RESULT_JSON__:") :])
             except json.JSONDecodeError:
                 pass
             break
@@ -319,6 +321,7 @@ GPU_RUNNERS = {
 def _get_runner(spec):
     """Get the appropriate Modal function for a test spec."""
     import sys
+
     sys.path.insert(0, str(SCRIPT_DIR))
     from registry import Task
 
@@ -367,6 +370,7 @@ def main(
     """
     # Import registry locally - not available on remote containers
     import sys
+
     sys.path.insert(0, str(SCRIPT_DIR))
     from registry import Backend, Task, get_test_by_name, get_tests, list_tests
 

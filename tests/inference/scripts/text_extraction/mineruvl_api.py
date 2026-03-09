@@ -6,6 +6,7 @@ against it. Validates both VLLM online serving and the omnidocs API backend.
 
 Requires: GPU container with vllm installed (runs on Modal via modal_runner).
 """
+
 import os
 import subprocess
 import sys
@@ -22,18 +23,29 @@ CACHE_DIR = os.environ.get("HF_HOME", "/data/.cache")
 # ============= Start VLLM server =============
 print("Starting VLLM server...")
 cmd = [
-    "vllm", "serve", MODEL_NAME,
-    "--served-model-name", "mineru-vl",
-    "--host", "0.0.0.0",
-    "--port", str(VLLM_PORT),
-    "--gpu-memory-utilization", "0.85",
-    "--tensor-parallel-size", "1",
-    "--max-model-len", "16384",
+    "vllm",
+    "serve",
+    MODEL_NAME,
+    "--served-model-name",
+    "mineru-vl",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    str(VLLM_PORT),
+    "--gpu-memory-utilization",
+    "0.85",
+    "--tensor-parallel-size",
+    "1",
+    "--max-model-len",
+    "16384",
     "--trust-remote-code",
-    "--download-dir", CACHE_DIR,
-    "--dtype", "bfloat16",
+    "--download-dir",
+    CACHE_DIR,
+    "--dtype",
+    "bfloat16",
     "--enforce-eager",
-    "--limit-mm-per-prompt", '{"image": 4}',
+    "--limit-mm-per-prompt",
+    '{"image": 4}',
 ]
 print(f"Command: {' '.join(cmd)}")
 
@@ -96,12 +108,15 @@ try:
         result = extractor.extract(img)
 
     verify_text_result(result)
-    print_result("mineruvl_text_api", {
-        "model": result.model_name,
-        "content_length": len(result.content),
-        "load_time": f"{t_load.elapsed:.2f}s",
-        "inference_time": f"{t_infer.elapsed:.2f}s",
-    })
+    print_result(
+        "mineruvl_text_api",
+        {
+            "model": result.model_name,
+            "content_length": len(result.content),
+            "load_time": f"{t_load.elapsed:.2f}s",
+            "inference_time": f"{t_infer.elapsed:.2f}s",
+        },
+    )
 finally:
     # Clean shutdown
     vllm_proc.terminate()

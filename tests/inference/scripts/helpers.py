@@ -26,6 +26,7 @@ def setup_vllm_env():
 
     # Force CUDA initialization in parent process before VLLM import.
     import torch
+
     torch.cuda.is_available()
     if torch.cuda.is_available():
         torch.cuda.init()
@@ -77,12 +78,8 @@ def create_test_image(width=800, height=1000):
     draw = ImageDraw.Draw(img)
 
     try:
-        title_font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24
-        )
-        body_font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14
-        )
+        title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
+        body_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
     except (OSError, IOError):
         title_font = ImageFont.load_default()
         body_font = ImageFont.load_default()
@@ -100,8 +97,7 @@ def create_test_image(width=800, height=1000):
         "that can be used for testing text extraction capabilities.",
         "The second paragraph provides additional content. Testing various scenarios "
         "helps ensure robust extraction across different document layouts.",
-        "A third paragraph concludes the main text section. This demonstrates "
-        "multi-paragraph document handling.",
+        "A third paragraph concludes the main text section. This demonstrates multi-paragraph document handling.",
     ]
 
     text_width = width - 2 * margin
@@ -174,9 +170,7 @@ def create_table_image(rows=4, cols=3):
     draw = ImageDraw.Draw(img)
 
     try:
-        font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12
-        )
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
     except (OSError, IOError):
         font = ImageFont.load_default()
 
@@ -232,9 +226,7 @@ def verify_text_result(result, min_length=10):
     """
     assert hasattr(result, "content"), "Result missing 'content' attribute"
     assert isinstance(result.content, str), f"content is {type(result.content)}, expected str"
-    assert len(result.content) >= min_length, (
-        f"Content too short: {len(result.content)} chars (min {min_length})"
-    )
+    assert len(result.content) >= min_length, f"Content too short: {len(result.content)} chars (min {min_length})"
     print(f"[Verify] Text OK: {len(result.content)} chars")
 
 
@@ -246,9 +238,7 @@ def verify_layout_result(result, min_boxes=1):
         min_boxes: Minimum number of bounding boxes expected.
     """
     assert hasattr(result, "bboxes"), "Result missing 'bboxes' attribute"
-    assert len(result.bboxes) >= min_boxes, (
-        f"Too few boxes: {len(result.bboxes)} (min {min_boxes})"
-    )
+    assert len(result.bboxes) >= min_boxes, f"Too few boxes: {len(result.bboxes)} (min {min_boxes})"
     for box in result.bboxes:
         assert hasattr(box, "label"), "Box missing 'label' attribute"
         assert hasattr(box, "confidence"), "Box missing 'confidence' attribute"
@@ -263,9 +253,7 @@ def verify_ocr_result(result, min_blocks=1):
         min_blocks: Minimum number of text blocks expected.
     """
     assert hasattr(result, "text_blocks"), "Result missing 'text_blocks' attribute"
-    assert len(result.text_blocks) >= min_blocks, (
-        f"Too few blocks: {len(result.text_blocks)} (min {min_blocks})"
-    )
+    assert len(result.text_blocks) >= min_blocks, f"Too few blocks: {len(result.text_blocks)} (min {min_blocks})"
     for block in result.text_blocks:
         assert hasattr(block, "text"), "Block missing 'text' attribute"
     print(f"[Verify] OCR OK: {len(result.text_blocks)} blocks")
@@ -279,9 +267,7 @@ def verify_table_result(result, min_tables=1):
         min_tables: Minimum number of tables expected.
     """
     assert hasattr(result, "tables"), "Result missing 'tables' attribute"
-    assert len(result.tables) >= min_tables, (
-        f"Too few tables: {len(result.tables)} (min {min_tables})"
-    )
+    assert len(result.tables) >= min_tables, f"Too few tables: {len(result.tables)} (min {min_tables})"
     print(f"[Verify] Table OK: {len(result.tables)} tables")
 
 
@@ -293,9 +279,7 @@ def verify_reading_order_result(result, min_elements=1):
         min_elements: Minimum number of ordered elements expected.
     """
     assert hasattr(result, "elements"), "Result missing 'elements' attribute"
-    assert len(result.elements) >= min_elements, (
-        f"Too few elements: {len(result.elements)} (min {min_elements})"
-    )
+    assert len(result.elements) >= min_elements, f"Too few elements: {len(result.elements)} (min {min_elements})"
     print(f"[Verify] Reading order OK: {len(result.elements)} elements")
 
 

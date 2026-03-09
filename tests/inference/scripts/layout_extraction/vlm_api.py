@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """VLM layout detection - API backend (LiteLLM / Gemini)."""
+
 import os
 import sys
 
@@ -24,9 +25,12 @@ with Timer("Inference") as t_infer:
     result = detector.extract(img)
 
 verify_layout_result(result)
-print_result("vlm_layout_api", {
-    "model": "gemini-2.5-flash",
-    "num_boxes": len(result.bboxes),
-    "load_time": f"{t_load.elapsed:.2f}s",
-    "inference_time": f"{t_infer.elapsed:.2f}s",
-})
+print_result(
+    "vlm_layout_api",
+    {
+        "model": "gemini-2.5-flash",
+        "num_boxes": len(result.bboxes),
+        "load_time": f"{t_load.elapsed:.2f}s",
+        "inference_time": f"{t_infer.elapsed:.2f}s",
+    },
+)
