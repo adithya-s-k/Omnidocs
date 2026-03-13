@@ -27,12 +27,14 @@ Example:
     print(result.content)
     ```
 """
-
+import base64
+import io
 import os
 import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Union
 
+import litellm
 import numpy as np
 from PIL import Image
 
@@ -358,7 +360,7 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
                             texts.append(f.read())
 
             return "\n\n".join(texts)
-    
+
     def _infer_vllm(self, image: Image.Image) -> str:
         """VLLM inference."""
         if image.mode != "RGB":
@@ -430,10 +432,6 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
     #     return vlm_completion(vlm_config, DEEPSEEK_PROMPTS["markdown"], image)
     def _infer_api(self, image: Image.Image) -> str:
         """API inference via litellm (Novita/OpenAI-compatible)."""
-        import base64
-        import io
-        import litellm
-
         config = self.backend_config
 
         # Encode image

@@ -25,8 +25,6 @@ class TestDeepSeekOCRTextPyTorchConfig:
         assert config.use_flash_attention is False
         assert config.trust_remote_code is True
         assert config.cache_dir is None
-        assert config.max_new_tokens == 8192
-        assert config.temperature == 0.0
         assert config.base_size == 1024
         assert config.image_size == 768
         assert config.crop_mode is True
@@ -53,8 +51,6 @@ class TestDeepSeekOCRTextPyTorchConfig:
             device="cpu",
             torch_dtype="float16",
             use_flash_attention=True,
-            max_new_tokens=4096,
-            temperature=0.1,
             base_size=512,
             image_size=512,
             crop_mode=False,
@@ -63,8 +59,6 @@ class TestDeepSeekOCRTextPyTorchConfig:
         assert config.device == "cpu"
         assert config.torch_dtype == "float16"
         assert config.use_flash_attention is True
-        assert config.max_new_tokens == 4096
-        assert config.temperature == 0.1
         assert config.base_size == 512
         assert config.image_size == 512
         assert config.crop_mode is False
@@ -142,23 +136,29 @@ class TestDeepSeekOCRTextVLLMConfig:
 
         config = DeepSeekOCRTextVLLMConfig()
 
-        assert config.model == "deepseek-ai/DeepSeek-OCR-2"
+        assert config.model == "deepseek-ai/DeepSeek-OCR"
         assert config.tensor_parallel_size == 1
         assert config.gpu_memory_utilization == 0.9
-        assert config.max_model_len == 32768
+        assert config.max_model_len == 8192
         assert config.trust_remote_code is True
         assert config.enforce_eager is False
         assert config.max_tokens == 8192
         assert config.temperature == 0.0
         assert config.download_dir is None
         assert config.disable_custom_all_reduce is False
+        assert config.enable_prefix_caching is False
+        assert config.mm_processor_cache_gb == 0
+        assert config.use_ngram_logits_processor is True
+        assert config.ngram_size == 30
+        assert config.ngram_window_size == 90
+        assert config.skip_special_tokens is False
 
-    def test_default_model_is_v2(self):
-        """Test that the default model is DeepSeek-OCR-2."""
+    def test_default_model_is_v1(self):
+        """Test that the default model is DeepSeek-OCR."""
         from omnidocs.tasks.text_extraction.deepseek import DeepSeekOCRTextVLLMConfig
 
         config = DeepSeekOCRTextVLLMConfig()
-        assert config.model == "deepseek-ai/DeepSeek-OCR-2"
+        assert config.model == "deepseek-ai/DeepSeek-OCR"
 
     def test_custom_values(self):
         """Test custom configuration values."""
@@ -212,7 +212,7 @@ class TestDeepSeekOCRTextVLLMConfig:
             DeepSeekOCRTextVLLMConfig(max_tokens=100)  # below min 256
 
         with pytest.raises(ValidationError):
-            DeepSeekOCRTextVLLMConfig(max_tokens=100000)  # above max 32768
+            DeepSeekOCRTextVLLMConfig(max_tokens=8193)  # above max 32768
 
     def test_extra_forbid(self):
         """Test that extra parameters raise error."""

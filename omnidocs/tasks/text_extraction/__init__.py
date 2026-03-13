@@ -27,6 +27,7 @@ Example:
 """
 
 from .base import BaseTextExtractor
+from .deepseek import DeepSeekOCRTextExtractor
 from .dotsocr import DotsOCRTextExtractor
 from .granitedocling import GraniteDoclingTextExtractor
 from .mineruvl import MinerUVLTextExtractor
@@ -34,7 +35,6 @@ from .models import DotsOCRTextOutput, LayoutElement, OutputFormat, TextOutput
 from .nanonets import NanonetsTextExtractor
 from .qwen import QwenTextExtractor
 from .vlm import VLMTextExtractor
-from .deepseek import DeepSeekOCRTextExtractor
 
 __all__ = [
     # Base
