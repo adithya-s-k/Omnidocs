@@ -1,7 +1,7 @@
 """LightOn text extractor with multi-backend support.
 
 LightOn OCR is optimized for document text extraction and recognition.
-Supports multiple backends: PyTorch, VLLM, MLX, and API.
+Supports multiple backends: PyTorch, VLLM, and MLX.
 """
 
 from pathlib import Path
@@ -10,11 +10,10 @@ from typing import TYPE_CHECKING, Literal, Union
 import numpy as np
 from PIL import Image
 
-from ....cache import add_reference, get_cache_key, get_cached
+from ....cache import add_reference, get_cache_key, get_cached, set_cached
 from ....utils.cache import get_model_cache_dir
 from ..base import BaseTextExtractor
 from ..models import OutputFormat, TextOutput
-from .utils import simple_post_process
 
 if TYPE_CHECKING:
     from .mlx import LightOnTextMLXConfig
@@ -28,6 +27,13 @@ LightOnTextBackendConfig = Union[
     "LightOnTextMLXConfig",
 ]
 
+def _simple_post_process(text: str) -> str:
+    """Remove special tokens and clean up whitespace."""
+    for token in ["<|im_start|>", "<|im_end|>", "<|end_header_id|>"]:
+        text = text.replace(token, "")
+    text = text.strip()
+    lines = [line.strip() for line in text.split("\n")]
+    return "\n".join(line for line in lines if line)
 
 class LightOnTextExtractor(BaseTextExtractor):
     """
@@ -109,6 +115,11 @@ class LightOnTextExtractor(BaseTextExtractor):
             self._load_mlx_backend()
         else:
             raise TypeError(f"Unknown backend config: {config_type}")
+
+        if self._processor is not None:
+            set_cached(self._cache_key, (self._client, self._processor), owner=self)
+        else:
+            set_cached(self._cache_key, self._client, owner=self)
 
         self._loaded = True
 
@@ -243,7 +254,7 @@ class LightOnTextExtractor(BaseTextExtractor):
             raise TypeError(f"Unknown backend: {config_type}")
 
         # Post-process output
-        content = simple_post_process(raw_output)
+        content = _simple_post_process(raw_output)
 
         # Convert to desired format
         if output_format == "html":
@@ -380,9 +391,9 @@ class LightOnTextExtractor(BaseTextExtractor):
 
     def _markdown_to_html(self, markdown_text: str) -> str:
         """Convert markdown to HTML (basic conversion)."""
-        # Basic markdown to HTML conversion
-        html = markdown_text.replace("\n", "<br>\n")
-        return f"<div>{html}</div>"
+        from html import escape
+        safe = escape(markdown_text).replace("\n", "<br>\n")
+        return f"<div>{safe}</div>"
 
     def _html_to_text(self, html_text: str) -> str:
         """Convert HTML to plain text."""
