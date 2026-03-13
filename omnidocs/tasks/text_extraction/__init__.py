@@ -28,13 +28,14 @@ Example:
 
 from .base import BaseTextExtractor
 from .dotsocr import DotsOCRTextExtractor
+from .glmocr import GLMOCRTextExtractor
 from .granitedocling import GraniteDoclingTextExtractor
 from .mineruvl import MinerUVLTextExtractor
 from .models import DotsOCRTextOutput, LayoutElement, OutputFormat, TextOutput
 from .nanonets import NanonetsTextExtractor
 from .qwen import QwenTextExtractor
 from .vlm import VLMTextExtractor
-from .glmocr import GLMOCRTextExtractor
+
 __all__ = [
     # Base
     "BaseTextExtractor",
@@ -51,5 +52,5 @@ __all__ = [
     "MinerUVLTextExtractor",
     "VLMTextExtractor",
     "GLMOCRTextExtractor",
-    
+
 ]

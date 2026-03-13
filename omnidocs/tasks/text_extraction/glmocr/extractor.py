@@ -13,7 +13,6 @@ Key differences from GLM-V:
   - No <think> tokens, no <|begin_of_box|> — clean output
 """
 import os
-import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Union
 
@@ -231,6 +230,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
 
     def _infer_pytorch(self, image: Image.Image) -> str:
         import tempfile
+
         import torch
 
         config = self.backend_config
@@ -342,7 +342,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         finally:
             if temp_path and os.path.exists(temp_path):
                 os.unlink(temp_path)
-                
+
     def _infer_api(self, image: Image.Image) -> str:
         from omnidocs.vlm import VLMAPIConfig, vlm_completion
 

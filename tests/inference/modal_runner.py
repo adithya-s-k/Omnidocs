@@ -204,7 +204,9 @@ GLM_VLLM_IMAGE = (
         copy=True,
         ignore=["**/__pycache__", "**/*.pyc"],
     )
-    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR, "HF_HOME": MODEL_CACHE_DIR, "VLLM_USE_V1": "0", "VLLM_DISABLE_V1": "1"})
+    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1",
+        "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR,
+        "HF_HOME": MODEL_CACHE_DIR, "VLLM_USE_V1": "0", "VLLM_DISABLE_V1": "1"})
 )
 # ============= Modal App =============
 
