@@ -32,6 +32,6 @@ print_result(
         "model": result.model_name,
         "content_length": len(result.content),
         "load_time": f"{t_load.elapsed:.2f}s",
-        "inference_time": f"{t_infer.elapsed:.2f}s", 
+        "inference_time": f"{t_infer.elapsed:.2f}s",
     },
 )

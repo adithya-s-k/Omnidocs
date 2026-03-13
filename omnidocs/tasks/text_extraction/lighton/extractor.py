@@ -169,7 +169,7 @@ class LightOnTextExtractor(BaseTextExtractor):
         self._client = _TransformersClient(model, processor, config.max_new_tokens)
 
     def _load_vllm_backend(self) -> None:
-        """Load VLLM backend."""    
+        """Load VLLM backend."""
         from transformers import AutoProcessor
         from vllm import LLM, SamplingParams
 
@@ -194,17 +194,8 @@ class LightOnTextExtractor(BaseTextExtractor):
         )
         self._sampling_params_class = SamplingParams
 
-    # def _load_mlx_backend(self) -> None:
-    #     """Load MLX backend."""
-    #     from mlx_vlm import load
-
-    #     config = self.backend_config
-    #     print(f"Loading MLX model from {config.model}...")
-    #     model, processor = load(config.model, cache_dir=config.cache_dir)
-    #     self._client = _MLXClient(model, processor, config.max_tokens)
-
     def _load_mlx_backend(self) -> None:
-        from mlx_vlm import generate, load
+        from mlx_vlm import load
         from mlx_vlm.prompt_utils import apply_chat_template
         from mlx_vlm.utils import load_config
 
@@ -308,9 +299,10 @@ class LightOnTextExtractor(BaseTextExtractor):
             )
 
         # Decode
+        generated_ids = output_ids[0, inputs["input_ids"].shape[1]:]
         raw_output = self._client.processor.decode(
-            output_ids[0],
-            skip_special_tokens=False,
+            generated_ids,
+            skip_special_tokens=True,
         )
 
         return raw_output
@@ -356,24 +348,10 @@ class LightOnTextExtractor(BaseTextExtractor):
 
         return outputs[0].outputs[0].text
 
-    # def _extract_mlx(self, image: Image.Image) -> str:
-    #     """Extract text using MLX backend."""
-    #     from mlx_vlm import generate
-
-    #     prompt = "Transcribe this document."
-    #     response = generate(
-    #         model=self._client.model,
-    #         processor=self._client.processor,
-    #         prompt=prompt,
-    #         image=image,
-    #         max_tokens=self._client.max_tokens,
-    #     )
-
-    #     return response
-
     def _extract_mlx(self, image: Image.Image) -> str:
         import os
         import tempfile
+
         from mlx_vlm import generate
 
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
