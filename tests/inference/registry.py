@@ -197,6 +197,31 @@ TEST_REGISTRY: List[TestSpec] = [
         gpu_type="L40S:1",
         tags=["mineruvl", "vlm", "api", "online"],
     ),
+    # GLM-OCR Text Extractor
+    TestSpec(
+        name="glm_ocr_text_pytorch",
+        module="text_extraction.glm_ocr_pytorch",
+        backend=Backend.PYTORCH_GPU,
+        task=Task.TEXT,
+        gpu_type="A10G:1",
+        tags=["glm", "ocr"],
+    ),
+    TestSpec(
+        name="glm_ocr_text_vllm",
+        module="text_extraction.glm_ocr_vllm",
+        backend=Backend.VLLM,
+        task=Task.TEXT,
+        gpu_type="L40S:1",
+        tags=["glm", "ocr"],
+    ),
+    TestSpec(
+        name="glm_ocr_text_api",
+        module="text_extraction.glm_ocr_api",
+        backend=Backend.API,
+        task=Task.TEXT,
+        gpu_type=None,
+        tags=["glm", "ocr", "api"],
+    ),
     # VLM Text Extractor (generic LiteLLM)
     TestSpec(
         name="vlm_text_api",
