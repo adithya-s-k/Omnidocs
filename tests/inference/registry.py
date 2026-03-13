@@ -206,6 +206,38 @@ TEST_REGISTRY: List[TestSpec] = [
         gpu_type=None,
         tags=["vlm", "api", "litellm"],
     ),
+    TestSpec(
+        name="deepseek_text_vllm",
+        module="text_extraction.deepseek_ocr_vllm",
+        backend=Backend.VLLM,
+        task=Task.TEXT,
+        gpu_type="L40S:1",
+        tags=["deepseek", "ocr"],
+    ),
+    TestSpec(
+        name="deepseek_text_pytorch",
+        module="text_extraction.deepseek_ocr_pytorch",
+        backend=Backend.PYTORCH_GPU,
+        task=Task.TEXT,
+        gpu_type="A10G:1",
+        tags=["deepseek", "ocr"],
+    ),
+    TestSpec(
+        name="deepseek_text_mlx",
+        module="text_extraction.deepseek_ocr_mlx",
+        backend=Backend.MLX,
+        task=Task.TEXT,
+        gpu_type=None,
+        tags=["deepseek", "ocr", "apple_silicon"],
+    ),
+    TestSpec(
+        name="deepseek_text_api",
+        module="text_extraction.deepseek_ocr_api",
+        backend=Backend.API,
+        task=Task.TEXT,
+        gpu_type=None,
+        tags=["deepseek", "ocr", "api"],
+    ),
     # ============================================================
     # LAYOUT EXTRACTION
     # ============================================================

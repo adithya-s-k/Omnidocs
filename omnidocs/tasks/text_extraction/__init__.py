@@ -11,6 +11,7 @@ Available Extractors:
     - NanonetsTextExtractor: Nanonets OCR2-3B for text extraction (PyTorch/VLLM)
     - GraniteDoclingTextExtractor: IBM Granite Docling for document conversion (multi-backend)
     - MinerUVLTextExtractor: MinerU VL 1.2B with layout-aware two-step extraction (multi-backend)
+    - DeepSeekOCRTextExtractor: DeepSeek-OCR-2 ~3B high-accuracy OCR (PyTorch/VLLM/MLX/API)
 
 Example:
     ```python
@@ -33,6 +34,7 @@ from .models import DotsOCRTextOutput, LayoutElement, OutputFormat, TextOutput
 from .nanonets import NanonetsTextExtractor
 from .qwen import QwenTextExtractor
 from .vlm import VLMTextExtractor
+from .deepseek import DeepSeekOCRTextExtractor
 
 __all__ = [
     # Base
@@ -49,4 +51,5 @@ __all__ = [
     "GraniteDoclingTextExtractor",
     "MinerUVLTextExtractor",
     "VLMTextExtractor",
+    "DeepSeekOCRTextExtractor",
 ]

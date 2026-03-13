@@ -81,6 +81,7 @@ PYTORCH_IMAGE = (
         ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
     )
     .run_commands("uv pip install '/opt/omnidocs[pytorch]' --system")
+    # .run_commands("uv pip install 'transformers==4.46.3' --system") 
     .uv_pip_install(flash_attn_wheel)
     .add_local_dir(
         str(SCRIPTS_DIR),
