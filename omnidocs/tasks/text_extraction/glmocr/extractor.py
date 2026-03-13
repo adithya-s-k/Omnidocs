@@ -28,12 +28,14 @@ from ..models import OutputFormat, TextOutput
 
 if TYPE_CHECKING:
     from .api import GLMOCRAPIConfig
+    from .mlx import GLMOCRMLXConfig
     from .pytorch import GLMOCRPyTorchConfig
     from .vllm import GLMOCRVLLMConfig
 
 GLMOCRBackendConfig = Union[
     "GLMOCRPyTorchConfig",
     "GLMOCRVLLMConfig",
+    "GLMOCRMLXConfig",
     "GLMOCRAPIConfig",
 ]
 
@@ -64,6 +66,9 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         self._processor: Any = None
         self._loaded = False
         self._sampling_params_class: Any = None
+        self._mlx_config: Any = None
+        self._apply_chat_template: Any = None
+        self._generate: Any = None
         self._load_model()
 
     def _load_model(self) -> None:
@@ -79,12 +84,20 @@ class GLMOCRTextExtractor(BaseTextExtractor):
                 if config_type == "GLMOCRVLLMConfig":
                     from vllm import SamplingParams
                     self._sampling_params_class = SamplingParams
+                elif config_type == "GLMOCRMLXConfig":
+                    from mlx_vlm import generate
+                    from mlx_vlm.prompt_utils import apply_chat_template
+                    from mlx_vlm.utils import load_config
+                    self._mlx_config = load_config(self.backend_config.model)
+                    self._apply_chat_template = apply_chat_template
+                    self._generate = generate
                 self._loaded = True
                 return
 
         dispatch = {
             "GLMOCRPyTorchConfig": self._load_pytorch_backend,
             "GLMOCRVLLMConfig": self._load_vllm_backend,
+            "GLMOCRMLXConfig": self._load_mlx_backend,
             "GLMOCRAPIConfig": self._load_api_backend,
         }
         loader = dispatch.get(config_type)
@@ -162,6 +175,26 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         )
         self._sampling_params_class = SamplingParams
 
+    def _load_mlx_backend(self) -> None:
+        try:
+            from mlx_vlm import generate, load
+            from mlx_vlm.prompt_utils import apply_chat_template
+            from mlx_vlm.utils import load_config
+        except ImportError as e:
+            raise ImportError(
+                "MLX backend requires mlx and mlx-vlm>=0.3.11. "
+                "Install with: uv add mlx 'mlx-vlm>=0.3.11'"
+            ) from e
+
+        config = self.backend_config
+        if config.cache_dir:
+            os.environ["HF_HOME"] = config.cache_dir
+
+        self._backend, self._processor = load(config.model)
+        self._mlx_config = load_config(config.model)
+        self._apply_chat_template = apply_chat_template
+        self._generate = generate
+
     def _load_api_backend(self) -> None:
         pass
 
@@ -180,6 +213,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         dispatch = {
             "GLMOCRPyTorchConfig": self._infer_pytorch,
             "GLMOCRVLLMConfig": self._infer_vllm,
+            "GLMOCRMLXConfig": self._infer_mlx,
             "GLMOCRAPIConfig": self._infer_api,
         }
         raw_output = dispatch[config_type](pil_image)
@@ -280,6 +314,35 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         )
         return outputs[0].outputs[0].text
 
+    def _infer_mlx(self, image: Image.Image) -> str:
+        import tempfile
+
+        temp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+                temp_path = f.name
+                image.save(f, format="PNG")
+
+            formatted_prompt = self._apply_chat_template(
+                self._processor, self._mlx_config, GLMOCR_PROMPT, num_images=1
+            )
+
+            config = self.backend_config
+            result = self._generate(
+                self._backend,
+                self._processor,
+                formatted_prompt,
+                [temp_path],
+                max_tokens=config.max_tokens,
+                temp=config.temperature,
+                verbose=False,
+            )
+
+            return result.text if hasattr(result, "text") else str(result)
+        finally:
+            if temp_path and os.path.exists(temp_path):
+                os.unlink(temp_path)
+                
     def _infer_api(self, image: Image.Image) -> str:
         from omnidocs.vlm import VLMAPIConfig, vlm_completion
 

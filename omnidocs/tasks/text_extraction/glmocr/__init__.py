@@ -20,6 +20,7 @@ License: Apache 2.0
 
 from .api import GLMOCRAPIConfig
 from .extractor import GLMOCRTextExtractor
+from .mlx import GLMOCRMLXConfig
 from .pytorch import GLMOCRPyTorchConfig
 from .vllm import GLMOCRVLLMConfig
 
@@ -27,5 +28,6 @@ __all__ = [
     "GLMOCRTextExtractor",
     "GLMOCRPyTorchConfig",
     "GLMOCRVLLMConfig",
+    "GLMOCRMLXConfig",
     "GLMOCRAPIConfig",
 ]
