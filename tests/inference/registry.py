@@ -217,10 +217,18 @@ TEST_REGISTRY: List[TestSpec] = [
     TestSpec(
         name="glm_ocr_text_api",
         module="text_extraction.glm_ocr_api",
-        backend=Backend.API,
+        backend=Backend.VLLM,  # not API — needs GPU for local vLLM
+        task=Task.TEXT,
+        gpu_type="L40S:1",
+        tags=["glm", "ocr"],  # no "api" tag — routes to GLM_VLLM_IMAGE
+    ),
+    TestSpec(
+        name="glm_ocr_text_mlx",
+        module="text_extraction.glm_ocr_mlx",
+        backend=Backend.MLX,
         task=Task.TEXT,
         gpu_type=None,
-        tags=["glm", "ocr", "api"],
+        tags=["glm", "ocr", "apple_silicon"],
     ),
     # VLM Text Extractor (generic LiteLLM)
     TestSpec(

@@ -9,8 +9,7 @@ class GLMOCRAPIConfig(BaseModel):
     """
     API backend configuration for GLM-OCR.
 
-    GLM-OCR is not yet widely available via public APIs.
-    Use a self-hosted vLLM server or ZhipuAI if/when they expose it.
+    Primary provider: ZhipuAI / BigModel (official) — get key at open.bigmodel.cn.
 
     Example:
 ```python
@@ -24,16 +23,16 @@ class GLMOCRAPIConfig(BaseModel):
     """
 
     model: str = Field(
-        default="zai-org/GLM-OCR",
-        description="Model identifier. For litellm: 'openai/zai-org/GLM-OCR' for self-hosted.",
+        default="openai/glm-ocr",
+        description="Model in litellm openai/ format matching --served-model-name.",
     )
     api_key: Optional[str] = Field(
         default=None,
         description="API key.",
     )
-    api_base: Optional[str] = Field(
+    api_base: str = Field(
         default=None,
-        description="API base URL (e.g. self-hosted vLLM server).",
+        description="Base URL of vLLM server (e.g. http://localhost:8192/v1).",
     )
     max_tokens: int = Field(
         default=4096,

@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
-"""GLM-OCR text extraction - PyTorch backend (zai-org/GLM-OCR, 0.9B, #1 OmniDocBench)."""
+"""GLM-OCR text extraction - MLX backend (Apple Silicon only)."""
 
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from helpers import Timer, check_gpu_available, create_test_image, print_result, verify_text_result
-
-check_gpu_available()
+from helpers import Timer, create_test_image, print_result, verify_text_result
 
 img = create_test_image()
 
 from omnidocs.tasks.text_extraction import GLMOCRTextExtractor
-from omnidocs.tasks.text_extraction.glmocr import GLMOCRPyTorchConfig
+from omnidocs.tasks.text_extraction.glmocr import GLMOCRMLXConfig
 
 with Timer("Model load") as t_load:
     extractor = GLMOCRTextExtractor(
-        backend=GLMOCRPyTorchConfig(
-            model="zai-org/GLM-OCR",
-            device="cuda",
-            torch_dtype="bfloat16",
+        backend=GLMOCRMLXConfig(
+            model="mlx-community/GLM-OCR-bf16",
         )
     )
 
@@ -28,7 +24,7 @@ with Timer("Inference") as t_infer:
 
 verify_text_result(result)
 print_result(
-    "glm_ocr_text_pytorch",
+    "glm_ocr_text_mlx",
     {
         "model": result.model_name,
         "content_length": len(result.content),

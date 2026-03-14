@@ -12,6 +12,8 @@ Key differences from GLM-V:
   - Requires transformers>=5.3.0
   - No <think> tokens, no <|begin_of_box|> — clean output
 """
+import base64
+import io
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Union
@@ -195,7 +197,11 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         self._generate = generate
 
     def _load_api_backend(self) -> None:
-        pass
+        from transformers import AutoProcessor
+        cache_dir = get_model_cache_dir()
+        self._processor = AutoProcessor.from_pretrained(
+            "zai-org/GLM-OCR", cache_dir=str(cache_dir)
+        )
 
     def extract(
         self,
@@ -344,17 +350,62 @@ class GLMOCRTextExtractor(BaseTextExtractor):
                 os.unlink(temp_path)
 
     def _infer_api(self, image: Image.Image) -> str:
-        from omnidocs.vlm import VLMAPIConfig, vlm_completion
+        import tempfile
+
+        import litellm
 
         config = self.backend_config
-        vlm_config = VLMAPIConfig(
+
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+
+        # Apply chat template client-side — server-side template is broken
+        # for GLM-OCR when receiving OpenAI messages format
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+            temp_path = f.name
+            image.save(f, format="PNG")
+
+        try:
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image", "image": image},
+                        {"type": "text", "text": GLMOCR_PROMPT},
+                    ],
+                }
+            ]
+            prompt = self._processor.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")
+        b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+        # Send pre-formatted prompt + image — server uses prompt as-is
+        # without re-applying chat template
+        response = litellm.completion(
             model=config.model,
-            api_key=config.api_key,
-            api_base=config.api_base,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}},
+                    ],
+                }
+            ],
             max_tokens=config.max_tokens,
             temperature=config.temperature,
+            api_key=config.api_key or "dummy",
+            api_base=config.api_base,
             timeout=config.timeout,
-            api_version=config.api_version,
-            extra_headers=config.extra_headers,
         )
-        return vlm_completion(vlm_config, GLMOCR_PROMPT, image)
+
+        return response.choices[0].message.content
