@@ -350,8 +350,6 @@ class GLMOCRTextExtractor(BaseTextExtractor):
                 os.unlink(temp_path)
 
     def _infer_api(self, image: Image.Image) -> str:
-        import tempfile
-
         import litellm
 
         config = self.backend_config
@@ -359,34 +357,23 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         if image.mode != "RGB":
             image = image.convert("RGB")
 
-        # Apply chat template client-side — server-side template is broken
-        # for GLM-OCR when receiving OpenAI messages format
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
-            temp_path = f.name
-            image.save(f, format="PNG")
-
-        try:
-            messages = [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "image", "image": image},
-                        {"type": "text", "text": GLMOCR_PROMPT},
-                    ],
-                }
-            ]
-            prompt = self._processor.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True,
-            )
-        finally:
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)
-
         buffered = io.BytesIO()
         image.save(buffered, format="PNG")
         b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": image},
+                    {"type": "text", "text": GLMOCR_PROMPT},
+                ],
+            }
+        ]
+        prompt = self._processor.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
 
         # Send pre-formatted prompt + image — server uses prompt as-is
         # without re-applying chat template
@@ -396,8 +383,8 @@ class GLMOCRTextExtractor(BaseTextExtractor):
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": prompt},
                         {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}},
+                        {"type": "text", "text": GLMOCR_PROMPT},
                     ],
                 }
             ],
@@ -406,6 +393,11 @@ class GLMOCRTextExtractor(BaseTextExtractor):
             api_key=config.api_key or "dummy",
             api_base=config.api_base,
             timeout=config.timeout,
+            extra_body={
+                "prompt": prompt,
+                "repetition_penalty": config.repetition_penalty,
+                "stop": ["<|endoftext|>", "<|end_of_text|>"],
+            },
         )
 
         return response.choices[0].message.content

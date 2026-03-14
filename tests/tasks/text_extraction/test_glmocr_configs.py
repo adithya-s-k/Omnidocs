@@ -193,7 +193,7 @@ class TestGLMOCRAPIConfig:
 
         config = GLMOCRAPIConfig()
 
-        assert config.model == "zai-org/GLM-OCR"
+        assert config.model == "openai/glm-ocr"
         assert config.api_key is None
         assert config.api_base is None
         assert config.max_tokens == 4096
@@ -219,7 +219,7 @@ class TestGLMOCRAPIConfig:
         from omnidocs.tasks.text_extraction.glmocr import GLMOCRAPIConfig
 
         config = GLMOCRAPIConfig(
-            model="openai/zai-org/GLM-OCR",
+            model="openai/custom-model",
             api_key="test-key",
             api_base="https://custom.api.com/v1",
             max_tokens=2048,
@@ -227,7 +227,7 @@ class TestGLMOCRAPIConfig:
             timeout=300,
         )
 
-        assert config.model == "openai/zai-org/GLM-OCR"
+        assert config.model == "openai/custom-model"
         assert config.api_key == "test-key"
         assert config.api_base == "https://custom.api.com/v1"
         assert config.max_tokens == 2048

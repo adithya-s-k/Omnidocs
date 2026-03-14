@@ -51,6 +51,12 @@ class GLMOCRAPIConfig(BaseModel):
         ge=10,
         description="Request timeout in seconds.",
     )
+    repetition_penalty: float = Field(
+        default=1.05,
+        ge=1.0,
+        le=2.0,
+        description="Repetition penalty to prevent looping at temperature=0.0.",
+    )
     api_version: Optional[str] = Field(default=None)
     extra_headers: Optional[dict[str, str]] = Field(default=None)
 
