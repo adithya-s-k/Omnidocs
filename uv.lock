@@ -3155,12 +3155,22 @@ dependencies = [
 [package.optional-dependencies]
 all = [
     { name = "accelerate" },
+    { name = "easyocr" },
+    { name = "paddleocr" },
+    { name = "paddlepaddle" },
+    { name = "pytesseract" },
     { name = "qwen-vl-utils" },
     { name = "vllm" },
 ]
 mlx = [
     { name = "mlx" },
     { name = "mlx-vlm" },
+]
+ocr = [
+    { name = "easyocr" },
+    { name = "paddleocr" },
+    { name = "paddlepaddle" },
+    { name = "pytesseract" },
 ]
 pytorch = [
     { name = "accelerate" },
@@ -3233,6 +3243,8 @@ requires-dist = [
     { name = "accelerate", marker = "extra == 'vllm'", specifier = ">=1.0.0" },
     { name = "doclayout-yolo", specifier = ">=0.0.4" },
     { name = "docling-ibm-models", specifier = ">=3.4.0" },
+    { name = "easyocr", marker = "extra == 'all'", specifier = ">=1.7.2" },
+    { name = "easyocr", marker = "extra == 'ocr'", specifier = ">=1.7.2" },
     { name = "hf-transfer", specifier = ">=0.1.0" },
     { name = "huggingface-hub", specifier = ">=0.36.0" },
     { name = "litellm", specifier = ">=1.81.9" },
@@ -3240,10 +3252,16 @@ requires-dist = [
     { name = "mlx-vlm", marker = "extra == 'mlx'", specifier = ">=0.1.0" },
     { name = "numpy", specifier = ">=2.2.6" },
     { name = "opencv-contrib-python", specifier = ">=4.10.0" },
+    { name = "paddleocr", marker = "extra == 'all'", specifier = ">=3.4.0" },
+    { name = "paddleocr", marker = "extra == 'ocr'", specifier = ">=3.4.0" },
+    { name = "paddlepaddle", marker = "extra == 'all'", specifier = ">=3.3.0" },
+    { name = "paddlepaddle", marker = "extra == 'ocr'", specifier = ">=3.3.0" },
     { name = "pdfplumber", specifier = ">=0.11.9" },
     { name = "pillow", specifier = ">=12.1.0" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pypdfium2", specifier = ">=5.3.0" },
+    { name = "pytesseract", marker = "extra == 'all'", specifier = ">=0.3.13" },
+    { name = "pytesseract", marker = "extra == 'ocr'", specifier = ">=0.3.13" },
     { name = "qwen-vl-utils", marker = "extra == 'all'", specifier = ">=0.0.14" },
     { name = "qwen-vl-utils", marker = "extra == 'pytorch'", specifier = ">=0.0.14" },
     { name = "qwen-vl-utils", marker = "extra == 'vllm'", specifier = ">=0.0.14" },
@@ -3256,7 +3274,7 @@ requires-dist = [
     { name = "vllm", marker = "extra == 'all'", specifier = ">=0.6.0" },
     { name = "vllm", marker = "extra == 'vllm'", specifier = ">=0.6.0" },
 ]
-provides-extras = ["all", "mlx", "pytorch", "vllm"]
+provides-extras = ["all", "mlx", "ocr", "pytorch", "vllm"]
 
 [package.metadata.requires-dev]
 api = [

@@ -22,7 +22,7 @@ print_result(
     "tableformer_cpu",
     {
         "model": "TableFormer",
-        "num_tables": len(result.tables),
+        "num_tables": len(result.cells),
         "load_time": f"{t_load.elapsed:.2f}s",
         "inference_time": f"{t_infer.elapsed:.2f}s",
     },
