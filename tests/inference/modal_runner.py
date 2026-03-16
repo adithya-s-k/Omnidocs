@@ -198,7 +198,7 @@ LIGHTON_VLLM_IMAGE = (
     .apt_install("libopenmpi-dev", "libnuma-dev", "libgl1", "libglib2.0-0")
     .run_commands("pip install uv")
     .run_commands("uv pip install vllm==0.17.0 --system")
-    #.run_commands("uv pip install flash-attn --no-build-isolation --system")
+    # .run_commands("uv pip install flash-attn --no-build-isolation --system")
     .add_local_dir(
         str(OMNIDOCS_DIR),
         remote_path="/opt/omnidocs",
@@ -351,6 +351,7 @@ def run_pytorch_t4_test(script_module: str) -> dict:
     """Run a test script on PyTorch image with T4 GPU."""
     return _execute_script(script_module)
 
+
 @app.function(
     image=LIGHTON_IMAGE,
     gpu="A10G:1",
@@ -362,6 +363,7 @@ def run_lighton_gpu_test(script_module: str) -> dict:
     """Run a LightOn test with transformers v5 image."""
     return _execute_script(script_module)
 
+
 @app.function(
     image=LIGHTON_VLLM_IMAGE,
     gpu="L40S:1",
@@ -372,6 +374,7 @@ def run_lighton_gpu_test(script_module: str) -> dict:
 def run_lighton_vllm_test(script_module: str) -> dict:
     """Run a LightOn VLLM test with transformers v5 image."""
     return _execute_script(script_module)
+
 
 @app.function(
     image=OCR_IMAGE,
@@ -421,6 +424,7 @@ def _get_runner(spec):
 
     if "lighton" in spec.tags:
         from registry import Backend
+
         if spec.backend == Backend.VLLM:
             return run_lighton_vllm_test
         return run_lighton_gpu_test

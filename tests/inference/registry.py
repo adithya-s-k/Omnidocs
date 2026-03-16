@@ -197,7 +197,6 @@ TEST_REGISTRY: List[TestSpec] = [
         gpu_type="L40S:1",
         tags=["mineruvl", "vlm", "api", "online"],
     ),
-
     # LightOn Text Extractor
     TestSpec(
         name="lighton_text_pytorch",

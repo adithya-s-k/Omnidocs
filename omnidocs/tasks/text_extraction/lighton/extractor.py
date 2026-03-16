@@ -27,6 +27,7 @@ LightOnTextBackendConfig = Union[
     "LightOnTextMLXConfig",
 ]
 
+
 def _simple_post_process(text: str) -> str:
     """Remove special tokens and clean up whitespace."""
     for token in ["<|im_start|>", "<|im_end|>", "<|end_header_id|>"]:
@@ -34,6 +35,7 @@ def _simple_post_process(text: str) -> str:
     text = text.strip()
     lines = [line.strip() for line in text.split("\n")]
     return "\n".join(line for line in lines if line)
+
 
 class LightOnTextExtractor(BaseTextExtractor):
     """
@@ -213,6 +215,7 @@ class LightOnTextExtractor(BaseTextExtractor):
         config = self.backend_config
         if config.cache_dir:
             import os
+
             os.environ["HF_HOME"] = config.cache_dir
 
         model, processor = load(config.model)
@@ -310,7 +313,7 @@ class LightOnTextExtractor(BaseTextExtractor):
             )
 
         # Decode
-        generated_ids = output_ids[0, inputs["input_ids"].shape[1]:]
+        generated_ids = output_ids[0, inputs["input_ids"].shape[1] :]
         raw_output = self._client.processor.decode(
             generated_ids,
             skip_special_tokens=True,
@@ -392,6 +395,7 @@ class LightOnTextExtractor(BaseTextExtractor):
     def _markdown_to_html(self, markdown_text: str) -> str:
         """Convert markdown to HTML (basic conversion)."""
         from html import escape
+
         safe = escape(markdown_text).replace("\n", "<br>\n")
         return f"<div>{safe}</div>"
 
