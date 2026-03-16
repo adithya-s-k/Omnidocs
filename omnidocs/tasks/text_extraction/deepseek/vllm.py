@@ -33,8 +33,7 @@ class DeepSeekOCRTextVLLMConfig(BaseModel):
 
     model: str = Field(
         default="deepseek-ai/DeepSeek-OCR",
-        description="HuggingFace model ID. "
-        "'deepseek-ai/DeepSeek-OCR-2' (latest) or 'deepseek-ai/DeepSeek-OCR' (v1).",
+        description="HuggingFace model ID. 'deepseek-ai/DeepSeek-OCR-2' (latest) or 'deepseek-ai/DeepSeek-OCR' (v1).",
     )
     tensor_parallel_size: int = Field(
         default=1,

@@ -32,6 +32,7 @@ Models for extracting text content with optional formatting (Markdown/HTML/JSON)
 | **Batch processing** | DotsOCR + VLLM | Good speed with detailed output |
 | **Cloud/API deployment** | Qwen3-VL (API) | Only option with API backend |
 | **Apple Silicon only** | Qwen3-VL (MLX) | Only VLM with MLX support |
+| **High-throughput batch processing** | DeepSeek-OCR-2 + VLLM | ~2500 tok/s on A100, official VLLM support |
 
 ### Performance Comparison
 
@@ -42,7 +43,7 @@ Models for extracting text content with optional formatting (Markdown/HTML/JSON)
 | Qwen3-VL-32B | 20-40 | Outstanding | High |
 | DotsOCR | 80-120 | Very Good | Medium |
 | Nanonuts | 150-200 | Good | Medium |
-
+| DeepSeek-OCR-2 (VLLM) | ~2500 | Excellent | Low-Medium |
 ---
 
 ## Layout Analysis Models

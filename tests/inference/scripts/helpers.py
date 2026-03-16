@@ -266,9 +266,9 @@ def verify_table_result(result, min_tables=1):
         result: TableOutput from a table extractor.
         min_tables: Minimum number of tables expected.
     """
-    assert hasattr(result, "tables"), "Result missing 'tables' attribute"
-    assert len(result.tables) >= min_tables, f"Too few tables: {len(result.tables)} (min {min_tables})"
-    print(f"[Verify] Table OK: {len(result.tables)} tables")
+    assert hasattr(result, "cells"), "Result missing 'tables' attribute"
+    assert len(result.cells) >= min_tables, f"Too few tables: {len(result.cells)} (min {min_tables})"
+    print(f"[Verify] Table OK: {len(result.cells)} tables")
 
 
 def verify_reading_order_result(result, min_elements=1):
@@ -278,9 +278,11 @@ def verify_reading_order_result(result, min_elements=1):
         result: ReadingOrderOutput from a predictor.
         min_elements: Minimum number of ordered elements expected.
     """
-    assert hasattr(result, "elements"), "Result missing 'elements' attribute"
-    assert len(result.elements) >= min_elements, f"Too few elements: {len(result.elements)} (min {min_elements})"
-    print(f"[Verify] Reading order OK: {len(result.elements)} elements")
+    assert hasattr(result, "ordered_elements"), "Result missing 'elements' attribute"
+    assert len(result.ordered_elements) >= min_elements, (
+        f"Too few elements: {len(result.ordered_elements)} (min {min_elements})"
+    )
+    print(f"[Verify] Reading order OK: {len(result.ordered_elements)} elements")
 
 
 # ============= Result Output =============

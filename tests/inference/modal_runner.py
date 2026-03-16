@@ -117,6 +117,7 @@ OCR_IMAGE = (
         ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
     )
     .run_commands("uv pip install '/opt/omnidocs[pytorch,ocr]' --system")
+    .run_commands("pip install paddlepaddle-gpu==3.3.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu126/")
     .uv_pip_install(flash_attn_wheel)
     .add_local_dir(
         str(SCRIPTS_DIR),
@@ -129,6 +130,8 @@ OCR_IMAGE = (
             "HF_HUB_ENABLE_HF_TRANSFER": "1",
             "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR,
             "HF_HOME": MODEL_CACHE_DIR,
+            "FLAGS_use_mkldnn": "0",
+            "PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK": "True",
         }
     )
 )
@@ -160,6 +163,72 @@ CPU_IMAGE = (
     )
 )
 
+# --- LightOn Image (transformers v5, separate from docling-ibm-models constraint) ---
+LIGHTON_IMAGE = (
+    modal.Image.from_registry(f"nvidia/cuda:{cuda_pytorch}-devel-ubuntu24.04", add_python="3.12")
+    .apt_install("libglib2.0-0", "libgl1", "libglx-mesa0", "libgl1-mesa-dri")
+    .run_commands("pip install uv")
+    .add_local_dir(
+        str(OMNIDOCS_DIR),
+        remote_path="/opt/omnidocs",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
+    )
+    # Write override file then install — forces transformers>=5.0.0
+    # regardless of docling-ibm-models' <5.0.0 constraint
+    .run_commands(
+        "echo 'transformers>=5.0.0' > /tmp/overrides.txt && "
+        "uv pip install '/opt/omnidocs[pytorch]' --system --override /tmp/overrides.txt"
+    )
+    .uv_pip_install(flash_attn_wheel)
+    .add_local_dir(
+        str(SCRIPTS_DIR),
+        remote_path="/opt/test_scripts",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc"],
+    )
+    .env(
+        {
+            "HF_HUB_ENABLE_HF_TRANSFER": "1",
+            "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR,
+            "HF_HOME": MODEL_CACHE_DIR,
+        }
+    )
+)
+
+# --- LightOn VLLM Image (transformers v5 + vllm) ---
+LIGHTON_VLLM_IMAGE = (
+    modal.Image.from_registry(f"nvidia/cuda:{cuda_vllm}-devel-ubuntu24.04", add_python="3.12")
+    .apt_install("libopenmpi-dev", "libnuma-dev", "libgl1", "libglib2.0-0")
+    .run_commands("pip install uv")
+    .run_commands("uv pip install vllm==0.17.0 --system")
+    # .run_commands("uv pip install flash-attn --no-build-isolation --system")
+    .add_local_dir(
+        str(OMNIDOCS_DIR),
+        remote_path="/opt/omnidocs",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
+    )
+    .run_commands(
+        "echo 'transformers>=5.0.0' > /tmp/overrides.txt && "
+        "uv pip install '/opt/omnidocs[vllm]' --system --override /tmp/overrides.txt"
+    )
+    .add_local_dir(
+        str(SCRIPTS_DIR),
+        remote_path="/opt/test_scripts",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc"],
+    )
+    .env(
+        {
+            "HF_HUB_ENABLE_HF_TRANSFER": "1",
+            "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR,
+            "HF_HOME": MODEL_CACHE_DIR,
+            "VLLM_USE_V1": "0",
+            "VLLM_DISABLE_V1": "1",
+        }
+    )
+)
 # ============= Modal App =============
 
 app = modal.App("omnidocs-inference-tests")
@@ -288,6 +357,30 @@ def run_pytorch_t4_test(script_module: str) -> dict:
 
 
 @app.function(
+    image=LIGHTON_IMAGE,
+    gpu="A10G:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def run_lighton_gpu_test(script_module: str) -> dict:
+    """Run a LightOn test with transformers v5 image."""
+    return _execute_script(script_module)
+
+
+@app.function(
+    image=LIGHTON_VLLM_IMAGE,
+    gpu="L40S:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def run_lighton_vllm_test(script_module: str) -> dict:
+    """Run a LightOn VLLM test with transformers v5 image."""
+    return _execute_script(script_module)
+
+
+@app.function(
     image=OCR_IMAGE,
     gpu="T4:1",
     secrets=[secret],
@@ -333,6 +426,12 @@ def _get_runner(spec):
     if spec.task == Task.OCR and spec.gpu_type:
         return run_ocr_gpu_test
 
+    if "lighton" in spec.tags:
+        from registry import Backend
+
+        if spec.backend == Backend.VLLM:
+            return run_lighton_vllm_test
+        return run_lighton_gpu_test
     # GPU tests
     runner = GPU_RUNNERS.get(spec.gpu_type)
     if runner:

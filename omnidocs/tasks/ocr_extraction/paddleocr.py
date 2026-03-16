@@ -150,6 +150,7 @@ class PaddleOCR(BaseOCRExtractor):
         self._ocr = PaddleOCREngine(
             lang=self._lang,
             device=self.config.device,
+            enable_mkldnn=False,
         )
 
         # Cache the loaded engine

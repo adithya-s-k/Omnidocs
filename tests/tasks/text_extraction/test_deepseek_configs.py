@@ -342,9 +342,7 @@ class TestDeepSeekOCRTextAPIConfig:
         """Test overriding api_base."""
         from omnidocs.tasks.text_extraction.deepseek import DeepSeekOCRTextAPIConfig
 
-        config = DeepSeekOCRTextAPIConfig(
-            api_base="https://api.novita.ai/v3/openai"
-        )
+        config = DeepSeekOCRTextAPIConfig(api_base="https://api.novita.ai/v3/openai")
         assert config.api_base == "https://api.novita.ai/v3/openai"
 
     def test_custom_values(self):

@@ -47,7 +47,7 @@ def simple_text_image() -> Image.Image:
 @pytest.fixture
 def document_image() -> tuple[Image.Image, list[str]]:
     """Create a more complex document-like image."""
-    img = Image.new("RGB", (800, 600), color="white")
+    img = Image.new("RGB", (400, 300), color="white")
     draw = ImageDraw.Draw(img)
 
     try:
@@ -163,8 +163,8 @@ class TestTesseractOCR:
         result = ocr.extract(img)
 
         check_ocr_result_structure(result, expected_min_blocks=5)
-        assert result.image_width == 800
-        assert result.image_height == 600
+        assert result.image_width == 400
+        assert result.image_height == 300
 
         # Check that key content is found
         assert text_found_in_result(result, "document")
@@ -264,8 +264,8 @@ class TestEasyOCR:
         result = ocr.extract(img)
 
         check_ocr_result_structure(result, expected_min_blocks=1)
-        assert result.image_width == 800
-        assert result.image_height == 600
+        assert result.image_width == 400
+        assert result.image_height == 300
         assert text_found_in_result(result, "document")
 
     def test_easyocr_default_word_granularity(self, simple_text_image: Image.Image):
@@ -349,8 +349,8 @@ class TestPaddleOCR:
         result = ocr.extract(img)
 
         check_ocr_result_structure(result, expected_min_blocks=1)
-        assert result.image_width == 800
-        assert result.image_height == 600
+        assert result.image_width == 400
+        assert result.image_height == 300
         assert text_found_in_result(result, "document")
 
     def test_paddleocr_line_granularity(self, simple_text_image: Image.Image):

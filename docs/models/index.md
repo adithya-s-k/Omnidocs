@@ -11,7 +11,7 @@ Complete reference for all models available in OmniDocs.
 |-------|----------|----------|
 | [Qwen3-VL](text-extraction/qwen.md) | PyTorch, VLLM, MLX, API | General purpose, multilingual |
 | [DotsOCR](text-extraction/dotsocr.md) | PyTorch, VLLM | Layout-aware extraction |
-
+| [DeepSeek-OCR](text-extraction/deepseek.md) | PyTorch, VLLM, MLX, API | High-throughput, dense docs |
 ### Layout Analysis
 | Model | Backends | Best For |
 |-------|----------|----------|
@@ -34,6 +34,7 @@ Complete reference for all models available in OmniDocs.
 | DotsOCR | Fast | Very Good | 8GB | 2 |
 | DocLayoutYOLO | Very Fast | Good | 2-4GB | 1 |
 | Tesseract | Slow (CPU) | Good | Minimal | 1 |
+| DeepSeek-OCR-2 | Fast | Excellent | 16GB | 4 |
 
 See [full comparison](comparison.md) for detailed benchmarks.
 
@@ -47,6 +48,7 @@ See [full comparison](comparison.md) for detailed benchmarks.
 - General: Qwen3-VL (any size)
 - Layout-aware: DotsOCR
 - Multilingual: Qwen3-VL
+- High-throughput / dense docs: DeepSeek-OCR-2
 
 **Layout Detection**
 - Speed: DocLayoutYOLO (0.1s/page)

@@ -48,8 +48,7 @@ class DeepSeekOCRTextPyTorchConfig(BaseModel):
     )
     device: str = Field(
         default="cuda",
-        description="Device to run inference on. Options: 'cuda', 'cpu'. "
-        "MPS not tested for DeepSeek-OCR.",
+        description="Device to run inference on. Options: 'cuda', 'cpu'. MPS not tested for DeepSeek-OCR.",
     )
     torch_dtype: Literal["bfloat16", "float16", "float32", "auto"] = Field(
         default="bfloat16",

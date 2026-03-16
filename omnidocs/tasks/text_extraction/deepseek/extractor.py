@@ -27,6 +27,7 @@ Example:
     print(result.content)
     ```
 """
+
 import base64
 import io
 import os
@@ -113,7 +114,7 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
                 - DeepSeekOCRTextAPIConfig (Novita AI)
         """
         self.backend_config = backend
-        self._backend: Any = None   # model
+        self._backend: Any = None  # model
         self._processor: Any = None  # tokenizer
         self._loaded = False
         self._device: str = "cpu"
@@ -141,11 +142,13 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
                 add_reference(cache_key, self)
                 if config_type == "DeepSeekOCRTextVLLMConfig":
                     from vllm import SamplingParams
+
                     self._sampling_params_class = SamplingParams
                 elif config_type == "DeepSeekOCRTextMLXConfig":
                     from mlx_vlm import generate
                     from mlx_vlm.prompt_utils import apply_chat_template
                     from mlx_vlm.utils import load_config
+
                     self._mlx_config = load_config(self.backend_config.model)
                     self._apply_chat_template = apply_chat_template
                     self._generate = generate
@@ -160,10 +163,7 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
         }
         loader = dispatch.get(config_type)
         if loader is None:
-            raise TypeError(
-                f"Unknown backend config: {config_type}. Expected one of: "
-                + ", ".join(dispatch.keys())
-            )
+            raise TypeError(f"Unknown backend config: {config_type}. Expected one of: " + ", ".join(dispatch.keys()))
         loader()
 
         if config_type != "DeepSeekOCRTextAPIConfig":
@@ -193,17 +193,24 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
 
         attn_impl = "flash_attention_2" if config.use_flash_attention else "eager"
 
-        self._backend = AutoModel.from_pretrained(
-            config.model,
-            _attn_implementation=attn_impl,
-            trust_remote_code=config.trust_remote_code,
-            use_safetensors=True,
-            cache_dir=str(cache_dir),
-        ).eval().to(self._device).to(
-            {"bfloat16": __import__("torch").bfloat16,
-             "float16": __import__("torch").float16,
-             "float32": __import__("torch").float32,
-             "auto": __import__("torch").bfloat16}[config.torch_dtype]
+        self._backend = (
+            AutoModel.from_pretrained(
+                config.model,
+                _attn_implementation=attn_impl,
+                trust_remote_code=config.trust_remote_code,
+                use_safetensors=True,
+                cache_dir=str(cache_dir),
+            )
+            .eval()
+            .to(self._device)
+            .to(
+                {
+                    "bfloat16": __import__("torch").bfloat16,
+                    "float16": __import__("torch").float16,
+                    "float32": __import__("torch").float32,
+                    "auto": __import__("torch").bfloat16,
+                }[config.torch_dtype]
+            )
         )
 
         self._processor = AutoTokenizer.from_pretrained(
@@ -238,9 +245,9 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
             enforce_eager=config.enforce_eager,
             download_dir=download_dir,
             disable_custom_all_reduce=config.disable_custom_all_reduce,
-            enable_prefix_caching=config.enable_prefix_caching,   # must be False
-            mm_processor_cache_gb=config.mm_processor_cache_gb,   # must be 0
-            logits_processors=[NGramPerReqLogitsProcessor],        # required for v1
+            enable_prefix_caching=config.enable_prefix_caching,  # must be False
+            mm_processor_cache_gb=config.mm_processor_cache_gb,  # must be 0
+            logits_processors=[NGramPerReqLogitsProcessor],  # required for v1
         )
         self._processor = AutoTokenizer.from_pretrained(config.model, cache_dir=str(cache_dir))
         self._sampling_params_class = SamplingParams
@@ -252,9 +259,7 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
             from mlx_vlm.prompt_utils import apply_chat_template
             from mlx_vlm.utils import load_config
         except ImportError as e:
-            raise ImportError(
-                "MLX backend requires mlx-vlm. Install with: uv add mlx mlx-vlm"
-            ) from e
+            raise ImportError("MLX backend requires mlx-vlm. Install with: uv add mlx mlx-vlm") from e
 
         config = self.backend_config
         if config.cache_dir:
@@ -272,6 +277,7 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
     def _resolve_device(self, device: str) -> str:
         try:
             import torch
+
             if device == "cuda" and torch.cuda.is_available():
                 return "cuda"
             elif device in ("cuda",):
@@ -337,9 +343,11 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
             os.makedirs(out_path, exist_ok=True)
             image.save(img_path)
 
-            with open(os.devnull, "w") as devnull, \
-                 contextlib.redirect_stdout(devnull), \
-                 contextlib.redirect_stderr(devnull):
+            with (
+                open(os.devnull, "w") as devnull,
+                contextlib.redirect_stdout(devnull),
+                contextlib.redirect_stderr(devnull),
+            ):
                 self._backend.infer(
                     self._processor,
                     prompt=prompt,
@@ -396,9 +404,7 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
             image.save(f, format="PNG")
 
         try:
-            formatted_prompt = self._apply_chat_template(
-                self._processor, self._mlx_config, prompt, num_images=1
-            )
+            formatted_prompt = self._apply_chat_template(self._processor, self._mlx_config, prompt, num_images=1)
             config = self.backend_config
             result = self._generate(
                 self._backend,
