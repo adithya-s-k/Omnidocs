@@ -197,6 +197,31 @@ TEST_REGISTRY: List[TestSpec] = [
         gpu_type="L40S:1",
         tags=["mineruvl", "vlm", "api", "online"],
     ),
+    # LightOn Text Extractor
+    TestSpec(
+        name="lighton_text_pytorch",
+        module="text_extraction.lighton_pytorch",
+        backend=Backend.PYTORCH_GPU,
+        task=Task.TEXT,
+        gpu_type="A10G:1",
+        tags=["lighton"],
+    ),
+    TestSpec(
+        name="lighton_text_vllm",
+        module="text_extraction.lighton_vllm",
+        backend=Backend.VLLM,
+        task=Task.TEXT,
+        gpu_type="L40S:1",
+        tags=["lighton"],
+    ),
+    TestSpec(
+        name="lighton_text_mlx",
+        module="text_extraction.lighton_mlx",
+        backend=Backend.MLX,
+        task=Task.TEXT,
+        gpu_type=None,
+        tags=["lighton", "apple_silicon"],
+    ),
     # VLM Text Extractor (generic LiteLLM)
     TestSpec(
         name="vlm_text_api",
