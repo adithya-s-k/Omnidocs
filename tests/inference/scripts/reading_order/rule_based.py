@@ -30,18 +30,20 @@ print(f"Detected {len(ocr_result.text_blocks)} text blocks")
 # Step 3: Reading order prediction
 with Timer("Reading order") as t_order:
     predictor = RuleBasedReadingOrderPredictor()
-    result = predictor.extract(
-        layout_output=layout_result,
-        ocr_output=ocr_result,
-        image=img,
-    )
+    # result = predictor.extract(
+    #     layout_output=layout_result,
+    #     ocr_output=ocr_result,
+    #     image=img,
+    # )
+    result = predictor.predict(layout_result, ocr_result)
+
 
 verify_reading_order_result(result)
 print_result(
     "reading_order_rule_based",
     {
         "model": "RuleBased",
-        "num_elements": len(result.elements),
+        "num_elements": len(result.ordered_elements),
         "layout_time": f"{t_layout.elapsed:.2f}s",
         "ocr_time": f"{t_ocr.elapsed:.2f}s",
         "order_time": f"{t_order.elapsed:.2f}s",

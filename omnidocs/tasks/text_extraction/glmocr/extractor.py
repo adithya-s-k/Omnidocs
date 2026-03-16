@@ -12,6 +12,7 @@ Key differences from GLM-V:
   - Requires transformers>=5.3.0
   - No <think> tokens, no <|begin_of_box|> — clean output
 """
+
 import base64
 import io
 import os
@@ -45,20 +46,20 @@ GLMOCR_PROMPT = "Text Recognition:"
 
 class GLMOCRTextExtractor(BaseTextExtractor):
     """
-    GLM-OCR text extractor (zai-org/GLM-OCR, 0.9B, Feb 2026).
+        GLM-OCR text extractor (zai-org/GLM-OCR, 0.9B, Feb 2026).
 
-    Purpose-built OCR model, #1 on OmniDocBench V1.5.
-    Faster and cheaper than GLM-V for pure document OCR tasks.
+        Purpose-built OCR model, #1 on OmniDocBench V1.5.
+        Faster and cheaper than GLM-V for pure document OCR tasks.
 
-    Example:
-```python
-        from omnidocs.tasks.text_extraction import GLMOCRTextExtractor
-        from omnidocs.tasks.text_extraction.glmocr import GLMOCRPyTorchConfig
+        Example:
+    ```python
+            from omnidocs.tasks.text_extraction import GLMOCRTextExtractor
+            from omnidocs.tasks.text_extraction.glmocr import GLMOCRPyTorchConfig
 
-        extractor = GLMOCRTextExtractor(backend=GLMOCRPyTorchConfig())
-        result = extractor.extract(image)
-        print(result.content)
-```
+            extractor = GLMOCRTextExtractor(backend=GLMOCRPyTorchConfig())
+            result = extractor.extract(image)
+            print(result.content)
+    ```
     """
 
     def __init__(self, backend: GLMOCRBackendConfig):
@@ -84,11 +85,13 @@ class GLMOCRTextExtractor(BaseTextExtractor):
                 add_reference(cache_key, self)
                 if config_type == "GLMOCRVLLMConfig":
                     from vllm import SamplingParams
+
                     self._sampling_params_class = SamplingParams
                 elif config_type == "GLMOCRMLXConfig":
                     from mlx_vlm import generate
                     from mlx_vlm.prompt_utils import apply_chat_template
                     from mlx_vlm.utils import load_config
+
                     self._mlx_config = load_config(self.backend_config.model)
                     self._apply_chat_template = apply_chat_template
                     self._generate = generate
@@ -115,15 +118,13 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         try:
             from transformers import AutoModelForImageTextToText, AutoProcessor
         except ImportError as e:
-            raise ImportError(
-                "GLM-OCR requires transformers>=5.3.0. "
-                "Install with: uv add 'transformers>=5.3.0'"
-            ) from e
+            raise ImportError("GLM-OCR requires transformers>=5.3.0. Install with: uv add 'transformers>=5.3.0'") from e
 
         config = self.backend_config
         cache_dir = get_model_cache_dir(config.cache_dir)
 
         import torch
+
         dtype_map = {
             "bfloat16": torch.bfloat16,
             "float16": torch.float16,
@@ -140,22 +141,16 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         if config.use_flash_attention:
             model_kwargs["attn_implementation"] = "flash_attention_2"
 
-        self._backend = AutoModelForImageTextToText.from_pretrained(
-            config.model, **model_kwargs
-        ).eval()
+        self._backend = AutoModelForImageTextToText.from_pretrained(config.model, **model_kwargs).eval()
 
-        self._processor = AutoProcessor.from_pretrained(
-            config.model, cache_dir=str(cache_dir)
-        )
+        self._processor = AutoProcessor.from_pretrained(config.model, cache_dir=str(cache_dir))
 
     def _load_vllm_backend(self) -> None:
         try:
             from transformers import AutoProcessor
             from vllm import LLM, SamplingParams
         except ImportError as e:
-            raise ImportError(
-                "VLLM backend requires vllm>=0.17.0 and transformers>=5.3.0."
-            ) from e
+            raise ImportError("VLLM backend requires vllm>=0.17.0 and transformers>=5.3.0.") from e
 
         config = self.backend_config
         cache_dir = get_model_cache_dir()
@@ -171,9 +166,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
             download_dir=download_dir,
             disable_custom_all_reduce=config.disable_custom_all_reduce,
         )
-        self._processor = AutoProcessor.from_pretrained(
-            config.model, cache_dir=str(cache_dir)
-        )
+        self._processor = AutoProcessor.from_pretrained(config.model, cache_dir=str(cache_dir))
         self._sampling_params_class = SamplingParams
 
     def _load_mlx_backend(self) -> None:
@@ -183,8 +176,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
             from mlx_vlm.utils import load_config
         except ImportError as e:
             raise ImportError(
-                "MLX backend requires mlx and mlx-vlm>=0.3.11. "
-                "Install with: uv add mlx 'mlx-vlm>=0.3.11'"
+                "MLX backend requires mlx and mlx-vlm>=0.3.11. Install with: uv add mlx 'mlx-vlm>=0.3.11'"
             ) from e
 
         config = self.backend_config
@@ -198,10 +190,9 @@ class GLMOCRTextExtractor(BaseTextExtractor):
 
     def _load_api_backend(self) -> None:
         from transformers import AutoProcessor
+
         cache_dir = get_model_cache_dir()
-        self._processor = AutoProcessor.from_pretrained(
-            "zai-org/GLM-OCR", cache_dir=str(cache_dir)
-        )
+        self._processor = AutoProcessor.from_pretrained("zai-org/GLM-OCR", cache_dir=str(cache_dir))
 
     def extract(
         self,
@@ -284,6 +275,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
+
     def _infer_vllm(self, image: Image.Image) -> str:
         if image.mode != "RGB":
             image = image.convert("RGB")
@@ -329,9 +321,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
                 temp_path = f.name
                 image.save(f, format="PNG")
 
-            formatted_prompt = self._apply_chat_template(
-                self._processor, self._mlx_config, GLMOCR_PROMPT, num_images=1
-            )
+            formatted_prompt = self._apply_chat_template(self._processor, self._mlx_config, GLMOCR_PROMPT, num_images=1)
 
             config = self.backend_config
             result = self._generate(

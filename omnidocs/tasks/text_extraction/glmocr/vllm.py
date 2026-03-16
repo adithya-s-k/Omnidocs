@@ -7,15 +7,15 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class GLMOCRVLLMConfig(BaseModel):
     """
-    VLLM backend configuration for GLM-OCR.
+        VLLM backend configuration for GLM-OCR.
 
-    GLM-OCR supports VLLM with MTP (Multi-Token Prediction) speculative decoding
-    for significantly higher throughput. Requires vllm>=0.17.0 and transformers>=5.3.0.
+        GLM-OCR supports VLLM with MTP (Multi-Token Prediction) speculative decoding
+        for significantly higher throughput. Requires vllm>=0.17.0 and transformers>=5.3.0.
 
-    Example:
-```python
-        config = GLMOCRVLLMConfig(gpu_memory_utilization=0.85)
-```
+        Example:
+    ```python
+            config = GLMOCRVLLMConfig(gpu_memory_utilization=0.85)
+    ```
     """
 
     model: str = Field(

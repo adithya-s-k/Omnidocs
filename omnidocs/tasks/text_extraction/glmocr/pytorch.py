@@ -7,16 +7,16 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class GLMOCRPyTorchConfig(BaseModel):
     """
-    PyTorch/HuggingFace backend configuration for GLM-OCR.
+        PyTorch/HuggingFace backend configuration for GLM-OCR.
 
-    GLM-OCR uses AutoModelForImageTextToText + AutoProcessor.
-    Requires transformers>=5.3.0.
+        GLM-OCR uses AutoModelForImageTextToText + AutoProcessor.
+        Requires transformers>=5.3.0.
 
-    Example:
-```python
-        config = GLMOCRPyTorchConfig()  # zai-org/GLM-OCR, default
-        config = GLMOCRPyTorchConfig(device="mps")  # Apple Silicon
-```
+        Example:
+    ```python
+            config = GLMOCRPyTorchConfig()  # zai-org/GLM-OCR, default
+            config = GLMOCRPyTorchConfig(device="mps")  # Apple Silicon
+    ```
     """
 
     model: str = Field(

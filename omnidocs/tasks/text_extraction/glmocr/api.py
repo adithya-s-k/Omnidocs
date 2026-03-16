@@ -7,19 +7,19 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class GLMOCRAPIConfig(BaseModel):
     """
-    API backend configuration for GLM-OCR.
+        API backend configuration for GLM-OCR.
 
-    Primary provider: ZhipuAI / BigModel (official) — get key at open.bigmodel.cn.
+        Primary provider: ZhipuAI / BigModel (official) — get key at open.bigmodel.cn.
 
-    Example:
-```python
-        # Self-hosted vLLM server
-        config = GLMOCRAPIConfig(
-            model="zai-org/GLM-OCR",
-            api_base="http://localhost:8000/v1",
-            api_key="token-abc",
-        )
-```
+        Example:
+    ```python
+            # Self-hosted vLLM server
+            config = GLMOCRAPIConfig(
+                model="zai-org/GLM-OCR",
+                api_base="http://localhost:8000/v1",
+                api_key="token-abc",
+            )
+    ```
     """
 
     model: str = Field(

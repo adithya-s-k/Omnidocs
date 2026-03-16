@@ -7,29 +7,28 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class GLMOCRMLXConfig(BaseModel):
     """
-    MLX backend configuration for GLM-OCR.
+        MLX backend configuration for GLM-OCR.
 
-    Uses mlx-vlm for Apple Silicon native inference.
-    GLM-OCR at 0.9B runs comfortably on any M-series Mac with 8GB+ unified memory.
-    Requires: mlx, mlx-vlm>=0.3.11
+        Uses mlx-vlm for Apple Silicon native inference.
+        GLM-OCR at 0.9B runs comfortably on any M-series Mac with 8GB+ unified memory.
+        Requires: mlx, mlx-vlm>=0.3.11
 
-    Note: Only works on Apple Silicon Macs. Do NOT use for Modal/cloud deployments.
+        Note: Only works on Apple Silicon Macs. Do NOT use for Modal/cloud deployments.
 
-    Available models:
-        mlx-community/GLM-OCR-bf16   (default — full precision, 2.21 GB)
-        mlx-community/GLM-OCR-6bit   (quantized, smaller)
+        Available models:
+            mlx-community/GLM-OCR-bf16   (default — full precision, 2.21 GB)
+            mlx-community/GLM-OCR-6bit   (quantized, smaller)
 
-    Example:
-```python
-        config = GLMOCRMLXConfig()  # bf16, default
-        config = GLMOCRMLXConfig(model="mlx-community/GLM-OCR-6bit")  # quantized
-```
+        Example:
+    ```python
+            config = GLMOCRMLXConfig()  # bf16, default
+            config = GLMOCRMLXConfig(model="mlx-community/GLM-OCR-6bit")  # quantized
+    ```
     """
 
     model: str = Field(
         default="mlx-community/GLM-OCR-bf16",
-        description="MLX model path or HuggingFace ID. "
-        "Default: mlx-community/GLM-OCR-bf16 (bfloat16, 2.21 GB).",
+        description="MLX model path or HuggingFace ID. Default: mlx-community/GLM-OCR-bf16 (bfloat16, 2.21 GB).",
     )
     cache_dir: Optional[str] = Field(
         default=None,
