@@ -116,9 +116,7 @@ OCR_IMAGE = (
         ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
     )
     .run_commands("uv pip install '/opt/omnidocs[pytorch,ocr]' --system")
-    .run_commands(                                                           
-    "pip install paddlepaddle-gpu==3.3.0 "
-    "-i https://www.paddlepaddle.org.cn/packages/stable/cu126/")
+    .run_commands("pip install paddlepaddle-gpu==3.3.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu126/")
     .uv_pip_install(flash_attn_wheel)
     .add_local_dir(
         str(SCRIPTS_DIR),
@@ -132,7 +130,7 @@ OCR_IMAGE = (
             "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR,
             "HF_HOME": MODEL_CACHE_DIR,
             "FLAGS_use_mkldnn": "0",
-            "PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK":"True"
+            "PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK": "True",
         }
     )
 )

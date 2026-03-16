@@ -279,7 +279,9 @@ def verify_reading_order_result(result, min_elements=1):
         min_elements: Minimum number of ordered elements expected.
     """
     assert hasattr(result, "ordered_elements"), "Result missing 'elements' attribute"
-    assert len(result.ordered_elements) >= min_elements, f"Too few elements: {len(result.ordered_elements)} (min {min_elements})"
+    assert len(result.ordered_elements) >= min_elements, (
+        f"Too few elements: {len(result.ordered_elements)} (min {min_elements})"
+    )
     print(f"[Verify] Reading order OK: {len(result.ordered_elements)} elements")
 
 
