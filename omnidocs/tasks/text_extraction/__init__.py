@@ -13,6 +13,7 @@ Available Extractors:
     - MinerUVLTextExtractor: MinerU VL 1.2B with layout-aware two-step extraction (multi-backend)
     - LightOnTextExtractor: LightOn OCR for document text extraction (multi-backend)
     - DeepSeekOCRTextExtractor: DeepSeek-OCR-2 ~3B high-accuracy OCR (PyTorch/VLLM/MLX/API)
+    - GLMOCRTextExtractor: GLM-OCR 0.9B OCR specialist, #1 OmniDocBench (PyTorch/VLLM/API/MLX)
 
 Example:
     ```python
@@ -30,6 +31,7 @@ Example:
 from .base import BaseTextExtractor
 from .deepseek import DeepSeekOCRTextExtractor
 from .dotsocr import DotsOCRTextExtractor
+from .glmocr import GLMOCRTextExtractor
 from .granitedocling import GraniteDoclingTextExtractor
 from .lighton import LightOnTextExtractor
 from .mineruvl import MinerUVLTextExtractor
@@ -55,4 +57,5 @@ __all__ = [
     "LightOnTextExtractor",
     "VLMTextExtractor",
     "DeepSeekOCRTextExtractor",
+    "GLMOCRTextExtractor",
 ]

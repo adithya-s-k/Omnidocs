@@ -11,6 +11,8 @@ Convert document images to Markdown or HTML.
 | **Qwen3-VL** | 2-3s/page | Excellent | PyTorch, VLLM, MLX, API |
 | **DotsOCR** | 3-5s/page | Very Good | PyTorch, VLLM, API |
 | **Nanonets OCR2** | 2-4s/page | Excellent | PyTorch, VLLM, MLX |
+| **GLM-OCR** | 1-2s/page | Excellent (#1 OmniDocBench) | PyTorch, VLLM, MLX, API |
+| **LightOn** | 2-3s/page | Very Good | PyTorch, VLLM, MLX |
 
 **Recommendation:** Start with Qwen3-VL-8B for most use cases. Use Nanonets for document digitization.
 
@@ -170,6 +172,66 @@ config = NanonetsTextVLLMConfig(gpu_memory_utilization=0.85)
 # MLX (Apple Silicon)
 from omnidocs.tasks.text_extraction.nanonets import NanonetsTextMLXConfig
 config = NanonetsTextMLXConfig()
+```
+
+## GLM-OCR
+
+GLM-OCR is a 0.9B purpose-built OCR model, ranked #1 on OmniDocBench V1.5. Requires `transformers>=5.3.0`.
+```python
+from omnidocs.tasks.text_extraction import GLMOCRTextExtractor
+from omnidocs.tasks.text_extraction.glmocr import GLMOCRPyTorchConfig
+
+extractor = GLMOCRTextExtractor(backend=GLMOCRPyTorchConfig(device="cuda"))
+result = extractor.extract(image, output_format="markdown")
+print(result.content)
+```
+
+### GLM-OCR Backends
+```python
+# PyTorch
+from omnidocs.tasks.text_extraction.glmocr import GLMOCRPyTorchConfig
+config = GLMOCRPyTorchConfig(device="cuda")
+
+# VLLM (high throughput, with MTP speculative decoding)
+from omnidocs.tasks.text_extraction.glmocr import GLMOCRVLLMConfig
+config = GLMOCRVLLMConfig(gpu_memory_utilization=0.85, repetition_penalty=1.05)
+
+# MLX (Apple Silicon)
+from omnidocs.tasks.text_extraction.glmocr import GLMOCRMLXConfig
+config = GLMOCRMLXConfig(model="mlx-community/GLM-OCR-bf16")
+
+# API (self-hosted vLLM)
+from omnidocs.tasks.text_extraction.glmocr import GLMOCRAPIConfig
+config = GLMOCRAPIConfig(api_base="http://localhost:8000/v1", api_key="token-abc")
+```
+
+---
+
+## LightOn
+
+LightOn OCR is a fully self-hosted 1B model with strong multi-lingual document extraction. Requires `transformers>=5.0.0`.
+```python
+from omnidocs.tasks.text_extraction import LightOnTextExtractor
+from omnidocs.tasks.text_extraction.lighton import LightOnTextPyTorchConfig
+
+extractor = LightOnTextExtractor(backend=LightOnTextPyTorchConfig(device="cuda"))
+result = extractor.extract(image, output_format="markdown")
+print(result.content)
+```
+
+### LightOn Backends
+```python
+# PyTorch
+from omnidocs.tasks.text_extraction.lighton import LightOnTextPyTorchConfig
+config = LightOnTextPyTorchConfig(device="auto")
+
+# VLLM
+from omnidocs.tasks.text_extraction.lighton import LightOnTextVLLMConfig
+config = LightOnTextVLLMConfig(gpu_memory_utilization=0.85)
+
+# MLX (Apple Silicon)
+from omnidocs.tasks.text_extraction.lighton import LightOnTextMLXConfig
+config = LightOnTextMLXConfig()
 ```
 
 ---

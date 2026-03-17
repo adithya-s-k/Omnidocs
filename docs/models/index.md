@@ -12,6 +12,8 @@ Complete reference for all models available in OmniDocs.
 | [Qwen3-VL](text-extraction/qwen.md) | PyTorch, VLLM, MLX, API | General purpose, multilingual |
 | [DotsOCR](text-extraction/dotsocr.md) | PyTorch, VLLM | Layout-aware extraction |
 | [DeepSeek-OCR](text-extraction/deepseek.md) | PyTorch, VLLM, MLX, API | High-throughput, dense docs |
+| [GLM-OCR](text-extraction/glmocr.md) | PyTorch, VLLM, MLX, API | Fast OCR, minimal VRAM, #1 OmniDocBench |
+| [LightOn](text-extraction/lighton.md) | PyTorch, VLLM, MLX | Self-hosted, multi-lingual |
 ### Layout Analysis
 | Model | Backends | Best For |
 |-------|----------|----------|
@@ -35,6 +37,8 @@ Complete reference for all models available in OmniDocs.
 | DocLayoutYOLO | Very Fast | Good | 2-4GB | 1 |
 | Tesseract | Slow (CPU) | Good | Minimal | 1 |
 | DeepSeek-OCR-2 | Fast | Excellent | 16GB | 4 |
+| GLM-OCR | Very Fast | Excellent | ~3GB | 4 |
+| LightOn | Fast | Very Good | ~3GB | 3 |
 
 See [full comparison](comparison.md) for detailed benchmarks.
 
@@ -113,7 +117,6 @@ result = ocr.extract(image)
 ## Coming Soon
 
 See [Roadmap](../roadmap.md) for upcoming models:
-- LightOnOCR-2 (1B, fastest OCR)
 - Chandra (9B, best accuracy)
 - olmOCR-2 (7B, tables/math)
 - MinerU2.5 (1.2B, MLX support)
