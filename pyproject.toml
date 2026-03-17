@@ -51,11 +51,17 @@ Changelog = "https://github.com/adithya-s-k/OmniDocs/releases"
 pytorch = [
     "accelerate>=1.0.0",
     "qwen-vl-utils>=0.0.14",
+    "addict>=2.4.0",
+    "easydict>=1.13",
+    "einops>=0.8.0",
 ]
 vllm = [
     "vllm>=0.6.0",
     "accelerate>=1.0.0",
     "qwen-vl-utils>=0.0.14",
+    "addict>=2.4.0",
+    "easydict>=1.13",
+    "einops>=0.8.0",
 ]
 mlx = [
     "mlx>=0.20.0",
@@ -117,6 +123,9 @@ pytorch = [
     "qwen-vl-utils>=0.0.14",
     "torch>=2.6",
     "transformers>=4.49.0,<5.0.0",
+    "addict>=2.4.0",
+    "easydict>=1.13",
+    "einops>=0.8.0",
 ]
 vllm = [
     {include-group = "pytorch"},

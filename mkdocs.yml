@@ -119,6 +119,7 @@ nav:
       - Qwen: usage/models/qwen.md
       - DotsOCR: usage/models/dotsocr.md
       - Nanonets OCR2: usage/models/nanonets.md
+      - DeepSeek OCR: usage/models/deepseek.md
     - Layout Analysis:
       - usage/tasks/layout-analysis.md
       - MinerU VL: usage/models/mineruvl.md
