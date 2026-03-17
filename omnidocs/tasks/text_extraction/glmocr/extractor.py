@@ -189,11 +189,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         self._generate = generate
 
     def _load_api_backend(self) -> None:
-        from transformers import AutoProcessor
-
-        cache_dir = get_model_cache_dir()
-        self._processor = AutoProcessor.from_pretrained("zai-org/GLM-OCR", cache_dir=str(cache_dir))
-
+        pass
     def extract(
         self,
         image: Union[Image.Image, np.ndarray, str, Path],
@@ -350,23 +346,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
         buffered = io.BytesIO()
         image.save(buffered, format="PNG")
         b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image", "image": image},
-                    {"type": "text", "text": GLMOCR_PROMPT},
-                ],
-            }
-        ]
-        prompt = self._processor.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-        )
 
-        # Send pre-formatted prompt + image — server uses prompt as-is
-        # without re-applying chat template
         response = litellm.completion(
             model=config.model,
             messages=[
@@ -384,10 +364,8 @@ class GLMOCRTextExtractor(BaseTextExtractor):
             api_base=config.api_base,
             timeout=config.timeout,
             extra_body={
-                "prompt": prompt,
                 "repetition_penalty": config.repetition_penalty,
                 "stop": ["<|endoftext|>", "<|end_of_text|>"],
             },
         )
-
         return response.choices[0].message.content

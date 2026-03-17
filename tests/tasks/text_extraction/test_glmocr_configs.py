@@ -191,11 +191,11 @@ class TestGLMOCRAPIConfig:
         """Test default configuration values."""
         from omnidocs.tasks.text_extraction.glmocr import GLMOCRAPIConfig
 
-        config = GLMOCRAPIConfig()
+        config = GLMOCRAPIConfig(api_base="http://localhost:8192/v1")
 
         assert config.model == "openai/glm-ocr"
         assert config.api_key is None
-        assert config.api_base is None
+        assert config.api_base == "http://localhost:8192/v1"
         assert config.max_tokens == 4096
         assert config.temperature == 0.0
         assert config.timeout == 120

@@ -31,7 +31,6 @@ class GLMOCRAPIConfig(BaseModel):
         description="API key.",
     )
     api_base: str = Field(
-        default=None,
         description="Base URL of vLLM server (e.g. http://localhost:8192/v1).",
     )
     max_tokens: int = Field(
