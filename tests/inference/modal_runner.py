@@ -228,6 +228,61 @@ LIGHTON_VLLM_IMAGE = (
         }
     )
 )
+GLM_IMAGE = (
+    modal.Image.from_registry(f"nvidia/cuda:{cuda_pytorch}-devel-ubuntu24.04", add_python="3.12")
+    .apt_install("libglib2.0-0", "libgl1", "libglx-mesa0", "libgl1-mesa-dri")
+    .run_commands("pip install uv")
+    .add_local_dir(
+        str(OMNIDOCS_DIR),
+        remote_path="/opt/omnidocs",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
+    )
+    .run_commands(
+        "echo 'transformers>=5.0.0' > /tmp/overrides.txt && "
+        "uv pip install '/opt/omnidocs[pytorch]' --system --override /tmp/overrides.txt"
+    )
+    .uv_pip_install(flash_attn_wheel)
+    .add_local_dir(
+        str(SCRIPTS_DIR),
+        remote_path="/opt/test_scripts",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc"],
+    )
+    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR, "HF_HOME": MODEL_CACHE_DIR})
+)
+
+GLM_VLLM_IMAGE = (
+    modal.Image.from_registry(f"nvidia/cuda:{cuda_vllm}-devel-ubuntu24.04", add_python="3.12")
+    .apt_install("libopenmpi-dev", "libnuma-dev", "libgl1", "libglib2.0-0")
+    .run_commands("pip install uv")
+    .run_commands("uv pip install vllm==0.17.0 --system")
+    .add_local_dir(
+        str(OMNIDOCS_DIR),
+        remote_path="/opt/omnidocs",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
+    )
+    .run_commands(
+        "echo 'transformers>=5.0.0' > /tmp/overrides.txt && "
+        "uv pip install '/opt/omnidocs[vllm]' --system --override /tmp/overrides.txt"
+    )
+    .add_local_dir(
+        str(SCRIPTS_DIR),
+        remote_path="/opt/test_scripts",
+        copy=True,
+        ignore=["**/__pycache__", "**/*.pyc"],
+    )
+    .env(
+        {
+            "HF_HUB_ENABLE_HF_TRANSFER": "1",
+            "OMNIDOCS_MODELS_DIR": MODEL_CACHE_DIR,
+            "HF_HOME": MODEL_CACHE_DIR,
+            "VLLM_USE_V1": "0",
+            "VLLM_DISABLE_V1": "1",
+        }
+    )
+)
 # ============= Modal App =============
 
 app = modal.App("omnidocs-inference-tests")
@@ -380,6 +435,30 @@ def run_lighton_vllm_test(script_module: str) -> dict:
 
 
 @app.function(
+    image=GLM_IMAGE,
+    gpu="A10G:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def run_glm_pytorch_test(script_module: str) -> dict:
+    """Run a GLM-OCR PyTorch test (transformers>=5.0.0 image) with A10G GPU."""
+    return _execute_script(script_module)
+
+
+@app.function(
+    image=GLM_VLLM_IMAGE,
+    gpu="L40S:1",
+    secrets=[secret],
+    volumes={"/data": volume},
+    timeout=900,
+)
+def run_glm_vllm_test(script_module: str) -> dict:
+    """Run a GLM-OCR VLLM test (vllm==0.17.0 + transformers>=5.0.0) with L40S GPU."""
+    return _execute_script(script_module)
+
+
+@app.function(
     image=OCR_IMAGE,
     gpu="T4:1",
     secrets=[secret],
@@ -421,6 +500,12 @@ def _get_runner(spec):
     if spec.gpu_type is None:
         return run_cpu_test
 
+    if "glm" in spec.tags:
+        from registry import Backend
+
+        if spec.backend == Backend.VLLM:
+            return run_glm_vllm_test
+        return run_glm_pytorch_test
     # OCR tasks with GPU go to OCR image
     if spec.task == Task.OCR and spec.gpu_type:
         return run_ocr_gpu_test

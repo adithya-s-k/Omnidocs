@@ -222,6 +222,39 @@ TEST_REGISTRY: List[TestSpec] = [
         gpu_type=None,
         tags=["lighton", "apple_silicon"],
     ),
+    # GLM-OCR Text Extractor
+    TestSpec(
+        name="glm_ocr_text_pytorch",
+        module="text_extraction.glm_ocr_pytorch",
+        backend=Backend.PYTORCH_GPU,
+        task=Task.TEXT,
+        gpu_type="A10G:1",
+        tags=["glm", "ocr"],
+    ),
+    TestSpec(
+        name="glm_ocr_text_vllm",
+        module="text_extraction.glm_ocr_vllm",
+        backend=Backend.VLLM,
+        task=Task.TEXT,
+        gpu_type="L40S:1",
+        tags=["glm", "ocr"],
+    ),
+    TestSpec(
+        name="glm_ocr_text_api",
+        module="text_extraction.glm_ocr_api",
+        backend=Backend.VLLM,  # not API — needs GPU for local vLLM
+        task=Task.TEXT,
+        gpu_type="L40S:1",
+        tags=["glm", "ocr"],  # no "api" tag — routes to GLM_VLLM_IMAGE
+    ),
+    TestSpec(
+        name="glm_ocr_text_mlx",
+        module="text_extraction.glm_ocr_mlx",
+        backend=Backend.MLX,
+        task=Task.TEXT,
+        gpu_type=None,
+        tags=["glm", "ocr", "apple_silicon"],
+    ),
     # VLM Text Extractor (generic LiteLLM)
     TestSpec(
         name="vlm_text_api",
