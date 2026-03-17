@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DeepSeek-OCR-2 text extraction - VLLM backend (~2500 tokens/s on A100)."""
+"""DeepSeek-OCR text extraction - VLLM backend (~2500 tokens/s on A100)."""
 
 import os
 import sys

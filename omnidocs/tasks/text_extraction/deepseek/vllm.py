@@ -21,6 +21,10 @@ class DeepSeekOCRTextVLLMConfig(BaseModel):
     Recommended for high-throughput batch document processing in production.
     Requires: vllm>=0.11.1 (or nightly for OCR-2), torch, transformers==4.46.3
 
+    Note: Default model is DeepSeek-OCR v1 (not v2) because DeepSeek-OCR-2 VLLM
+    support requires a vllm nightly build. Use PyTorch backend for DeepSeek-OCR-2
+    until official vllm support is released.
+
     Example:
         ```python
         config = DeepSeekOCRTextVLLMConfig(

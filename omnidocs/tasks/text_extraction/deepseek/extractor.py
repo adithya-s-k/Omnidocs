@@ -247,7 +247,7 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
             disable_custom_all_reduce=config.disable_custom_all_reduce,
             enable_prefix_caching=config.enable_prefix_caching,  # must be False
             mm_processor_cache_gb=config.mm_processor_cache_gb,  # must be 0
-            logits_processors=[NGramPerReqLogitsProcessor],  # required for v1
+            logits_processors=[NGramPerReqLogitsProcessor] if config.use_ngram_logits_processor else [],
         )
         self._processor = AutoTokenizer.from_pretrained(config.model, cache_dir=str(cache_dir))
         self._sampling_params_class = SamplingParams

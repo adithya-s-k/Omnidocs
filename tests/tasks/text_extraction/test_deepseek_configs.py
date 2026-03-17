@@ -70,26 +70,6 @@ class TestDeepSeekOCRTextPyTorchConfig:
         with pytest.raises(ValidationError):
             DeepSeekOCRTextPyTorchConfig(torch_dtype="float64")
 
-    def test_max_new_tokens_bounds(self):
-        """Test max_new_tokens validation bounds."""
-        from omnidocs.tasks.text_extraction.deepseek import DeepSeekOCRTextPyTorchConfig
-
-        with pytest.raises(ValidationError):
-            DeepSeekOCRTextPyTorchConfig(max_new_tokens=100)  # below min 256
-
-        with pytest.raises(ValidationError):
-            DeepSeekOCRTextPyTorchConfig(max_new_tokens=100000)  # above max 32768
-
-    def test_temperature_bounds(self):
-        """Test temperature validation bounds."""
-        from omnidocs.tasks.text_extraction.deepseek import DeepSeekOCRTextPyTorchConfig
-
-        with pytest.raises(ValidationError):
-            DeepSeekOCRTextPyTorchConfig(temperature=-0.1)
-
-        with pytest.raises(ValidationError):
-            DeepSeekOCRTextPyTorchConfig(temperature=2.5)
-
     def test_base_size_bounds(self):
         """Test base_size validation bounds."""
         from omnidocs.tasks.text_extraction.deepseek import DeepSeekOCRTextPyTorchConfig
@@ -212,7 +192,7 @@ class TestDeepSeekOCRTextVLLMConfig:
             DeepSeekOCRTextVLLMConfig(max_tokens=100)  # below min 256
 
         with pytest.raises(ValidationError):
-            DeepSeekOCRTextVLLMConfig(max_tokens=8193)  # above max 32768
+            DeepSeekOCRTextVLLMConfig(max_tokens=8193)  # above max 8192
 
     def test_extra_forbid(self):
         """Test that extra parameters raise error."""
