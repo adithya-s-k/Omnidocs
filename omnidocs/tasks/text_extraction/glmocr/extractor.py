@@ -190,6 +190,7 @@ class GLMOCRTextExtractor(BaseTextExtractor):
 
     def _load_api_backend(self) -> None:
         pass
+
     def extract(
         self,
         image: Union[Image.Image, np.ndarray, str, Path],
