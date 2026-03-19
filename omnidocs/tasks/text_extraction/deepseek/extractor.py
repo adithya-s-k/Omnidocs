@@ -397,7 +397,8 @@ class DeepSeekOCRTextExtractor(BaseTextExtractor):
 
     def _infer_mlx(self, image: Image.Image) -> str:
         """MLX inference (Apple Silicon)."""
-        prompt = DEEPSEEK_PROMPTS["markdown"]
+        # Strip <image> token — apply_chat_template adds it via num_images=1
+        prompt = DEEPSEEK_PROMPTS["markdown"].replace("<image>\n", "")
 
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             temp_path = f.name
