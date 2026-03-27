@@ -1,0 +1,8 @@
+# Benchmark outputs — never commit these
+results/
+
+# Cloned OmniDocBench eval repo (auto-managed, not part of source)
+benchmarks/omnidocbench/eval_repo/
+
+# Generated YAML configs inside the eval repo (auto-generated per run)
+benchmarks/omnidocbench/eval_repo/configs/*.yaml
