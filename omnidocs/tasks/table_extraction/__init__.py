@@ -44,6 +44,7 @@ from .models import (
     TableOutput,
 )
 from .tableformer import TableFormerConfig, TableFormerExtractor, TableFormerMode
+from .tatr import TATRExtractor, TATRONNXConfig, TATRPyTorchConfig, TATRVariant
 
 __all__ = [
     # Base
@@ -58,4 +59,9 @@ __all__ = [
     "TableFormerExtractor",
     "TableFormerConfig",
     "TableFormerMode",
+    # TATR
+    "TATRExtractor",
+    "TATRPyTorchConfig",
+    "TATRONNXConfig",
+    "TATRVariant",
 ]
