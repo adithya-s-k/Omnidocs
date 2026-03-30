@@ -481,6 +481,31 @@ TEST_REGISTRY: List[TestSpec] = [
         gpu_type=None,
         tags=["tableformer", "transformer"],
     ),
+    # TATR
+    TestSpec(
+        name="tatr_pytorch_gpu",
+        module="table_extraction.tatr_pytorch_gpu",
+        backend=Backend.PYTORCH_GPU,
+        task=Task.TABLE,
+        gpu_type="T4:1",
+        tags=["tatr", "transformer", "microsoft"],
+    ),
+    TestSpec(
+        name="tatr_pytorch_cpu",
+        module="table_extraction.tatr_pytorch_cpu",
+        backend=Backend.PYTORCH_CPU,
+        task=Task.TABLE,
+        gpu_type=None,
+        tags=["tatr", "transformer", "microsoft"],
+    ),
+    TestSpec(
+        name="tatr_onnx_cpu",
+        module="table_extraction.tatr_onnx_cpu",
+        backend=Backend.PYTORCH_CPU,  # no torch at inference, but export needs it; CPU bucket
+        task=Task.TABLE,
+        gpu_type=None,
+        tags=["tatr", "onnx", "microsoft"],
+    ),
     # ============================================================
     # READING ORDER
     # ============================================================

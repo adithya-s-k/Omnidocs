@@ -166,3 +166,5 @@ poetry.lock
 # # Ignore models directory but not docs/models
 # models/
 # !docs/models/
+
+results/

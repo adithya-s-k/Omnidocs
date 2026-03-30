@@ -202,6 +202,9 @@ html = result.to_html()
 | **Nanonets OCR2** | PyTorch, VLLM, MLX | Fast, accurate |
 | **Granite Docling** | PyTorch, VLLM, MLX, API | IBM research model |
 | **DotsOCR** | PyTorch, VLLM, API | Layout-aware |
+| **LightOn** | PyTorch, VLLM, MLX | High-speed document-to-markdown |
+| **GLM-OCR** | PyTorch, VLLM, MLX | Very Fast and accurate |
+| **Deepseek** | PyTorch, VLLM, MLX, API | Layout-aware document reasoning |
 
 ### Layout Analysis
 
@@ -232,6 +235,7 @@ html = result.to_html()
 | Model | Backends | Notes |
 |-------|----------|-------|
 | **TableFormer** | PyTorch | Structure + content |
+| **Microsoft TATR** | PyTorch,ONNX | DETR-based structure recognition |
 
 ### Reading Order
 

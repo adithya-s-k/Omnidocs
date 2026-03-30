@@ -155,6 +155,7 @@ CPU_IMAGE = (
         ignore=["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"],
     )
     .run_commands("uv pip install '/opt/omnidocs[ocr]' --system")
+    .run_commands("uv pip install onnxruntime onnxscript --system")
     .add_local_dir(
         str(SCRIPTS_DIR),
         remote_path="/opt/test_scripts",
