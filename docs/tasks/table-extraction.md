@@ -9,6 +9,7 @@ Extract structured data from tables in document images.
 | Model | Speed | Output | Backends |
 |-------|-------|--------|----------|
 | **TableFormer** | 0.5-1s/table | Cells, rows, columns, spans | PyTorch |
+| **Microsoft TATR** | 0.2-0.6s/page | Table detection & structure | PyTorch, ONNX |
 
 ---
 
