@@ -59,6 +59,7 @@ end2end_eval:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _ensure_eval_repo(eval_repo_path: Path) -> Path:
     """
     Clone the OmniDocBench eval repo if it doesn't exist yet.
@@ -73,12 +74,11 @@ def _ensure_eval_repo(eval_repo_path: Path) -> Path:
     eval_repo_path.parent.mkdir(parents=True, exist_ok=True)
     result = subprocess.run(
         ["git", "clone", EVAL_REPO_URL, str(eval_repo_path)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            f"Failed to clone eval repo:\n{result.stderr}"
-        )
+        raise RuntimeError(f"Failed to clone eval repo:\n{result.stderr}")
 
     # Install requirements
     req_file = eval_repo_path / "requirements.txt"
@@ -108,6 +108,7 @@ def _resolve_omnidocbench_json(omnidocbench_json: Optional[Path]) -> Path:
     # Try to resolve from HF hub cache without re-downloading
     try:
         import huggingface_hub
+
         cached = huggingface_hub.hf_hub_download(
             repo_id="opendatalab/OmniDocBench",
             filename="OmniDocBench.json",
@@ -146,11 +147,7 @@ def _generate_config(
     return config_path
 
 
-def _run_pdf_validation(
-    config_path: Path,
-    eval_repo_path: Path,
-    model_key: str
-) -> Optional[dict]:
+def _run_pdf_validation(config_path: Path, eval_repo_path: Path, model_key: str) -> Optional[dict]:
     """
     Run pdf_validation.py with the given config.
     Returns the parsed JSON results dict, or None if evaluation failed.
@@ -199,6 +196,7 @@ def _run_pdf_validation(
 # Public entry point
 # ---------------------------------------------------------------------------
 
+
 def run_evaluation(
     run_output_dir: Path,
     model_keys: List[str],
@@ -226,9 +224,9 @@ def run_evaluation(
         eval_repo_path = DEFAULT_EVAL_REPO_PATH
     eval_repo_path = Path(eval_repo_path)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("RUNNING OFFICIAL OMNIDOCBENCH EVALUATION")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Step 1 — ensure eval repo is present
     eval_repo_path = _ensure_eval_repo(eval_repo_path)
@@ -275,9 +273,9 @@ def run_evaluation(
 
 def _print_eval_summary(eval_scores: Dict[str, dict]) -> None:
     """Print a concise side-by-side summary of eval scores."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("EVAL SUMMARY")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     for model_key, scores in eval_scores.items():
         if "error" in scores:
             print(f"  {model_key:<18}  ERROR: {scores['error']}")

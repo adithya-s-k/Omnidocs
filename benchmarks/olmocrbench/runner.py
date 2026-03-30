@@ -30,10 +30,10 @@ from benchmarks.olmocrbench.dataset import OLM_SPLITS, SPLIT_LABELS
 from benchmarks.olmocrbench.scorer import score_case
 from benchmarks.registry import MODEL_REGISTRY, get_extractor
 
-
 # ---------------------------------------------------------------------------
 # PDF → PIL image
 # ---------------------------------------------------------------------------
+
 
 def _pdf_page_to_image(pdf_bytes: bytes, page_num: int):
     """
@@ -41,6 +41,7 @@ def _pdf_page_to_image(pdf_bytes: bytes, page_num: int):
     page_num refers to the original source document page, not this PDF.
     """
     from pdf2image import convert_from_bytes
+
     pages = convert_from_bytes(pdf_bytes, dpi=150, first_page=1, last_page=1)
     if not pages:
         raise ValueError("pdf2image returned no pages")
@@ -51,15 +52,16 @@ def _pdf_page_to_image(pdf_bytes: bytes, page_num: int):
 # Ground-truth extractor (for logging)
 # ---------------------------------------------------------------------------
 
+
 def _extract_gt(payload: dict, check_type: str) -> str:
     if check_type in ("text_present", "text_absent"):
         return payload.get("text", "")
     if check_type == "reading_order":
         before = payload.get("before", payload.get("text_before", ""))
-        after  = payload.get("after",  payload.get("text_after",  ""))
+        after = payload.get("after", payload.get("text_after", ""))
         return f"BEFORE: {before!r}  →  AFTER: {after!r}"
     if check_type == "table":
-        cell  = payload.get("cell", "")
+        cell = payload.get("cell", "")
         parts = [f"cell={cell!r}"]
         for direction in ("up", "down", "left", "right"):
             val = payload.get(direction)
@@ -79,6 +81,7 @@ def _extract_gt(payload: dict, check_type: str) -> str:
 # Core inference + scoring loop for one model
 # ---------------------------------------------------------------------------
 
+
 def run_cases(
     extractor,
     cases: List[OlmTestCase],
@@ -95,16 +98,18 @@ def run_cases(
         try:
             img = _pdf_page_to_image(case.pdf_bytes, case.page_num)
         except Exception as exc:
-            results.append(OlmResult(
-                case_id=case.case_id,
-                split=case.split,
-                check_type=case.check_type,
-                model=model_key,
-                passed=False,
-                latency_s=0.0,
-                failed=True,
-                error=f"PDF render failed: {exc}",
-            ))
+            results.append(
+                OlmResult(
+                    case_id=case.case_id,
+                    split=case.split,
+                    check_type=case.check_type,
+                    model=model_key,
+                    passed=False,
+                    latency_s=0.0,
+                    failed=True,
+                    error=f"PDF render failed: {exc}",
+                )
+            )
             print(f"  ✗ [{case.split:<15}] [{case.check_type:<14}] PDF render failed: {exc}")
             continue
 
@@ -117,17 +122,19 @@ def run_cases(
             passed = score_case(predicted, case.check_type, case.payload, case_id=case.case_id)
             gt = _extract_gt(case.payload, case.check_type)
 
-            results.append(OlmResult(
-                case_id=case.case_id,
-                split=case.split,
-                check_type=case.check_type,
-                # Use model_name from output if available, fall back to registry key
-                model=getattr(out, "model_name", None) or model_key,
-                passed=passed,
-                latency_s=latency,
-                gt=gt,
-                predicted=predicted,  # full output, no truncation
-            ))
+            results.append(
+                OlmResult(
+                    case_id=case.case_id,
+                    split=case.split,
+                    check_type=case.check_type,
+                    # Use model_name from output if available, fall back to registry key
+                    model=getattr(out, "model_name", None) or model_key,
+                    passed=passed,
+                    latency_s=latency,
+                    gt=gt,
+                    predicted=predicted,  # full output, no truncation
+                )
+            )
 
             tick = "✓" if passed else "✗"
             pred_preview = predicted[:200].replace("\n", "↵") + ("…" if len(predicted) > 200 else "")
@@ -137,16 +144,18 @@ def run_cases(
 
         except Exception as exc:
             latency = time.perf_counter() - t0
-            results.append(OlmResult(
-                case_id=case.case_id,
-                split=case.split,
-                check_type=case.check_type,
-                model=model_key,
-                passed=False,
-                latency_s=latency,
-                failed=True,
-                error=str(exc),
-            ))
+            results.append(
+                OlmResult(
+                    case_id=case.case_id,
+                    split=case.split,
+                    check_type=case.check_type,
+                    model=model_key,
+                    passed=False,
+                    latency_s=latency,
+                    failed=True,
+                    error=str(exc),
+                )
+            )
             print(f"  ✗ [{case.split:<15}] [{case.check_type:<14}] FAILED: {exc}")
             traceback.print_exc()
 
@@ -157,10 +166,11 @@ def run_cases(
 # Aggregation
 # ---------------------------------------------------------------------------
 
+
 def aggregate(results: List[OlmResult], model_key: str) -> dict:
     """Compute per-split and per-check-type pass rates."""
-    total    = len(results)
-    failed   = [r for r in results if r.failed]
+    total = len(results)
+    failed = [r for r in results if r.failed]
     scorable = [r for r in results if not r.failed]
 
     by_split: Dict[str, List[bool]] = defaultdict(list)
@@ -178,21 +188,15 @@ def aggregate(results: List[OlmResult], model_key: str) -> dict:
     p95 = lats[min(int(0.95 * n), n - 1)] if n else None
 
     return {
-        "model":          model_key,
-        "overall":        overall,
-        "samples_run":    total,
+        "model": model_key,
+        "overall": overall,
+        "samples_run": total,
         "samples_failed": len(failed),
-        "failure_rate":   len(failed) / total if total else 0.0,
-        "latency_p50_s":  p50,
-        "latency_p95_s":  p95,
-        "by_split": {
-            split: (sum(v) / len(v) if v else None)
-            for split, v in by_split.items()
-        },
-        "by_check": {
-            ct: (sum(v) / len(v) if v else None)
-            for ct, v in by_check.items()
-        },
+        "failure_rate": len(failed) / total if total else 0.0,
+        "latency_p50_s": p50,
+        "latency_p95_s": p95,
+        "by_split": {split: (sum(v) / len(v) if v else None) for split, v in by_split.items()},
+        "by_check": {ct: (sum(v) / len(v) if v else None) for ct, v in by_check.items()},
         "n_by_split": {split: len(v) for split, v in by_split.items()},
     }
 
@@ -201,13 +205,12 @@ def aggregate(results: List[OlmResult], model_key: str) -> dict:
 # Report printer
 # ---------------------------------------------------------------------------
 
+
 def print_report(all_metrics: List[dict], splits: List[str]) -> None:
     div = "=" * 120
     col_labels = [SPLIT_LABELS.get(s, s[:7]) for s in splits]
     header = (
-        f"\n{'Model':<18}"
-        + "".join(f"{lbl:>9}" for lbl in col_labels)
-        + f"{'Overall':>10}  {'p50(s)':>7} {'Fail%':>6}"
+        f"\n{'Model':<18}" + "".join(f"{lbl:>9}" for lbl in col_labels) + f"{'Overall':>10}  {'p50(s)':>7} {'Fail%':>6}"
     )
 
     print(f"\n{div}")
@@ -227,10 +230,7 @@ def print_report(all_metrics: List[dict], splits: List[str]) -> None:
         row += f"  {(m['failure_rate'] or 0) * 100:>5.1f}%"
         print(row)
 
-        counts = "  ".join(
-            f"{SPLIT_LABELS.get(s, s[:7])}={m['n_by_split'].get(s, 0)}"
-            for s in splits
-        )
+        counts = "  ".join(f"{SPLIT_LABELS.get(s, s[:7])}={m['n_by_split'].get(s, 0)}" for s in splits)
         print(f"  {'':18}  ({counts})")
 
     print(div)
@@ -257,6 +257,7 @@ def print_report(all_metrics: List[dict], splits: List[str]) -> None:
 # Top-level entry point
 # ---------------------------------------------------------------------------
 
+
 def run_olmocrbench_bench(
     model_keys: List[str],
     splits: Optional[List[str]] = None,
@@ -277,6 +278,7 @@ def run_olmocrbench_bench(
         A dict with all_metrics and raw_results.
     """
     import datetime
+
     from benchmarks.olmocrbench.dataset import load_olmocrbench_bench
 
     # Validate
@@ -310,9 +312,9 @@ def run_olmocrbench_bench(
     all_raw: Dict[str, list] = {}
 
     for model_key in model_keys:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  Running: {model_key}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         try:
             extractor = get_extractor(model_key)
@@ -353,6 +355,7 @@ def run_olmocrbench_bench(
         del extractor
         try:
             import torch
+
             torch.cuda.empty_cache()
         except Exception:
             pass
@@ -362,12 +365,12 @@ def run_olmocrbench_bench(
 
     # Write results to disk
     payload = {
-        "run_id":      run_id,
-        "benchmark":   "olmocrbench-bench",
-        "splits":      splits,
-        "num_cases":   len(cases),
-        "models":      model_keys,
-        "metrics":     all_metrics,
+        "run_id": run_id,
+        "benchmark": "olmocrbench-bench",
+        "splits": splits,
+        "num_cases": len(cases),
+        "models": model_keys,
+        "metrics": all_metrics,
         "raw_results": all_raw,
     }
 
@@ -376,11 +379,11 @@ def run_olmocrbench_bench(
     print(f"\nFull results saved to: {raw_path}")
 
     summary = {
-        "run_id":    run_id,
+        "run_id": run_id,
         "benchmark": "olmocrbench-bench",
-        "splits":    splits,
-        "models":    model_keys,
-        "metrics":   all_metrics,
+        "splits": splits,
+        "models": model_keys,
+        "metrics": all_metrics,
     }
     summary_path = output_dir / "summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")

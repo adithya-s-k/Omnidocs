@@ -13,7 +13,6 @@ from typing import List, Optional
 
 from benchmarks.base import OlmTestCase
 
-
 # All available splits in allenai/olmOCR-bench
 OLM_SPLITS = [
     "arxiv_math",
@@ -27,22 +26,22 @@ OLM_SPLITS = [
 
 # Maps each split to the leaderboard column header used in reporting
 SPLIT_LABELS = {
-    "arxiv_math":      "ArXiv",
+    "arxiv_math": "ArXiv",
     "headers_footers": "HdrFtr",
-    "long_tiny_text":  "TinyTxt",
-    "multi_column":    "MultCol",
-    "old_scans":       "OldScan",
-    "old_scans_math":  "OldMath",
-    "table_tests":     "Tables",
+    "long_tiny_text": "TinyTxt",
+    "multi_column": "MultCol",
+    "old_scans": "OldScan",
+    "old_scans_math": "OldMath",
+    "table_tests": "Tables",
 }
 
 # Aliases used in some records' `type` field
 _TYPE_ALIASES = {
-    "absent":  "text_absent",
+    "absent": "text_absent",
     "present": "text_present",
-    "order":   "reading_order",
-    "math":    "math",
-    "table":   "table",
+    "order": "reading_order",
+    "math": "math",
+    "table": "table",
 }
 
 
@@ -59,16 +58,19 @@ def load_olmocr_bench(
         max_per_split: If set, load at most this many cases per split.
     """
     import os
+
     import huggingface_hub
 
     # Disable HF transfer for the snapshot download — avoids occasional issues
     os.environ.pop("HF_HUB_ENABLE_HF_TRANSFER", None)
 
     print("Downloading olmOCR-bench dataset (snapshot)...")
-    local_dir = Path(huggingface_hub.snapshot_download(
-        repo_id="allenai/olmOCR-bench",
-        repo_type="dataset",
-    ))
+    local_dir = Path(
+        huggingface_hub.snapshot_download(
+            repo_id="allenai/olmOCR-bench",
+            repo_type="dataset",
+        )
+    )
     print(f"  Dataset at: {local_dir}")
 
     cases: List[OlmTestCase] = []
@@ -116,18 +118,17 @@ def load_olmocr_bench(
                 if pdf_key not in pdf_cache:
                     pdf_cache[pdf_key] = pdf_path.read_bytes()
 
-                case_id = (
-                    f"{split}/{Path(pdf_rel).stem}"
-                    f"/p{page_num}/{check_type}/{len(split_cases)}"
+                case_id = f"{split}/{Path(pdf_rel).stem}/p{page_num}/{check_type}/{len(split_cases)}"
+                split_cases.append(
+                    OlmTestCase(
+                        pdf_bytes=pdf_cache[pdf_key],
+                        page_num=page_num,
+                        check_type=check_type,
+                        split=split,
+                        case_id=case_id,
+                        payload=rec,
+                    )
                 )
-                split_cases.append(OlmTestCase(
-                    pdf_bytes=pdf_cache[pdf_key],
-                    page_num=page_num,
-                    check_type=check_type,
-                    split=split,
-                    case_id=case_id,
-                    payload=rec,
-                ))
 
                 if max_per_split and len(split_cases) >= max_per_split:
                     break

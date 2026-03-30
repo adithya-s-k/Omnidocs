@@ -27,8 +27,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from benchmarks.registry import list_models
 from benchmarks.omnidocbench.runner import run_omnidocbench
+from benchmarks.registry import list_models
 
 
 def main():
@@ -41,10 +41,7 @@ def main():
         "--models",
         type=str,
         default="",
-        help=(
-            "Comma-separated model keys to benchmark "
-            f"(default: all). Available: {', '.join(list_models())}"
-        ),
+        help=(f"Comma-separated model keys to benchmark (default: all). Available: {', '.join(list_models())}"),
     )
     parser.add_argument(
         "--max-samples",
@@ -77,10 +74,7 @@ def main():
         "--omnidocbench-json",
         type=str,
         default="",
-        help=(
-            "Path to OmniDocBench.json ground-truth file. "
-            "Resolved automatically from HF cache if not provided."
-        ),
+        help=("Path to OmniDocBench.json ground-truth file. Resolved automatically from HF cache if not provided."),
     )
     parser.add_argument(
         "--list-models",
@@ -95,8 +89,7 @@ def main():
         print("Available models:", list_models())
         sys.exit(0)
 
-    model_keys = [m.strip() for m in args.models.split(",") if m.strip()] \
-                 if args.models else list_models()
+    model_keys = [m.strip() for m in args.models.split(",") if m.strip()] if args.models else list_models()
 
     run_omnidocbench(
         model_keys=model_keys,

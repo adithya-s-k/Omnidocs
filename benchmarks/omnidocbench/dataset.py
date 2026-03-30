@@ -24,6 +24,7 @@ def load_omnidocbench(max_samples: Optional[int] = None) -> List[PageSample]:
                      iteration during development).
     """
     import json
+
     import huggingface_hub
     from PIL import Image as PILImage
 

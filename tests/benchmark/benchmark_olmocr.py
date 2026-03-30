@@ -15,19 +15,19 @@ Scoring uses BINARY pass/fail unit tests (not NED/BLEU/TEDS):
   math           — LaTeX symbol presence / relative position
 
 Usage:
-    modal run tests/inference/benchmark_olmocr.py
+    modal run tests/benchmark/benchmark_olmocr.py
 
     # Specific models
-    modal run tests/inference/benchmark_olmocr.py --models glmocr deepseek
+    modal run tests/benchmark/benchmark_olmocr.py --models glmocr deepseek
 
     # Specific splits
-    modal run tests/inference/benchmark_olmocr.py --splits arxiv_math table_tests
+    modal run tests/benchmark/benchmark_olmocr.py --splits arxiv_math table_tests
 
     # Limit samples per split (fast iteration)
-    modal run tests/inference/benchmark_olmocr.py --max-per-split 20
+    modal run tests/benchmark/benchmark_olmocr.py --max-per-split 20
 
     # Save results JSON
-    modal run tests/inference/benchmark_olmocr.py --output results/olmocr_run01.json
+    modal run tests/benchmark/benchmark_olmocr.py --output results/olmocr_run01.json
 
 Splits available (from allenai/olmOCR-bench):
     arxiv_math      — arXiv papers, heavy LaTeX math
@@ -43,12 +43,11 @@ GPU routing mirrors benchmark_omnidocbench.py exactly.
 
 from __future__ import annotations
 
-import io
 import json
 import re
 import sys
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -58,21 +57,21 @@ import modal
 # Paths
 # ---------------------------------------------------------------------------
 
-SCRIPT_DIR   = Path(__file__).parent
+SCRIPT_DIR = Path(__file__).parent
 OMNIDOCS_DIR = SCRIPT_DIR.parent.parent
-MODEL_CACHE  = "/data/.cache"
+MODEL_CACHE = "/data/.cache"
 
 # ---------------------------------------------------------------------------
 # Modal images  (identical to benchmark_omnidocbench.py)
 # ---------------------------------------------------------------------------
 
-cuda_vllm    = "12.8.1"
+cuda_vllm = "12.8.1"
 cuda_pytorch = "12.8.0"
 flash_attn_wheel = (
     "https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/"
     "flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp312-cp312-linux_x86_64.whl"
 )
-_ignore   = ["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"]
+_ignore = ["**/__pycache__", "**/*.pyc", "**/.git", "**/.venv", "**/.*"]
 _env_base = {
     "HF_HUB_ENABLE_HF_TRANSFER": "1",
     "OMNIDOCS_MODELS_DIR": MODEL_CACHE,
@@ -161,7 +160,7 @@ LIGHTON_IMAGE = (
 # Modal app + shared volume
 # ---------------------------------------------------------------------------
 
-app    = modal.App("omnidocs-olmocr-bench")
+app = modal.App("omnidocs-olmocr-bench")
 volume = modal.Volume.from_name("omnidocs", create_if_missing=True)
 secret = modal.Secret.from_name("adithya-hf-wandb")
 
@@ -181,28 +180,30 @@ OLM_SPLITS = [
 
 # Maps each split to the leaderboard column header
 SPLIT_LABELS = {
-    "arxiv_math":      "ArXiv",
+    "arxiv_math": "ArXiv",
     "headers_footers": "HdrFtr",
-    "long_tiny_text":  "TinyTxt",
-    "multi_column":    "MultCol",
-    "old_scans":       "OldScan",
-    "old_scans_math":  "OldMath",
-    "table_tests":     "Tables",
+    "long_tiny_text": "TinyTxt",
+    "multi_column": "MultCol",
+    "old_scans": "OldScan",
+    "old_scans_math": "OldMath",
+    "table_tests": "Tables",
 }
 
 # ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class OlmTestCase:
     """One unit-test case from a olmOCR-Bench JSONL file."""
-    pdf_bytes: bytes        # raw bytes of the PDF file
-    page_num: int           # 0-indexed page to render
-    check_type: str         # text_present | text_absent | reading_order | table | math
-    split: str              # which JSONL split this came from
-    case_id: str            # unique identifier for reporting
-    payload: dict           # full original JSON record (for scorer)
+
+    pdf_bytes: bytes  # raw bytes of the PDF file
+    page_num: int  # 0-indexed page to render
+    check_type: str  # text_present | text_absent | reading_order | table | math
+    split: str  # which JSONL split this came from
+    case_id: str  # unique identifier for reporting
+    payload: dict  # full original JSON record (for scorer)
 
 
 @dataclass
@@ -213,24 +214,28 @@ class OlmResult:
     model: str
     passed: bool
     latency_s: float
-    failed: bool = False    # True if model raised an exception
+    failed: bool = False  # True if model raised an exception
     error: str = ""
-    gt: str = ""           # ground-truth value(s) extracted from payload
-    predicted: str = ""   # raw model output (truncated for logging)
+    gt: str = ""  # ground-truth value(s) extracted from payload
+    predicted: str = ""  # raw model output (truncated for logging)
+
 
 # ---------------------------------------------------------------------------
 # Dataset loader  (runs locally before sending data to Modal)
 # ---------------------------------------------------------------------------
 def load_olmocr_bench(splits, max_per_split=None):
-    import huggingface_hub
     import os
+
+    import huggingface_hub
 
     os.environ.pop("HF_HUB_ENABLE_HF_TRANSFER", None)
     # Clone the entire dataset repo once — avoids per-file 404s
-    local_dir = Path(huggingface_hub.snapshot_download(
-        repo_id="allenai/olmOCR-bench",
-        repo_type="dataset",
-    ))
+    local_dir = Path(
+        huggingface_hub.snapshot_download(
+            repo_id="allenai/olmOCR-bench",
+            repo_type="dataset",
+        )
+    )
 
     cases = []
     pdf_cache = {}
@@ -250,14 +255,14 @@ def load_olmocr_bench(splits, max_per_split=None):
                 page_num = int(rec.get("page", 0))
                 check_type = rec.get("check_type", rec.get("type", ""))
                 # Normalize short aliases used in the dataset's `type` field
-                _TYPE_ALIASES = {
-                    "absent":  "text_absent",
+                _type_aliases = {
+                    "absent": "text_absent",
                     "present": "text_present",
-                    "order":   "reading_order",
-                    "math":    "math",
-                    "table":   "table",
+                    "order": "reading_order",
+                    "math": "math",
+                    "table": "table",
                 }
-                check_type = _TYPE_ALIASES.get(check_type, check_type)
+                check_type = _type_aliases.get(check_type, check_type)
                 # arxiv_math records don't have check_type — infer it from present keys
                 if not check_type:
                     if "math" in rec:
@@ -280,14 +285,16 @@ def load_olmocr_bench(splits, max_per_split=None):
                     pdf_cache[pdf_key] = pdf_path.read_bytes()
 
                 case_id = f"{split}/{Path(pdf_rel).stem}/p{page_num}/{check_type}/{len(split_cases)}"
-                split_cases.append(OlmTestCase(
-                    pdf_bytes=pdf_cache[pdf_key],
-                    page_num=page_num,
-                    check_type=check_type,
-                    split=split,
-                    case_id=case_id,
-                    payload=rec,
-                ))
+                split_cases.append(
+                    OlmTestCase(
+                        pdf_bytes=pdf_cache[pdf_key],
+                        page_num=page_num,
+                        check_type=check_type,
+                        split=split,
+                        case_id=case_id,
+                        payload=rec,
+                    )
+                )
 
                 if max_per_split and len(split_cases) >= max_per_split:
                     break
@@ -297,23 +304,27 @@ def load_olmocr_bench(splits, max_per_split=None):
 
     return cases
 
+
 # ---------------------------------------------------------------------------
 # PDF → image (runs inside Modal containers)
 # ---------------------------------------------------------------------------
 
+
 def _pdf_page_to_image(pdf_bytes: bytes, page_num: int):
     from pdf2image import convert_from_bytes
+
     # olmOCR-bench PDFs are pre-extracted single pages.
     # page_num refers to the original source doc, not this file.
     pages = convert_from_bytes(pdf_bytes, dpi=150, first_page=1, last_page=1)
     if not pages:
-        raise ValueError(f"pdf2image returned no pages")
+        raise ValueError("pdf2image returned no pages")
     return pages[0].convert("RGB")
 
 
 # ---------------------------------------------------------------------------
 # Scorer  (pure Python, no external deps beyond difflib which is stdlib)
 # ---------------------------------------------------------------------------
+
 
 def _fuzzy_contains(text: str, query: str, threshold: float = 0.8) -> bool:
     """
@@ -327,6 +338,7 @@ def _fuzzy_contains(text: str, query: str, threshold: float = 0.8) -> bool:
         return query in text
 
     import difflib
+
     q_len = len(query)
     if q_len == 0:
         return True
@@ -346,37 +358,37 @@ def _get_search_region(text: str, payload: dict) -> str:
     If neither is specified, return the full text.
     """
     first_n = payload.get("first_n")
-    last_n  = payload.get("last_n")
+    last_n = payload.get("last_n")
     if first_n is not None:
         return text[: int(first_n)]
     if last_n is not None:
-        return text[-int(last_n):]
+        return text[-int(last_n) :]
     return text
 
 
 def _score_text_present(predicted: str, payload: dict) -> bool:
     """text_present: the query string MUST appear in the output."""
-    query     = payload.get("text", "")
+    query = payload.get("text", "")
     threshold = float(payload.get("threshold", 0.8))
-    region    = _get_search_region(predicted, payload)
+    region = _get_search_region(predicted, payload)
 
     case_sensitive = payload.get("case_sensitive", True)
     if not case_sensitive:
         region = region.lower()
-        query  = query.lower()
+        query = query.lower()
 
     return _fuzzy_contains(region, query, threshold)
 
 
 def _score_text_absent(predicted: str, payload: dict) -> bool:
     """text_absent: the query string must NOT appear in the output."""
-    query     = payload.get("text", "")
+    query = payload.get("text", "")
     threshold = float(payload.get("threshold", 0.8))
-    region    = _get_search_region(predicted, payload)
+    region = _get_search_region(predicted, payload)
 
     # text_absent is NOT case-sensitive per olmOCR-bench spec
     region = region.lower()
-    query  = query.lower()
+    query = query.lower()
 
     return not _fuzzy_contains(region, query, threshold)
 
@@ -387,14 +399,14 @@ def _score_reading_order(predicted: str, payload: dict) -> bool:
     Both use fuzzy matching with the provided threshold.
     """
     before = payload.get("before", "")
-    after  = payload.get("after", "")
+    after = payload.get("after", "")
     threshold = float(payload.get("threshold", 0.8))
 
     case_sensitive = payload.get("case_sensitive", True)
     text = predicted if case_sensitive else predicted.lower()
     if not case_sensitive:
         before = before.lower()
-        after  = after.lower()
+        after = after.lower()
 
     # Find earliest position where before occurs
     b_len = len(before)
@@ -414,7 +426,7 @@ def _score_reading_order(predicted: str, payload: dict) -> bool:
         return -1
 
     pos_before = _first_occurrence(text, before, threshold)
-    pos_after  = _first_occurrence(text, after,  threshold)
+    pos_after = _first_occurrence(text, after, threshold)
 
     if pos_before == -1 or pos_after == -1:
         return False
@@ -538,6 +550,7 @@ def _score_reading_order(predicted: str, payload: dict) -> bool:
 
 #     return False
 
+
 def _parse_markdown_table(md: str) -> List[List[str]]:
     """Parse a markdown pipe table into a 2D list of strings."""
     rows = []
@@ -587,11 +600,10 @@ def _parse_html_table(html: str) -> List[List[str]]:
     return p.rows
 
 
-def _find_cell_position(
-    rows: List[List[str]], value: str, threshold: float
-) -> Optional[Tuple[int, int]]:
+def _find_cell_position(rows: List[List[str]], value: str, threshold: float) -> Optional[Tuple[int, int]]:
     """Return (row, col) of the first cell that fuzzy-matches value, or None."""
     import difflib
+
     for r, row in enumerate(rows):
         for c, cell in enumerate(row):
             if difflib.SequenceMatcher(None, value.lower(), cell.lower()).ratio() >= threshold:
@@ -618,23 +630,23 @@ def _score_table(predicted: str, payload: dict) -> bool:
       3. ALL specified neighbours must match — it's a logical AND.
       4. If no table structure is found in the output, fall back to a plain-text
          proximity check: the cell and every non-null neighbour must all appear
-         within a sliding window of `_TABLE_PROSE_WINDOW` characters.
+         within a sliding window of `table_prose_window` characters.
     """
     import difflib
 
-    cell      = payload.get("cell", "")
-    up        = payload.get("up")        # str or None
-    down      = payload.get("down")      # str or None
-    left      = payload.get("left")      # str or None
-    right     = payload.get("right")     # str or None
+    cell = payload.get("cell", "")
+    up = payload.get("up")  # str or None
+    down = payload.get("down")  # str or None
+    left = payload.get("left")  # str or None
+    right = payload.get("right")  # str or None
     threshold = float(payload.get("threshold", 0.8))
 
     # direction → (row_delta, col_delta)
     neighbours = {
-        "up":    ((-1,  0), up),
-        "down":  (( 1,  0), down),
-        "left":  (( 0, -1), left),
-        "right": (( 0, +1), right),
+        "up": ((-1, 0), up),
+        "down": ((1, 0), down),
+        "left": ((0, -1), left),
+        "right": ((0, +1), right),
     }
     # Only keep directions that have a non-null, non-empty expected value
     active_neighbours = {
@@ -683,9 +695,7 @@ def _score_table(predicted: str, payload: dict) -> bool:
                 if not (0 <= nr < len(grid) and 0 <= nc < len(grid[nr])):
                     all_neighbours_ok = False
                     break
-                ratio = difflib.SequenceMatcher(
-                    None, str(expected).lower(), grid[nr][nc].lower()
-                ).ratio()
+                ratio = difflib.SequenceMatcher(None, str(expected).lower(), grid[nr][nc].lower()).ratio()
                 if ratio < threshold:
                     all_neighbours_ok = False
                     break
@@ -702,7 +712,7 @@ def _score_table(predicted: str, payload: dict) -> bool:
     # ------------------------------------------------------------------ #
     # All required values (cell + every active neighbour) must appear
     # within a sliding window of this many characters to count as "nearby".
-    _TABLE_PROSE_WINDOW = 800
+    table_prose_window = 800
 
     required_values = [cell] + [str(exp) for _, exp in active_neighbours.values()]
     # Filter out empty strings just in case
@@ -715,10 +725,7 @@ def _score_table(predicted: str, payload: dict) -> bool:
     text_lower = predicted.lower()
 
     # First check: do ALL required values appear anywhere in the output?
-    all_present = all(
-        _fuzzy_contains(text_lower, v.lower(), threshold)
-        for v in required_values
-    )
+    all_present = all(_fuzzy_contains(text_lower, v.lower(), threshold) for v in required_values)
     if not all_present:
         return False
 
@@ -734,17 +741,16 @@ def _score_table(predicted: str, payload: dict) -> bool:
                 return i
         return -1
 
-    positions = [
-        _first_fuzzy_index(text_lower, v.lower(), threshold)
-        for v in required_values
-    ]
+    positions = [_first_fuzzy_index(text_lower, v.lower(), threshold) for v in required_values]
     positions = [p for p in positions if p != -1]
 
     if not positions:
         return False
 
     span = max(positions) - min(positions)
-    return span <= _TABLE_PROSE_WINDOW
+    return span <= table_prose_window
+
+
 def _score_math(predicted: str, payload: dict) -> bool:
     """
     math: a LaTeX expression must be PRESENT in the output.
@@ -760,7 +766,7 @@ def _score_math(predicted: str, payload: dict) -> bool:
     """
     primary = payload.get("latex", payload.get("math", payload.get("text", "")))
     secondary = payload.get("secondary_latex", "")
-    direction = payload.get("direction", "")    # left | right (secondary relative to primary)
+    direction = payload.get("direction", "")  # left | right (secondary relative to primary)
     threshold = float(payload.get("threshold", 0.7))
 
     if not primary:
@@ -776,7 +782,7 @@ def _score_math(predicted: str, payload: dict) -> bool:
         p_idx = predicted.find(primary)
         s_idx = predicted.find(secondary)
         if p_idx == -1 or s_idx == -1:
-            return True   # fuzzy found but not exact; accept
+            return True  # fuzzy found but not exact; accept
         if direction == "right":
             # secondary should be to the right → secondary index > primary index
             return s_idx > p_idx
@@ -791,11 +797,11 @@ def _score_math(predicted: str, payload: dict) -> bool:
 # ---------------------------------------------------------------------------
 
 _SCORERS = {
-    "text_present":  _score_text_present,
-    "text_absent":   _score_text_absent,
+    "text_present": _score_text_present,
+    "text_absent": _score_text_absent,
     "reading_order": _score_reading_order,
-    "table":         _score_table,
-    "math":          _score_math,
+    "table": _score_table,
+    "math": _score_math,
 }
 
 
@@ -821,16 +827,16 @@ def _extract_gt(payload: dict, check_type: str) -> str:
         return payload.get("text", "")
     if check_type == "reading_order":
         before = payload.get("before", payload.get("text_before", ""))
-        after  = payload.get("after",  payload.get("text_after",  ""))
+        after = payload.get("after", payload.get("text_after", ""))
         return f"BEFORE: {before!r}  →  AFTER: {after!r}"
     if check_type == "table":
-        cell  = payload.get("cell", "")
+        cell = payload.get("cell", "")
         parts = [f"cell={cell!r}"]
         for direction in ("up", "down", "left", "right"):
             val = payload.get(direction)
             if val is not None and str(val).strip():
                 parts.append(f"{direction}={val!r}")
-        top_h  = payload.get("top_heading")
+        top_h = payload.get("top_heading")
         left_h = payload.get("left_heading")
         if top_h:
             parts.append(f"top_heading={top_h!r}")
@@ -840,6 +846,7 @@ def _extract_gt(payload: dict, check_type: str) -> str:
     if check_type == "math":
         return payload.get("latex", payload.get("math", payload.get("text", "")))
     return ""
+
 
 def _run_cases(extractor_factory, cases: List[OlmTestCase]) -> List[OlmResult]:
     """
@@ -867,16 +874,18 @@ def _run_cases(extractor_factory, cases: List[OlmTestCase]) -> List[OlmResult]:
             # ))
             gt = _extract_gt(case.payload, case.check_type)
 
-            results.append(OlmResult(
-                case_id=case.case_id,
-                split=case.split,
-                check_type=case.check_type,
-                model=getattr(out, "model_name", None) or "unknown",
-                passed=passed,
-                latency_s=latency,
-                gt=gt,
-                predicted=predicted,
-            ))
+            results.append(
+                OlmResult(
+                    case_id=case.case_id,
+                    split=case.split,
+                    check_type=case.check_type,
+                    model=getattr(out, "model_name", None) or "unknown",
+                    passed=passed,
+                    latency_s=latency,
+                    gt=gt,
+                    predicted=predicted,
+                )
+            )
             tick = "✓" if passed else "✗"
             pred_preview = predicted[:200].replace("\n", "↵") + ("…" if len(predicted) > 200 else "")
             print(f"  {tick} [{case.split:<15}] [{case.check_type:<14}] {latency:.2f}s")
@@ -887,17 +896,20 @@ def _run_cases(extractor_factory, cases: List[OlmTestCase]) -> List[OlmResult]:
 
         except Exception as exc:
             import traceback
+
             latency = time.perf_counter() - t0
-            results.append(OlmResult(
-                case_id=case.case_id,
-                split=case.split,
-                check_type=case.check_type,
-                model="unknown",
-                passed=False,
-                latency_s=latency,
-                failed=True,
-                error=str(exc),
-            ))
+            results.append(
+                OlmResult(
+                    case_id=case.case_id,
+                    split=case.split,
+                    check_type=case.check_type,
+                    model="unknown",
+                    passed=False,
+                    latency_s=latency,
+                    failed=True,
+                    error=str(exc),
+                )
+            )
             print(f"  ✗ [{case.split:<15}] [{case.check_type:<14}] FAILED: {exc}")
             traceback.print_exc()
 
@@ -908,100 +920,116 @@ def _run_cases(extractor_factory, cases: List[OlmTestCase]) -> List[OlmResult]:
 # Remote Modal functions  (one per model / image / GPU)
 # ---------------------------------------------------------------------------
 
-@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret],
-              volumes={"/data": volume}, timeout=7200)
+
+@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def bench_qwen(cases: List[OlmTestCase]) -> List[OlmResult]:
     from omnidocs.tasks.text_extraction import QwenTextExtractor
     from omnidocs.tasks.text_extraction.qwen import QwenTextPyTorchConfig
+
     def factory():
-        return QwenTextExtractor(backend=QwenTextPyTorchConfig(
-            model="Qwen/Qwen3-VL-2B-Instruct", device="cuda"))
+        return QwenTextExtractor(backend=QwenTextPyTorchConfig(model="Qwen/Qwen3-VL-2B-Instruct", device="cuda"))
+
     return _run_cases(factory, cases)
 
 
-@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret],
-              volumes={"/data": volume}, timeout=7200)
+@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def bench_deepseek(cases: List[OlmTestCase]) -> List[OlmResult]:
     from omnidocs.tasks.text_extraction import DeepSeekOCRTextExtractor
     from omnidocs.tasks.text_extraction.deepseek import DeepSeekOCRTextPyTorchConfig
+
     def factory():
-        return DeepSeekOCRTextExtractor(backend=DeepSeekOCRTextPyTorchConfig(
-            model="unsloth/DeepSeek-OCR-2",
-            device="cuda",
-            torch_dtype="bfloat16",
-            use_flash_attention=False,
-            crop_mode=True,
-        ))
+        return DeepSeekOCRTextExtractor(
+            backend=DeepSeekOCRTextPyTorchConfig(
+                model="unsloth/DeepSeek-OCR-2",
+                device="cuda",
+                torch_dtype="bfloat16",
+                use_flash_attention=False,
+                crop_mode=True,
+            )
+        )
+
     return _run_cases(factory, cases)
 
 
-@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret],
-              volumes={"/data": volume}, timeout=7200)
+@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def bench_nanonets(cases: List[OlmTestCase]) -> List[OlmResult]:
     from omnidocs.tasks.text_extraction import NanonetsTextExtractor
     from omnidocs.tasks.text_extraction.nanonets import NanonetsTextPyTorchConfig
+
     def factory():
         return NanonetsTextExtractor(backend=NanonetsTextPyTorchConfig(device="cuda"))
+
     return _run_cases(factory, cases)
 
 
-@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret],
-              volumes={"/data": volume}, timeout=7200)
+@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def bench_granitedocling(cases: List[OlmTestCase]) -> List[OlmResult]:
     from omnidocs.tasks.text_extraction import GraniteDoclingTextExtractor
     from omnidocs.tasks.text_extraction.granitedocling import GraniteDoclingTextPyTorchConfig
+
     def factory():
-        return GraniteDoclingTextExtractor(backend=GraniteDoclingTextPyTorchConfig(
-            device="cuda", torch_dtype="bfloat16", use_flash_attention=False))
+        return GraniteDoclingTextExtractor(
+            backend=GraniteDoclingTextPyTorchConfig(device="cuda", torch_dtype="bfloat16", use_flash_attention=False)
+        )
+
     return _run_cases(factory, cases)
 
 
-@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret],
-              volumes={"/data": volume}, timeout=7200)
+@app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def bench_mineruvl(cases: List[OlmTestCase]) -> List[OlmResult]:
     from omnidocs.tasks.text_extraction import MinerUVLTextExtractor
     from omnidocs.tasks.text_extraction.mineruvl import MinerUVLTextPyTorchConfig
+
     def factory():
         return MinerUVLTextExtractor(backend=MinerUVLTextPyTorchConfig(device="cuda"))
+
     return _run_cases(factory, cases)
 
 
-@app.function(image=GLM_IMAGE, gpu="A10G:1", secrets=[secret],
-              volumes={"/data": volume}, timeout=7200)
+@app.function(image=GLM_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def bench_glmocr(cases: List[OlmTestCase]) -> List[OlmResult]:
     from omnidocs.tasks.text_extraction import GLMOCRTextExtractor
     from omnidocs.tasks.text_extraction.glmocr import GLMOCRPyTorchConfig
+
     def factory():
         return GLMOCRTextExtractor(backend=GLMOCRPyTorchConfig(device="cuda"))
+
     return _run_cases(factory, cases)
 
 
-@app.function(image=LIGHTON_IMAGE, gpu="A10G:1", secrets=[secret],
-              volumes={"/data": volume}, timeout=7200)
+@app.function(image=LIGHTON_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def bench_lighton(cases: List[OlmTestCase]) -> List[OlmResult]:
     from omnidocs.tasks.text_extraction import LightOnTextExtractor
     from omnidocs.tasks.text_extraction.lighton import LightOnTextPyTorchConfig
+
     def factory():
         return LightOnTextExtractor(backend=LightOnTextPyTorchConfig(device="cuda"))
+
     return _run_cases(factory, cases)
 
 
-@app.function(image=VLLM_IMAGE, gpu="L40S:1", secrets=[secret],
-              volumes={"/data": volume}, timeout=7200)
+@app.function(image=VLLM_IMAGE, gpu="L40S:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def bench_dotsocr(cases: List[OlmTestCase]) -> List[OlmResult]:
     import os
+
     os.environ["VLLM_USE_V1"] = "0"
     os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
-    import torch; torch.cuda.init()
+    import torch
+
+    torch.cuda.init()
     from omnidocs.tasks.text_extraction import DotsOCRTextExtractor
     from omnidocs.tasks.text_extraction.dotsocr import DotsOCRVLLMConfig
+
     def factory():
-        return DotsOCRTextExtractor(backend=DotsOCRVLLMConfig(
-            model="rednote-hilab/dots.ocr",
-            gpu_memory_utilization=0.90,
-            max_model_len=32768,
-            enforce_eager=True,
-        ))
+        return DotsOCRTextExtractor(
+            backend=DotsOCRVLLMConfig(
+                model="rednote-hilab/dots.ocr",
+                gpu_memory_utilization=0.90,
+                max_model_len=32768,
+                enforce_eager=True,
+            )
+        )
+
     return _run_cases(factory, cases)
 
 
@@ -1010,19 +1038,20 @@ def bench_dotsocr(cases: List[OlmTestCase]) -> List[OlmResult]:
 # ---------------------------------------------------------------------------
 
 MODEL_REGISTRY: Dict[str, tuple] = {
-    "qwen":           (bench_qwen,           "pytorch/A10G"),
-    "deepseek":       (bench_deepseek,        "pytorch/A10G"),
-    "nanonets":       (bench_nanonets,        "pytorch/A10G"),
-    "granitedocling": (bench_granitedocling,  "pytorch/A10G"),
-    "mineruvl":       (bench_mineruvl,        "pytorch/A10G"),
-    "glmocr":         (bench_glmocr,          "pytorch/A10G"),
-    "lighton":        (bench_lighton,         "pytorch/A10G"),
-    "dotsocr":        (bench_dotsocr,         "vllm/L40S"),
+    "qwen": (bench_qwen, "pytorch/A10G"),
+    "deepseek": (bench_deepseek, "pytorch/A10G"),
+    "nanonets": (bench_nanonets, "pytorch/A10G"),
+    "granitedocling": (bench_granitedocling, "pytorch/A10G"),
+    "mineruvl": (bench_mineruvl, "pytorch/A10G"),
+    "glmocr": (bench_glmocr, "pytorch/A10G"),
+    "lighton": (bench_lighton, "pytorch/A10G"),
+    "dotsocr": (bench_dotsocr, "vllm/L40S"),
 }
 
 # ---------------------------------------------------------------------------
 # Aggregation + reporting
 # ---------------------------------------------------------------------------
+
 
 def aggregate(results: List[OlmResult], model_id: str) -> dict:
     """
@@ -1031,8 +1060,8 @@ def aggregate(results: List[OlmResult], model_id: str) -> dict:
     """
     from collections import defaultdict
 
-    total   = len(results)
-    failed  = [r for r in results if r.failed]
+    total = len(results)
+    failed = [r for r in results if r.failed]
     scorable = [r for r in results if not r.failed]
 
     by_split: Dict[str, List[bool]] = defaultdict(list)
@@ -1045,26 +1074,21 @@ def aggregate(results: List[OlmResult], model_id: str) -> dict:
     overall = sum(all_passed) / len(all_passed) if all_passed else 0.0
 
     lats = [r.latency_s for r in results]
-    s = sorted(lats); n = len(s)
+    s = sorted(lats)
+    n = len(s)
     p50 = s[int(0.50 * n)] if n else None
     p95 = s[min(int(0.95 * n), n - 1)] if n else None
 
     return {
-        "model":          model_id,
-        "overall":        overall,
-        "samples_run":    total,
+        "model": model_id,
+        "overall": overall,
+        "samples_run": total,
         "samples_failed": len(failed),
-        "failure_rate":   len(failed) / total if total else 0.0,
-        "latency_p50_s":  p50,
-        "latency_p95_s":  p95,
-        "by_split": {
-            split: (sum(v) / len(v) if v else None)
-            for split, v in by_split.items()
-        },
-        "by_check": {
-            ct: (sum(v) / len(v) if v else None)
-            for ct, v in by_check.items()
-        },
+        "failure_rate": len(failed) / total if total else 0.0,
+        "latency_p50_s": p50,
+        "latency_p95_s": p95,
+        "by_split": {split: (sum(v) / len(v) if v else None) for split, v in by_split.items()},
+        "by_check": {ct: (sum(v) / len(v) if v else None) for ct, v in by_check.items()},
         "n_by_split": {split: len(v) for split, v in by_split.items()},
     }
 
@@ -1074,8 +1098,9 @@ def print_report(all_metrics: List[dict], splits: List[str]) -> None:
 
     # Build header matching the leaderboard column order
     col_labels = [SPLIT_LABELS.get(s, s[:7]) for s in splits]
-    header = f"\n{'Model':<18}" + "".join(f"{lbl:>9}" for lbl in col_labels) + f"{'Overall':>10}  {'p50(s)':>7} {'Fail%':>6}"
-
+    header = (
+        f"\n{'Model':<18}" + "".join(f"{lbl:>9}" for lbl in col_labels) + f"{'Overall':>10}  {'p50(s)':>7} {'Fail%':>6}"
+    )
     print(f"\n{div}")
     print("olmOCR-BENCH RESULTS  (binary pass/fail unit tests, % passed)")
     print(div + header)
@@ -1091,14 +1116,11 @@ def print_report(all_metrics: List[dict], splits: List[str]) -> None:
             row += f"{_pct(v):>9}"
         row += f"{_pct(m['overall']):>10}"
         row += f"  {m['latency_p50_s'] or 0:>7.2f}"
-        row += f"  {(m['failure_rate'] or 0)*100:>5.1f}%"
+        row += f"  {(m['failure_rate'] or 0) * 100:>5.1f}%"
         print(row)
 
         # Print sample counts per split as context
-        counts = "  ".join(
-            f"{SPLIT_LABELS.get(s, s[:7])}={m['n_by_split'].get(s, 0)}"
-            for s in splits
-        )
+        counts = "  ".join(f"{SPLIT_LABELS.get(s, s[:7])}={m['n_by_split'].get(s, 0)}" for s in splits)
         print(f"  {'':18}  ({counts})")
 
     print(div)
@@ -1133,13 +1155,14 @@ def print_report(all_metrics: List[dict], splits: List[str]) -> None:
 # Local entrypoint
 # ---------------------------------------------------------------------------
 
+
 @app.local_entrypoint()
 def main(
-    models:        str  = "",
-    splits:        str  = "",
-    max_per_split: int  = 0,
-    output:        str  = "",
-    list_info:     bool = False,
+    models: str = "",
+    splits: str = "",
+    max_per_split: int = 0,
+    output: str = "",
+    list_info: bool = False,
 ):
     """
     Run olmOCR-Bench on Modal GPUs.
@@ -1158,15 +1181,13 @@ def main(
             print(f"  {s:<20} → leaderboard column: {SPLIT_LABELS[s]}")
         return
 
-    model_ids = [m.strip() for m in models.split(",") if m.strip()] if models \
-                else list(MODEL_REGISTRY.keys())
+    model_ids = [m.strip() for m in models.split(",") if m.strip()] if models else list(MODEL_REGISTRY.keys())
     unknown = [m for m in model_ids if m not in MODEL_REGISTRY]
     if unknown:
         print(f"Unknown models: {unknown}. Available: {list(MODEL_REGISTRY.keys())}")
         sys.exit(1)
 
-    split_names = [s.strip() for s in splits.split(",") if s.strip()] if splits \
-                  else OLM_SPLITS
+    split_names = [s.strip() for s in splits.split(",") if s.strip()] if splits else OLM_SPLITS
     unknown_splits = [s for s in split_names if s not in OLM_SPLITS]
     if unknown_splits:
         print(f"Unknown splits: {unknown_splits}. Available: {OLM_SPLITS}")
@@ -1174,7 +1195,7 @@ def main(
 
     max_samples = max_per_split if max_per_split > 0 else None
 
-    print(f"\nLoading olmOCR-Bench from HuggingFace...")
+    print("\nLoading olmOCR-Bench from HuggingFace...")
     print(f"  Splits: {split_names}")
     print(f"  Max per split: {max_samples or 'all'}")
     all_cases = load_olmocr_bench(split_names, max_per_split=max_samples)
@@ -1201,16 +1222,21 @@ def main(
             futures[model_id] = (None, backend_label)
 
     for model_id, (future, backend_label) in futures.items():
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  Waiting: {model_id}  [{backend_label}]")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         if future is None:
             results = [
                 OlmResult(
-                    case_id=c.case_id, split=c.split, check_type=c.check_type,
-                    model=model_id, passed=False, latency_s=0.0,
-                    failed=True, error="spawn failed",
+                    case_id=c.case_id,
+                    split=c.split,
+                    check_type=c.check_type,
+                    model=model_id,
+                    passed=False,
+                    latency_s=0.0,
+                    failed=True,
+                    error="spawn failed",
                 )
                 for c in all_cases
             ]
@@ -1221,9 +1247,14 @@ def main(
                 print(f"  [ERROR] {model_id} failed: {exc}")
                 results = [
                     OlmResult(
-                        case_id=c.case_id, split=c.split, check_type=c.check_type,
-                        model=model_id, passed=False, latency_s=0.0,
-                        failed=True, error=str(exc),
+                        case_id=c.case_id,
+                        split=c.split,
+                        check_type=c.check_type,
+                        model=model_id,
+                        passed=False,
+                        latency_s=0.0,
+                        failed=True,
+                        error=str(exc),
                     )
                     for c in all_cases
                 ]
@@ -1233,10 +1264,10 @@ def main(
         all_raw[model_id] = [asdict(r) for r in results]
 
         passed_n = sum(1 for r in results if r.passed and not r.failed)
-        total_n  = len(results)
+        total_n = len(results)
         print(
             f"  Done: {passed_n}/{total_n} passed"
-            f"  overall={metrics['overall']*100:.1f}%"
+            f"  overall={metrics['overall'] * 100:.1f}%"
             f"  p50={metrics.get('latency_p50_s') or 0:.2f}s"
         )
 
@@ -1247,11 +1278,11 @@ def main(
         out_path = Path(output)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
-            "benchmark":   "olmOCR-bench",
-            "splits":      split_names,
-            "num_cases":   len(all_cases),
-            "models":      model_ids,
-            "metrics":     all_metrics,
+            "benchmark": "olmOCR-bench",
+            "splits": split_names,
+            "num_cases": len(all_cases),
+            "models": model_ids,
+            "metrics": all_metrics,
             "raw_results": all_raw,
         }
         out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")

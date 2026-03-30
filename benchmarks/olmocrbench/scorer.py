@@ -20,10 +20,10 @@ import re
 from html.parser import HTMLParser
 from typing import List, Optional, Tuple
 
-
 # ---------------------------------------------------------------------------
 # Fuzzy matching helpers
 # ---------------------------------------------------------------------------
+
 
 def _fuzzy_contains(text: str, query: str, threshold: float = 0.8) -> bool:
     """
@@ -37,6 +37,7 @@ def _fuzzy_contains(text: str, query: str, threshold: float = 0.8) -> bool:
         return query in text
 
     import difflib
+
     q_len = len(query)
     if q_len == 0:
         return True
@@ -51,17 +52,18 @@ def _fuzzy_contains(text: str, query: str, threshold: float = 0.8) -> bool:
 def _get_search_region(text: str, payload: dict) -> str:
     """Apply first_n / last_n constraints from the payload."""
     first_n = payload.get("first_n")
-    last_n  = payload.get("last_n")
+    last_n = payload.get("last_n")
     if first_n is not None:
         return text[: int(first_n)]
     if last_n is not None:
-        return text[-int(last_n):]
+        return text[-int(last_n) :]
     return text
 
 
 def _first_fuzzy_index(haystack: str, needle: str, threshold: float) -> int:
     """Return the start index of the first fuzzy match, or -1."""
     import difflib
+
     n = len(needle)
     if n == 0:
         return 0
@@ -76,15 +78,16 @@ def _first_fuzzy_index(haystack: str, needle: str, threshold: float) -> int:
 # text_present
 # ---------------------------------------------------------------------------
 
+
 def score_text_present(predicted: str, payload: dict) -> bool:
     """The query string MUST appear in the output."""
-    query     = payload.get("text", "")
+    query = payload.get("text", "")
     threshold = float(payload.get("threshold", 0.8))
-    region    = _get_search_region(predicted, payload)
+    region = _get_search_region(predicted, payload)
 
     if not payload.get("case_sensitive", True):
         region = region.lower()
-        query  = query.lower()
+        query = query.lower()
 
     return _fuzzy_contains(region, query, threshold)
 
@@ -93,11 +96,12 @@ def score_text_present(predicted: str, payload: dict) -> bool:
 # text_absent
 # ---------------------------------------------------------------------------
 
+
 def score_text_absent(predicted: str, payload: dict) -> bool:
     """The query string must NOT appear in the output."""
-    query     = payload.get("text", "")
+    query = payload.get("text", "")
     threshold = float(payload.get("threshold", 0.8))
-    region    = _get_search_region(predicted, payload)
+    region = _get_search_region(predicted, payload)
 
     # text_absent is not case-sensitive per olmOCR-bench spec
     return not _fuzzy_contains(region.lower(), query.lower(), threshold)
@@ -107,10 +111,11 @@ def score_text_absent(predicted: str, payload: dict) -> bool:
 # reading_order
 # ---------------------------------------------------------------------------
 
+
 def score_reading_order(predicted: str, payload: dict) -> bool:
     """text_before must appear before text_after in the output."""
-    before    = payload.get("before", "")
-    after     = payload.get("after", "")
+    before = payload.get("before", "")
+    after = payload.get("after", "")
     threshold = float(payload.get("threshold", 0.8))
 
     if not before or not after:
@@ -118,12 +123,12 @@ def score_reading_order(predicted: str, payload: dict) -> bool:
 
     text = predicted
     if not payload.get("case_sensitive", True):
-        text   = text.lower()
+        text = text.lower()
         before = before.lower()
-        after  = after.lower()
+        after = after.lower()
 
     pos_before = _first_fuzzy_index(text, before, threshold)
-    pos_after  = _first_fuzzy_index(text, after,  threshold)
+    pos_after = _first_fuzzy_index(text, after, threshold)
 
     if pos_before == -1 or pos_after == -1:
         return False
@@ -133,6 +138,7 @@ def score_reading_order(predicted: str, payload: dict) -> bool:
 # ---------------------------------------------------------------------------
 # table
 # ---------------------------------------------------------------------------
+
 
 def _parse_markdown_table(md: str) -> List[List[str]]:
     """Parse a markdown pipe table into a 2-D list of cell strings."""
@@ -150,6 +156,7 @@ def _parse_markdown_table(md: str) -> List[List[str]]:
 
 def _parse_html_table(html: str) -> List[List[str]]:
     """Parse an HTML table into a 2-D list of cell strings."""
+
     class _Parser(HTMLParser):
         def __init__(self):
             super().__init__()
@@ -181,11 +188,10 @@ def _parse_html_table(html: str) -> List[List[str]]:
     return p.rows
 
 
-def _find_cell_position(
-    rows: List[List[str]], value: str, threshold: float
-) -> Optional[Tuple[int, int]]:
+def _find_cell_position(rows: List[List[str]], value: str, threshold: float) -> Optional[Tuple[int, int]]:
     """Return (row, col) of the first fuzzy-matching cell, or None."""
     import difflib
+
     for r, row in enumerate(rows):
         for c, cell in enumerate(row):
             if difflib.SequenceMatcher(None, value.lower(), cell.lower()).ratio() >= threshold:
@@ -201,24 +207,20 @@ def score_table(predicted: str, payload: dict) -> bool:
     """
     import difflib
 
-    cell      = payload.get("cell", "")
-    up        = payload.get("up")
-    down      = payload.get("down")
-    left      = payload.get("left")
-    right     = payload.get("right")
+    cell = payload.get("cell", "")
+    up = payload.get("up")
+    down = payload.get("down")
+    left = payload.get("left")
+    right = payload.get("right")
     threshold = float(payload.get("threshold", 0.8))
 
     neighbours = {
-        "up":    ((-1,  0), up),
-        "down":  (( 1,  0), down),
-        "left":  (( 0, -1), left),
-        "right": (( 0, +1), right),
+        "up": ((-1, 0), up),
+        "down": ((1, 0), down),
+        "left": ((0, -1), left),
+        "right": ((0, +1), right),
     }
-    active = {
-        d: (delta, exp)
-        for d, (delta, exp) in neighbours.items()
-        if exp is not None and str(exp).strip() != ""
-    }
+    active = {d: (delta, exp) for d, (delta, exp) in neighbours.items() if exp is not None and str(exp).strip() != ""}
 
     # Collect all grids (HTML + markdown)
     grids: List[List[List[str]]] = []
@@ -248,16 +250,14 @@ def score_table(predicted: str, payload: dict) -> bool:
                 if not (0 <= nr < len(grid) and 0 <= nc < len(grid[nr])):
                     ok = False
                     break
-                if difflib.SequenceMatcher(
-                    None, str(exp).lower(), grid[nr][nc].lower()
-                ).ratio() < threshold:
+                if difflib.SequenceMatcher(None, str(exp).lower(), grid[nr][nc].lower()).ratio() < threshold:
                     ok = False
                     break
             if ok:
                 return True
 
     # Prose fallback: all required values must appear within 800 chars of each other
-    _WINDOW = 800
+    window = 800
     required = [cell] + [str(exp) for _, exp in active.values()]
     required = [v for v in required if v.strip()]
     if not required:
@@ -267,20 +267,18 @@ def score_table(predicted: str, payload: dict) -> bool:
     if not all(_fuzzy_contains(text_lower, v.lower(), threshold) for v in required):
         return False
 
-    positions = [
-        _first_fuzzy_index(text_lower, v.lower(), threshold)
-        for v in required
-    ]
+    positions = [_first_fuzzy_index(text_lower, v.lower(), threshold) for v in required]
     positions = [p for p in positions if p != -1]
     if not positions:
         return False
 
-    return (max(positions) - min(positions)) <= _WINDOW
+    return (max(positions) - min(positions)) <= window
 
 
 # ---------------------------------------------------------------------------
 # math
 # ---------------------------------------------------------------------------
+
 
 def score_math(predicted: str, payload: dict) -> bool:
     """
@@ -288,7 +286,7 @@ def score_math(predicted: str, payload: dict) -> bool:
     If a secondary symbol + direction is given, both must appear and
     their relative order must match.
     """
-    primary   = payload.get("latex", payload.get("math", payload.get("text", "")))
+    primary = payload.get("latex", payload.get("math", payload.get("text", "")))
     secondary = payload.get("secondary_latex", "")
     direction = payload.get("direction", "")
     threshold = float(payload.get("threshold", 0.7))
@@ -318,11 +316,11 @@ def score_math(predicted: str, payload: dict) -> bool:
 # ---------------------------------------------------------------------------
 
 _SCORERS = {
-    "text_present":  score_text_present,
-    "text_absent":   score_text_absent,
+    "text_present": score_text_present,
+    "text_absent": score_text_absent,
     "reading_order": score_reading_order,
-    "table":         score_table,
-    "math":          score_math,
+    "table": score_table,
+    "math": score_math,
 }
 
 
