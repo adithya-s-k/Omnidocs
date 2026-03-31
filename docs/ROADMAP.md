@@ -88,6 +88,7 @@
 | Batch processing | ✅ |
 | Modal deployment | ✅ |
 | Testing framework | ✅ |
+| Benchmarking suite | ✅ |
 
 ---
 

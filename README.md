@@ -326,6 +326,30 @@ See the full [Roadmap](https://adithya-s-k.github.io/Omnidocs/ROADMAP/) for plan
 
 ---
 
+## Benchmarking
+
+OmniDocs includes a built-in benchmarking suite to evaluate model quality across standard document AI benchmarks.
+
+| Benchmark | What It Measures |
+|-----------|-----------------|
+| **OmniDocBench** | End-to-end text quality (Edit Distance, TEDS, CDM) |
+| **NayanaOCRBench** | Multilingual text quality across 22 languages |
+| **olmOCR-Bench** | Binary pass/fail unit tests across 7 OCR capability splits |
+
+Run on Modal (parallel, cloud GPU):
+```bash
+modal run tests/benchmark/test_benchmark.py --benchmark omnidocbench --models glmocr
+modal run tests/benchmark/test_benchmark.py --benchmark multilingual --languages en,hi,kn
+modal run tests/benchmark/test_benchmark.py --benchmark olmocr
+```
+
+Or locally:
+```bash
+python -m benchmarks.omnidocbench --models glmocr --max-samples 10
+python -m benchmarks.multilingual --models glmocr --languages en
+python -m benchmarks.olmocrbench --models glmocr
+```
+
 ## Contributing
 
 Contributions are welcome! See our [Contributing Guide](https://adithya-s-k.github.io/Omnidocs/contributing/) to get started.

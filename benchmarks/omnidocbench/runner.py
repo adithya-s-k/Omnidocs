@@ -215,16 +215,16 @@ def run_omnidocbench(
         )
 
     # Write summary.json
-    summary = {
-        "run_id": run_id,
-        "benchmark": "OmniDocBench",
-        "output_dir": str(output_dir),
-        "models": model_keys,
+    results_json = {
+        "run_id":    run_id,
+        "benchmark": "omnidocbench",
+        "execution": "local",
+        "models":    model_keys,
         "inference": inference_summary,
         "eval_scores": eval_scores,
     }
-    summary_path = output_dir / "summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    print(f"\nSummary written to: {summary_path}")
+    results_path = output_dir / "results.json"
+    results_path.write_text(json.dumps(results_json, indent=2), encoding="utf-8")
+    print(f"\nResults saved to: {results_path}")
 
-    return summary
+    return results_json

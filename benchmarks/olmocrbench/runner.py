@@ -361,29 +361,32 @@ def run_olmocrbench_bench(
     print_report(all_metrics, splits)
 
     # Write results to disk
-    payload = {
-        "run_id": run_id,
-        "benchmark": "olmocrbench-bench",
-        "splits": splits,
-        "num_cases": len(cases),
-        "models": model_keys,
-        "metrics": all_metrics,
-        "raw_results": all_raw,
+    results_json = {
+        "run_id":      run_id,
+        "benchmark":   "olmocrbench",
+        "execution":   "local",
+        "models":      model_keys,
+        "splits":      splits,
+        "inference": {
+            m["model"]: {
+                "cases_run":    m["samples_run"],
+                "cases_failed": m["samples_failed"],
+            }
+            for m in all_metrics
+        },
+        "eval_scores": {
+            m["model"]: {
+                "overall":   m["overall"],
+                "by_split":  m["by_split"],
+                "by_check":  m["by_check"],
+                "latency_p50_s": m["latency_p50_s"],
+                "latency_p95_s": m["latency_p95_s"],
+            }
+            for m in all_metrics
+        },
     }
+    results_path = output_dir / "results.json"
+    results_path.write_text(json.dumps(results_json, indent=2), encoding="utf-8")
+    print(f"\nResults saved to: {results_path}")
 
-    raw_path = output_dir / "raw_results.json"
-    raw_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"\nFull results saved to: {raw_path}")
-
-    summary = {
-        "run_id": run_id,
-        "benchmark": "olmocrbench-bench",
-        "splits": splits,
-        "models": model_keys,
-        "metrics": all_metrics,
-    }
-    summary_path = output_dir / "summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    print(f"Summary saved to:      {summary_path}")
-
-    return payload
+    return results_json

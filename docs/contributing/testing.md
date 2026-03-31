@@ -314,7 +314,17 @@ TestSpec(
     gpu_type=None,  # None for CPU tests
 ),
 ```
+## Running Benchmarks
 
+OmniDocs includes a separate benchmarking suite for evaluating model quality. See the **[Benchmarking Guide](../benchmarks/benchmarking.md)** for full details.
+
+Quick reference:
+
+| Benchmark | Modal | Local |
+|-----------|-------|-------|
+| OmniDocBench | `modal run tests/benchmark/test_benchmark.py --benchmark omnidocbench` | `python -m benchmarks.omnidocbench` |
+| NayanaOCRBench | `modal run tests/benchmark/test_benchmark.py --benchmark multilingual` | `python -m benchmarks.multilingual` |
+| olmOCR-Bench | `modal run tests/benchmark/test_benchmark.py --benchmark olmocr` | `python -m benchmarks.olmocrbench` |
 ---
 
 ## Troubleshooting

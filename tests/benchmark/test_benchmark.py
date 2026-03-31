@@ -173,49 +173,57 @@ def _omnidocbench_remote(extractor_factory, sample_dicts: list) -> list:
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=3600)
 def omnidocbench_infer_qwen(sample_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_qwen
     return _omnidocbench_remote(_make_qwen, sample_dicts)
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=3600)
 def omnidocbench_infer_deepseek(sample_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_deepseek
     return _omnidocbench_remote(_make_deepseek, sample_dicts)
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=3600)
 def omnidocbench_infer_nanonets(sample_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_nanonets
     return _omnidocbench_remote(_make_nanonets, sample_dicts)
 
 @app.function(image=PYTORCH_IMAGE, gpu="L40S:1", secrets=[secret], volumes={"/data": volume}, timeout=3600)
 def omnidocbench_infer_granitedocling(sample_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_granitedocling
     return _omnidocbench_remote(_make_granitedocling, sample_dicts)
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=3600)
 def omnidocbench_infer_mineruvl(sample_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_mineruvl
     return _omnidocbench_remote(_make_mineruvl, sample_dicts)
 
 @app.function(image=GLM_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=3600)
 def omnidocbench_infer_glmocr(sample_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_glmocr
     return _omnidocbench_remote(_make_glmocr, sample_dicts)
 
 @app.function(image=LIGHTON_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=3600)
 def omnidocbench_infer_lighton(sample_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_lighton
     return _omnidocbench_remote(_make_lighton, sample_dicts)
 
 @app.function(image=VLLM_IMAGE, gpu="L40S:1", secrets=[secret], volumes={"/data": volume}, timeout=3600)
 def omnidocbench_infer_dotsocr(sample_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_dotsocr
     return _omnidocbench_remote(_make_dotsocr, sample_dicts)
 
@@ -299,10 +307,16 @@ def _run_omnidocbench_benchmark(
         run_output_dir=out_root,
         model_keys=[mid for mid, s in summary.items() if s.get("written", 0) > 0],
     )
-    (out_root / "eval_scores.json").write_text(
-        json.dumps(eval_scores, indent=2), encoding="utf-8"
-    )
-    print(f"\nEval scores saved to: {out_root / 'eval_scores.json'}")
+    results_json = {
+        "run_id":    run_id,
+        "benchmark": "omnidocbench",
+        "execution": "modal",
+        "models":    model_ids,
+        "inference": summary,
+        "eval_scores": eval_scores,
+    }
+    (out_root / "results.json").write_text(json.dumps(results_json, indent=2), encoding="utf-8")
+    print(f"\nResults saved to: {out_root / 'results.json'}")
 
 
 # ---------------------------------------------------------------------------
@@ -330,49 +344,57 @@ def _olmocr_remote(extractor_factory, case_dicts: list) -> list:
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def olmocr_bench_qwen(case_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_qwen
     return _olmocr_remote(_make_qwen, case_dicts)
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def olmocr_bench_deepseek(case_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_deepseek
     return _olmocr_remote(_make_deepseek, case_dicts)
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def olmocr_bench_nanonets(case_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_nanonets
     return _olmocr_remote(_make_nanonets, case_dicts)
 
 @app.function(image=PYTORCH_IMAGE, gpu="L40S:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def olmocr_bench_granitedocling(case_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_granitedocling
     return _olmocr_remote(_make_granitedocling, case_dicts)
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def olmocr_bench_mineruvl(case_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_mineruvl
     return _olmocr_remote(_make_mineruvl, case_dicts)
 
 @app.function(image=GLM_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def olmocr_bench_glmocr(case_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_glmocr
     return _olmocr_remote(_make_glmocr, case_dicts)
 
 @app.function(image=LIGHTON_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def olmocr_bench_lighton(case_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_lighton
     return _olmocr_remote(_make_lighton, case_dicts)
 
 @app.function(image=VLLM_IMAGE, gpu="L40S:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def olmocr_bench_dotsocr(case_dicts: list) -> list:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_dotsocr
     return _olmocr_remote(_make_dotsocr, case_dicts)
 
@@ -399,6 +421,7 @@ def _run_olmocr_benchmark(
     from benchmarks.olmocrbench.dataset import OLM_SPLITS, load_olmocr_bench
     from benchmarks.olmocrbench.runner import aggregate, print_report
     from benchmarks.base import OlmTestCase
+    import datetime
 
     if list_info:
         print("\nAvailable models:", list(OLMOCR_REGISTRY.keys()))
@@ -466,18 +489,34 @@ def _run_olmocr_benchmark(
 
     print_report(all_metrics, split_names)
 
-    if output:
-        out_path = Path(output)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json.dumps({
-            "benchmark":   "olmOCR-bench",
-            "splits":      split_names,
-            "num_cases":   len(cases),
-            "models":      model_ids,
-            "metrics":     all_metrics,
-            "raw_results": all_raw,
-        }, indent=2), encoding="utf-8")
-        print(f"\nFull results saved to: {output}")
+    results_json = {
+        "run_id":    datetime.datetime.now().strftime("%Y%m%d_%H%M%S"),
+        "benchmark": "olmocrbench",
+        "execution": "modal",
+        "models":    model_ids,
+        "splits":    split_names,
+        "inference": {
+            m["model"]: {
+                "cases_run":    m["samples_run"],
+                "cases_failed": m["samples_failed"],
+            }
+            for m in all_metrics
+        },
+        "eval_scores": {
+            m["model"]: {
+                "overall":       m["overall"],
+                "by_split":      m["by_split"],
+                "by_check":      m["by_check"],
+                "latency_p50_s": m["latency_p50_s"],
+                "latency_p95_s": m["latency_p95_s"],
+            }
+            for m in all_metrics
+        },
+    }
+    out_path = Path(output) if output else (Path("results") / "olmocrbench" / results_json["run_id"] / "results.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(results_json, indent=2), encoding="utf-8")
+    print(f"\nResults saved to: {out_path}")
 
 
 # ---------------------------------------------------------------------------
@@ -521,49 +560,57 @@ def _multilingual_remote(extractor_factory, languages: list, max_per_language) -
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def multilingual_infer_qwen(languages: list, max_per_language) -> dict:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_qwen
     return _multilingual_remote(_make_qwen, languages, max_per_language)
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def multilingual_infer_deepseek(languages: list, max_per_language) -> dict:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_deepseek
     return _multilingual_remote(_make_deepseek, languages, max_per_language)
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def multilingual_infer_nanonets(languages: list, max_per_language) -> dict:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_nanonets
     return _multilingual_remote(_make_nanonets, languages, max_per_language)
 
 @app.function(image=PYTORCH_IMAGE, gpu="L40S:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def multilingual_infer_granitedocling(languages: list, max_per_language) -> dict:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_granitedocling
     return _multilingual_remote(_make_granitedocling, languages, max_per_language)
 
 @app.function(image=PYTORCH_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def multilingual_infer_mineruvl(languages: list, max_per_language) -> dict:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_mineruvl
     return _multilingual_remote(_make_mineruvl, languages, max_per_language)
 
 @app.function(image=GLM_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def multilingual_infer_glmocr(languages: list, max_per_language) -> dict:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_glmocr
     return _multilingual_remote(_make_glmocr, languages, max_per_language)
 
 @app.function(image=LIGHTON_IMAGE, gpu="A10G:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def multilingual_infer_lighton(languages: list, max_per_language) -> dict:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_lighton
     return _multilingual_remote(_make_lighton, languages, max_per_language)
 
 @app.function(image=VLLM_IMAGE, gpu="L40S:1", secrets=[secret], volumes={"/data": volume}, timeout=7200)
 def multilingual_infer_dotsocr(languages: list, max_per_language) -> dict:
-    import sys; sys.path.insert(0, "/opt/omnidocs")
+    import sys
+    sys.path.insert(0, "/opt/omnidocs")
     from benchmarks.registry import _make_dotsocr
     return _multilingual_remote(_make_dotsocr, languages, max_per_language)
 
@@ -685,10 +732,17 @@ def _run_multilingual_benchmark(
             languages=target_langs,
             gt_by_lang=gt_by_lang,
         )
-        (out_root / "eval_scores.json").write_text(
-            json.dumps(eval_scores, indent=2), encoding="utf-8"
-        )
-        print(f"\nEval scores saved to: {out_root / 'eval_scores.json'}")
+        results_json = {
+                "run_id":    run_id,
+                "benchmark": "multilingual",
+                "execution": "modal",
+                "models":    model_ids,
+                "languages": target_langs,
+                "inference": summary,
+                "eval_scores": eval_scores,
+            }
+        (out_root / "results.json").write_text(json.dumps(results_json, indent=2), encoding="utf-8")
+        print(f"\nResults saved to: {out_root / 'results.json'}")
 
 
 # ---------------------------------------------------------------------------
