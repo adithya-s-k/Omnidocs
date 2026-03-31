@@ -362,23 +362,23 @@ def run_olmocrbench_bench(
 
     # Write results to disk
     results_json = {
-        "run_id":      run_id,
-        "benchmark":   "olmocrbench",
-        "execution":   "local",
-        "models":      model_keys,
-        "splits":      splits,
+        "run_id": run_id,
+        "benchmark": "olmocrbench",
+        "execution": "local",
+        "models": model_keys,
+        "splits": splits,
         "inference": {
             m["model"]: {
-                "cases_run":    m["samples_run"],
+                "cases_run": m["samples_run"],
                 "cases_failed": m["samples_failed"],
             }
             for m in all_metrics
         },
         "eval_scores": {
             m["model"]: {
-                "overall":   m["overall"],
-                "by_split":  m["by_split"],
-                "by_check":  m["by_check"],
+                "overall": m["overall"],
+                "by_split": m["by_split"],
+                "by_check": m["by_check"],
                 "latency_p50_s": m["latency_p50_s"],
                 "latency_p95_s": m["latency_p95_s"],
             }

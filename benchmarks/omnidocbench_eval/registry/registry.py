@@ -8,6 +8,7 @@ class Registry:
                 raise ValueError(f"Item {name} already registered.")
             self._registry[name] = item
             return item
+
         return decorator
 
     def get(self, name):
@@ -17,6 +18,7 @@ class Registry:
 
     def list_items(self):
         return list(self._registry.keys())
+
 
 # Create global registries for tasks and models
 EVAL_TASK_REGISTRY = Registry()

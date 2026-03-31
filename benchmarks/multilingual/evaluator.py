@@ -2,6 +2,7 @@
 benchmarks/multilingual/evaluator.py
 Runs the OmniDocBench end-to-end eval in-process for each model+language.
 """
+
 from __future__ import annotations
 
 import json
@@ -14,13 +15,13 @@ def run_evaluation(
     model_keys: List[str],
     languages: List[str],
     gt_by_lang: Dict[str, List[dict]],
-    eval_repo_path: Optional[Path] = None,   # kept for API compat, unused
+    eval_repo_path: Optional[Path] = None,  # kept for API compat, unused
 ) -> Dict[str, Dict[str, dict]]:
     from benchmarks.omnidocbench_eval.run_eval import run_eval
 
     run_output_dir = Path(run_output_dir)
-    result_dir     = run_output_dir / "result"
-    gt_dir         = run_output_dir / "gt"
+    result_dir = run_output_dir / "result"
+    gt_dir = run_output_dir / "gt"
 
     # Write GT JSON files (may already exist from inference step, but write anyway)
     gt_dir.mkdir(parents=True, exist_ok=True)

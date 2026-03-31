@@ -2,6 +2,7 @@
 benchmarks/omnidocbench/evaluator.py
 Runs the OmniDocBench end-to-end eval in-process (no subprocess, no git clone).
 """
+
 from __future__ import annotations
 
 import json
@@ -20,11 +21,14 @@ def run_evaluation(
 
     if omnidocbench_json is None:
         import huggingface_hub
-        omnidocbench_json = Path(huggingface_hub.hf_hub_download(
-            repo_id="opendatalab/OmniDocBench",
-            filename="OmniDocBench.json",
-            repo_type="dataset",
-        ))
+
+        omnidocbench_json = Path(
+            huggingface_hub.hf_hub_download(
+                repo_id="opendatalab/OmniDocBench",
+                filename="OmniDocBench.json",
+                repo_type="dataset",
+            )
+        )
 
     result_dir = run_output_dir / "result"
     eval_scores: Dict[str, dict] = {}

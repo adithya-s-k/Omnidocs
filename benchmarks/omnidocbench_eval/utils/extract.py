@@ -1,36 +1,38 @@
 import re
-import os
-import json
-import copy
-#from  modules.table_utils import convert_markdown_to_html #end
-from  utils.table_utils import convert_markdown_to_html
-import re
-import unicodedata
-from bs4 import BeautifulSoup
-from pylatexenc.latexencode import unicode_to_latex
-from pylatexenc.latex2text import LatexNodes2Text
-from pylatexenc.latexwalker import LatexWalker, LatexEnvironmentNode, LatexCharsNode, LatexGroupNode, LatexMacroNode, LatexSpecialsNode
 from collections import defaultdict
-import pdb
-from utils.data_preprocess import remove_markdown_fences, replace_repeated_chars, textblock_with_norm_formula, textblock2unicode
+
+from pylatexenc.latexwalker import (
+    LatexCharsNode,
+    LatexEnvironmentNode,
+    LatexGroupNode,
+    LatexMacroNode,
+    LatexSpecialsNode,
+)
+from utils.data_preprocess import (
+    remove_markdown_fences,
+    replace_repeated_chars,
+)
+
+# from  modules.table_utils import convert_markdown_to_html #end
+from utils.table_utils import convert_markdown_to_html
 
 
 def extract_tabular(text):
-    begin_pattern = r'\\begin{tabular}'
-    end_pattern = r'\\end{tabular}'
+    begin_pattern = r"\\begin{tabular}"
+    end_pattern = r"\\end{tabular}"
 
     tabulars = []
     positions = []
     current_pos = 0
     stack = []
-    
+
     while current_pos < len(text):
         begin_match = re.search(begin_pattern, text[current_pos:])
         end_match = re.search(end_pattern, text[current_pos:])
-        
+
         if not begin_match and not end_match:
             break
-            
+
         if begin_match and (not end_match or begin_match.start() < end_match.start()):
             stack.append(current_pos + begin_match.start())
             current_pos += begin_match.start() + len(end_pattern)
@@ -45,7 +47,7 @@ def extract_tabular(text):
             current_pos += end_match.start() + len(end_pattern)
         else:
             current_pos += 1
-    
+
     if stack:
         new_start = stack[0] + len(begin_pattern)
         new_tabulars, new_positions = extract_tabular(text[new_start:])
@@ -55,20 +57,21 @@ def extract_tabular(text):
 
     return tabulars, positions
 
+
 # math reg
-    # r'\\begin{equation\*?}(.*?)\\end{equation\*?}|'
-    # r'\\begin{align\*?}(.*?)\\end{align\*?}|'
-    # r'\\begin{gather\*?}(.*?)\\end{gather\*?}|'
+# r'\\begin{equation\*?}(.*?)\\end{equation\*?}|'
+# r'\\begin{align\*?}(.*?)\\end{align\*?}|'
+# r'\\begin{gather\*?}(.*?)\\end{gather\*?}|'
 display_reg = re.compile(
     # r'\\begin{equation\*?}(.*?)\\end{equation\*?}|'
     # r'\\begin{align\*?}(.*?)\\end{align\*?}|'
     # r'\\begin{gather\*?}(.*?)\\end{gather\*?}|'
     # r'\\begin{array\*?}(.*?)\\end{array\*?}|'
-    r'\$\$(.*?)\$\$|'
-    r'\\\[(.*?)\\\]|'
-    r'\$(.*?)\$|'
-    r'\\\((.*?)\\\)',  
-    re.DOTALL
+    r"\$\$(.*?)\$\$|"
+    r"\\\[(.*?)\\\]|"
+    r"\$(.*?)\$|"
+    r"\\\((.*?)\\\)",
+    re.DOTALL,
 )
 
 # inline_reg = re.compile(
@@ -76,48 +79,39 @@ display_reg = re.compile(
 #     r'\\\((.*?)\\\)',
 # )
 inline_reg = re.compile(
-    r'\$(.*?)\$|'
-    r'\\\((.*?)\\\)',
+    r"\$(.*?)\$|"
+    r"\\\((.*?)\\\)",
 )
 
-# table 
+# table
 table_reg = re.compile(
-    r'\\begin{table\*?}(.*?)\\end{table\*?}|'
-    r'\\begin{tabular\*?}(.*?)\\end{tabular\*?}',
-    re.DOTALL 
+    r"\\begin{table\*?}(.*?)\\end{table\*?}|"
+    r"\\begin{tabular\*?}(.*?)\\end{tabular\*?}",
+    re.DOTALL,
 )
-md_table_reg = re.compile(
-    r'\|\s*.*?\s*\|\n', 
-    re.DOTALL)
-html_table_reg = re.compile(
-    r'(<table.*?</table>)',
-    re.DOTALL
-)
+md_table_reg = re.compile(r"\|\s*.*?\s*\|\n", re.DOTALL)
+html_table_reg = re.compile(r"(<table.*?</table>)", re.DOTALL)
 
 # title
-title_reg = re.compile(
-    r'^\s*#.*$', 
-    re.MULTILINE)
+title_reg = re.compile(r"^\s*#.*$", re.MULTILINE)
 
 # img
-img_pattern = r'!\[.*?\]\(.*?\)'
+img_pattern = r"!\[.*?\]\(.*?\)"
 
 # code block
-code_block_reg = re.compile(
-    r'```(\w+)\n(.*?)```',
-    re.DOTALL
-)
+code_block_reg = re.compile(r"```(\w+)\n(.*?)```", re.DOTALL)
+
 
 def md_tex_filter(content):
-    '''
+    """
     Input: 1 page md or tex content - String
     Output: text, display, inline, table, title, code - list
-    '''
-    content = re.sub(img_pattern, '', content)  # remove image
-    content = remove_markdown_fences(content)   # remove markdown fences
-    content = replace_repeated_chars(content) # replace all consecutive characters
-    content = content.replace('<html>', '').replace('</html>', '').replace('<body>', '').replace('</body>', '')
-    
+    """
+    content = re.sub(img_pattern, "", content)  # remove image
+    content = remove_markdown_fences(content)  # remove markdown fences
+    content = replace_repeated_chars(content)  # replace all consecutive characters
+    content = content.replace("<html>", "").replace("</html>", "").replace("<body>", "").replace("</body>", "")
+
     # # 使用正则表达式对unicode进行替换
     # special_unicode = ''.join(unicode_replacements.keys())
     # content = re.sub(f'[{special_unicode}]', replace_unicode, content)
@@ -144,31 +138,25 @@ def md_tex_filter(content):
     #         'content': inline_item['content'],
     #         'fine_category_type': 'equation_inline'
     #     })
-    
-    # extract latex table 
+
+    # extract latex table
     latex_table_array, table_positions = extract_tex_table(content)
     for latex_table, position in zip(latex_table_array, table_positions):
-        position = [position[0], position[0]+len(latex_table)]   # !!!
-        pred_all.append({
-            'category_type': 'latex_table',
-            'position': position,
-            'content': latex_table
-        })
-        content = content[:position[0]] + ' '*(position[1]-position[0]) + content[position[1]:]  # replace latex table with space
-
+        position = [position[0], position[0] + len(latex_table)]  # !!!
+        pred_all.append({"category_type": "latex_table", "position": position, "content": latex_table})
+        # replace latex table with space
+        content = content[: position[0]] + " " * (position[1] - position[0]) + content[position[1] :]
     # print('--------After latex table: \n', content)
     # print('-------latex_table_array: \n', latex_table_array)
 
-    # extract html table  
+    # extract html table
     html_table_array, table_positions = extract_html_table(content)
     for html_table, position in zip(html_table_array, table_positions):
-        position = [position[0], position[0]+len(html_table)]
-        pred_all.append({
-            'category_type': 'html_table',
-            'position': position,
-            'content': html_table
-        })
-        content = content[:position[0]] + ' '*(position[1]-position[0]) + content[position[1]:]  # replace html table with space
+        position = [position[0], position[0] + len(html_table)]
+        pred_all.append({"category_type": "html_table", "position": position, "content": html_table})
+        content = (
+            content[: position[0]] + " " * (position[1] - position[0]) + content[position[1] :]
+        )  # replace html table with space
     # html_table_array = []
     # html_table_matches = html_table_reg.finditer(content)
     # if html_table_matches:
@@ -177,7 +165,8 @@ def md_tex_filter(content):
     #         position = [match.start(), match.end()]
     #         html_table_array.append(matched.strip())
     #         # content = content.replace(matched, ' '*len(matched)) # replace html table with space
-    #         content = content[:position[0]] + ' '*(position[1]-position[0]) + content[position[1]:]  # replace html table with space
+    #         content = content[:position[0]] + ' '*(position[1]-position[0]) +
+    # content[position[1]:]  # replace html table with space
     #         pred_all.append({
     #             'category_type': 'html_table',
     #             'position': position,
@@ -199,32 +188,25 @@ def md_tex_filter(content):
 
     # extract interline formula
     display_matches = display_reg.finditer(content)
-    content_copy = content
     for match in display_matches:
         matched = match.group(0)
         if matched:
             # single_line = ''.join(matched.split())
-            single_line = ' '.join(matched.strip().split('\n'))
+            single_line = " ".join(matched.strip().split("\n"))
             position = [match.start(), match.end()]
             # replace $$ with \[\]
-            dollar_pattern = re.compile(r'\$\$(.*?)\$\$|\$(.*?)\$|\\\((.*?)\\\)', re.DOTALL)
+            dollar_pattern = re.compile(r"\$\$(.*?)\$\$|\$(.*?)\$|\\\((.*?)\\\)", re.DOTALL)
             sub_match = dollar_pattern.search(single_line)
             if sub_match is None:
                 # pass
-                content = content[:position[0]] + ' '*(position[1]-position[0]) + content[position[1]:]
-                pred_all.append({
-                    'category_type': 'equation_isolated',
-                    'position': position,
-                    'content': single_line
-                })
+                content = content[: position[0]] + " " * (position[1] - position[0]) + content[position[1] :]
+                pred_all.append({"category_type": "equation_isolated", "position": position, "content": single_line})
             elif sub_match.group(1):
-                single_line = re.sub(dollar_pattern, r'\\[\1\\]', single_line)
-                content = content[:position[0]] + ' '*(position[1]-position[0]) + content[position[1]:]  # replace equation with space
-                pred_all.append({
-                    'category_type': 'equation_isolated',
-                    'position': position,
-                    'content': single_line
-                })
+                single_line = re.sub(dollar_pattern, r"\\[\1\\]", single_line)
+                content = (
+                    content[: position[0]] + " " * (position[1] - position[0]) + content[position[1] :]
+                )  # replace equation with space
+                pred_all.append({"category_type": "equation_isolated", "position": position, "content": single_line})
             else:
                 # start, end = match.span()
                 # char_before = content_copy[start-1] if start > 0           else '\n'
@@ -237,13 +219,15 @@ def md_tex_filter(content):
                 #         'content': single_line,
                 #         'fine_category_type': 'equation_inline'
                 #     })
-                single_line = re.sub(dollar_pattern, r'\\[\2\3\\]', single_line)
-                pred_all.append({
-                    'category_type': 'equation_isolated',
-                    'position': position,
-                    'content': single_line,
-                    'fine_category_type': 'equation_inline'
-                })
+                single_line = re.sub(dollar_pattern, r"\\[\2\3\\]", single_line)
+                pred_all.append(
+                    {
+                        "category_type": "equation_isolated",
+                        "position": position,
+                        "content": single_line,
+                        "fine_category_type": "equation_inline",
+                    }
+                )
             # single_line = re.sub(dollar_pattern, r'\\[\1\2\3\\]', single_line)
             # print('single_line: ', single_line)
             # content = content.replace(matched, ' '*len(matched))
@@ -256,7 +240,7 @@ def md_tex_filter(content):
 
     # print('-------------After display: \n', content)
     # extract md table with ||
-    md_table_mathces = md_table_reg.findall(content+'\n')
+    md_table_mathces = md_table_reg.findall(content + "\n")
     if len(md_table_mathces) >= 2:
         # print("md table found!")
         # print("content:", content)
@@ -269,13 +253,17 @@ def md_tex_filter(content):
                 position = [match.start(), match.end()]
                 # content = content.replace(match, '')
                 # print('content after removing the md table:', content)
-                content = content[:position[0]] + ' '*(position[1]-position[0]) + content[position[1]:]  # replace md table with space
-                pred_all.append({
-                    'category_type': 'html_table',
-                    'position': position,
-                    'content': matched.strip(),
-                    'fine_category_type': 'md2html_table'
-                })
+                content = (
+                    content[: position[0]] + " " * (position[1] - position[0]) + content[position[1] :]
+                )  # replace md table with space
+                pred_all.append(
+                    {
+                        "category_type": "html_table",
+                        "position": position,
+                        "content": matched.strip(),
+                        "fine_category_type": "md2html_table",
+                    }
+                )
     # print('---------After md table: \n', content)
 
     # extract code blocks
@@ -286,18 +274,23 @@ def md_tex_filter(content):
             language = match.group(1)
             code = match.group(2).strip()
             # content = content.replace(match.group(0), '')
-            content = content[:position[0]] + ' '*(position[1]-position[0]) + content[position[1]:]  # replace code block with space
-            pred_all.append({
-                'category_type': 'text_all',
-                'position': position,
-                'content': code,
-                'language': language,
-                'fine_category_type': 'code'
-            })
+            content = (
+                content[: position[0]] + " " * (position[1] - position[0]) + content[position[1] :]
+            )  # replace code block with space
+            pred_all.append(
+                {
+                    "category_type": "text_all",
+                    "position": position,
+                    "content": code,
+                    "language": language,
+                    "fine_category_type": "code",
+                }
+            )
 
     # print('-------After code block: \n', content)
 
-    # # Extract titles: Do not extract titles, as some models do not wrap code blocks, causing all comments to be treated as titles
+    # # Extract titles: Do not extract titles, as some models do not wrap code blocks,
+    # causing all comments to be treated as titles
     # title_matches = title_reg.finditer(content)
     # if title_matches:
     #     for match in title_matches:
@@ -315,9 +308,9 @@ def md_tex_filter(content):
     #                 'content': matched,
     #                 'fine_category_type': 'title'
     #             })
-    
+
     # print('----------After title: \n', content)
-            
+
     # # Delete extracted content
     # extracted_position = [_['position'] for _ in pred_all]
     # for start, end in sorted(extracted_position, reverse=True):
@@ -326,34 +319,37 @@ def md_tex_filter(content):
     # print('----------After delete extracted: \n', content)
 
     # Remove latex style
-    content = re.sub(r'\\title\{(.*?)\}', r'\1', content)
-    content = re.sub(r'\\title\s*\{\s*(.*?)\s*\}', r'\1', content, flags=re.DOTALL)
-    content = re.sub(r'\\text\s*\{\s*(.*?)\s*\}', r'\1', content, flags=re.DOTALL)
-    content = re.sub(r'\\section\*?\{(.*?)\}', r'\1', content)
-    content = re.sub(r'\\section\*?\{\s*(.*?)\s*\}', r'\1', content, flags=re.DOTALL)
+    content = re.sub(r"\\title\{(.*?)\}", r"\1", content)
+    content = re.sub(r"\\title\s*\{\s*(.*?)\s*\}", r"\1", content, flags=re.DOTALL)
+    content = re.sub(r"\\text\s*\{\s*(.*?)\s*\}", r"\1", content, flags=re.DOTALL)
+    content = re.sub(r"\\section\*?\{(.*?)\}", r"\1", content)
+    content = re.sub(r"\\section\*?\{\s*(.*?)\s*\}", r"\1", content, flags=re.DOTALL)
 
     # extract texts
-    res = content.split('\n\n')
+    res = content.split("\n\n")
     if len(res) == 1:
-        res = content.split('\n')  # some models do not use double newlines, so use single newlines to split
+        res = content.split("\n")  # some models do not use double newlines, so use single newlines to split
 
     content_position = 0
     for text in res:
-        position = [content_position, content_position+len(text)]
+        position = [content_position, content_position + len(text)]
         content_position += len(text)
         text = text.strip()
-        text = text.strip('\n')
+        text = text.strip("\n")
         # print('ori_text: ', text)
-        text = '\n'.join([_.strip() for _ in text.split('\n') if _.strip()])   # avoid some single newline content with many spaces
+        # avoid some single newline content with many spaces
+        text = "\n".join([_.strip() for _ in text.split("\n") if _.strip()])
         # print('after strip text: ', text)
 
         if text:  # Check if the stripped text is not empty
-            if text.startswith('<table') and text.endswith('</table>'):
-                pred_all.append({
-                    'category_type': 'html_table',
-                    'position': position,
-                    'content': text,
-                })
+            if text.startswith("<table") and text.endswith("</table>"):
+                pred_all.append(
+                    {
+                        "category_type": "html_table",
+                        "position": position,
+                        "content": text,
+                    }
+                )
             # elif text.startswith('#') and '\n' not in text:
             #     text = text.replace('#', '').strip()
             #     if text:
@@ -364,37 +360,41 @@ def md_tex_filter(content):
             #             'content': text,
             #             'fine_category_type': 'title'
             #         })
-            elif text.startswith('$') and text.endswith('$'):
-                if text.replace('$', '').strip():
-                    pred_all.append({
-                        'category_type': 'equation_isolated',
-                        'position': position,
-                        'content': text.strip(),
-                    })
+            elif text.startswith("$") and text.endswith("$"):
+                if text.replace("$", "").strip():
+                    pred_all.append(
+                        {
+                            "category_type": "equation_isolated",
+                            "position": position,
+                            "content": text.strip(),
+                        }
+                    )
             else:
                 text = text.strip()
                 if text:
-                    pred_all.append({
-                        'category_type': 'text_all',
-                        'position': position,
-                        'content': text,
-                        'fine_category_type': 'text_block'
-                    })
+                    pred_all.append(
+                        {
+                            "category_type": "text_all",
+                            "position": position,
+                            "content": text,
+                            "fine_category_type": "text_block",
+                        }
+                    )
                 # if '$' in text:
                 #     for formula in re.findall(r'\$(.*?)\$', text):
                 #         formula_array.append(formula)
 
     pred_dataset = defaultdict(list)
-    pred_all = sorted(pred_all, key=lambda x: x['position'][0])
+    pred_all = sorted(pred_all, key=lambda x: x["position"][0])
     for item in pred_all:
-        pred_dataset[item['category_type']].append(item)
+        pred_dataset[item["category_type"]].append(item)
     # pdb.set_trace()
     return pred_dataset
 
 
 # def replace_or_extract(match):
 #     content = match.group(1) if match.group(1) is not None else match.group(2)
-    
+
 #     if any(char in content for char in r'\^_'):
 #         inline_array.append(match.group(0))
 #         return ''
@@ -408,7 +408,7 @@ def md_tex_filter(content):
 #     inline_matches = inline_reg.finditer(text)
 #     for match in inline_matches:
 #         content = match.group(1) if match.group(1) is not None else match.group(2)
-        
+
 #         # remove \\, \_, \&, \%, \^
 #         clean_content = re.sub(r'\\([\\_&%^])', '', content)
 
@@ -441,61 +441,64 @@ def md_tex_filter(content):
 
 #     return tables, positions
 
+
 def extract_tex_table(content):
     tables = []
     tables_positions = []
 
-    pattern = r'\\begin{table}(.*?)\\end{table}'
+    pattern = r"\\begin{table}(.*?)\\end{table}"
     for match in re.finditer(pattern, content, re.DOTALL):
         start_pos = match.start()
         end_pos = match.end()
         table_content = match.group(0)
         tables.append(table_content)
         tables_positions.append((start_pos, end_pos))
-        content = content[:start_pos] + ' '*(end_pos-start_pos) + content[end_pos:]
+        content = content[:start_pos] + " " * (end_pos - start_pos) + content[end_pos:]
 
     tabulars, tabular_positions = extract_tabular(content)
     all_tables = tables + tabulars
     all_positions = tables_positions + tabular_positions
 
-    all_result = sorted([[pos, table]for pos, table in zip(all_positions, all_tables)], key=lambda x: x[0][0])
+    all_result = sorted([[pos, table] for pos, table in zip(all_positions, all_tables)], key=lambda x: x[0][0])
     all_tables = [x[1] for x in all_result]
     all_positions = [x[0] for x in all_result]
 
     return all_tables, all_positions
+
 
 # def extract_html_table(content):
 #     soup = BeautifulSoup(content, 'html.parser')
 #     all_tables = soup.find_all('table')
 #     tables = []
 #     positions = []
-    
+
 #     for table in all_tables:
 #         if table.find_parent('table') is None:
 #             table_str = str(table)
 #             start_pos = content.find(table_str)
 #             end_pos = start_pos + len(table_str)
-            
+
 #             tables.append(table_str)
 #             positions.append((start_pos, end_pos))
 #     return tables, positions
 
+
 def extract_html_table(text):
-    begin_pattern = r'<table(?:[^>]*)>'
-    end_pattern = r'</table>'
+    begin_pattern = r"<table(?:[^>]*)>"
+    end_pattern = r"</table>"
 
     tabulars = []
     positions = []
     current_pos = 0
     stack = []
-    
+
     while current_pos < len(text):
         begin_match = re.search(begin_pattern, text[current_pos:])
         end_match = re.search(end_pattern, text[current_pos:])
-        
+
         if not begin_match and not end_match:
             break
-            
+
         if begin_match and (not end_match or begin_match.start() < end_match.start()):
             stack.append(current_pos + begin_match.start())
             current_pos += begin_match.start() + len(end_pattern)
@@ -510,7 +513,7 @@ def extract_html_table(text):
             current_pos += end_match.start() + len(end_pattern)
         else:
             current_pos += 1
-    
+
     if stack:
         new_start = stack[0] + len(begin_pattern)
         new_tabulars, new_positions = extract_html_table(text[new_start:])
@@ -522,7 +525,7 @@ def extract_html_table(text):
 
 
 def extract_node_content(node):
-    """ Recursively extract content from LatexEnvironmentNode and rebuild LaTeX table representation """
+    """Recursively extract content from LatexEnvironmentNode and rebuild LaTeX table representation"""
     if isinstance(node, LatexCharsNode):
         return node.chars  # Use chars attribute
     elif isinstance(node, LatexGroupNode):
@@ -548,18 +551,20 @@ def extract_node_content(node):
         return node.specials_chars
     else:
         return ""
-        
+
+
 def get_node_end_pos(node):
     """Recursively determine the end position of a node"""
-    if hasattr(node, 'nodelist') and node.nodelist:
+    if hasattr(node, "nodelist") and node.nodelist:
         # If the node has child nodes, recursively find the end position of the last child node
         return get_node_end_pos(node.nodelist[-1])
-    elif hasattr(node, 'pos_end'):
+    elif hasattr(node, "pos_end"):
         # If the node has pos_end attribute, return it directly
         return node.pos_end
     else:
         # If there are no child nodes, assume the node ends at the last character of its content
         return node.pos + len(str(node))
+
 
 def remove_tex_table(content):
     tables, positions = extract_tex_table(content)

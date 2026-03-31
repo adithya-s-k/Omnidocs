@@ -237,10 +237,10 @@ def run_multilingual(
 
     # Write summary.json
     results_json = {
-        "run_id":    run_id,
+        "run_id": run_id,
         "benchmark": "multilingual",
         "execution": "local",
-        "models":    model_keys,
+        "models": model_keys,
         "languages": languages,
         "inference": inference_summary,
         "eval_scores": eval_scores,

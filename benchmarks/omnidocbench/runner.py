@@ -216,10 +216,10 @@ def run_omnidocbench(
 
     # Write summary.json
     results_json = {
-        "run_id":    run_id,
+        "run_id": run_id,
         "benchmark": "omnidocbench",
         "execution": "local",
-        "models":    model_keys,
+        "models": model_keys,
         "inference": inference_summary,
         "eval_scores": eval_scores,
     }
