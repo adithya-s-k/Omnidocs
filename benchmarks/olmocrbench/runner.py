@@ -137,10 +137,7 @@ def run_cases(
             )
 
             tick = "✓" if passed else "✗"
-            pred_preview = predicted[:200].replace("\n", "↵") + ("…" if len(predicted) > 200 else "")
             print(f"  {tick} [{case.split:<15}] [{case.check_type:<14}] {latency:.2f}s")
-            print(f"      GT : {gt!r}")
-            print(f"      OUT: {pred_preview!r}")
 
         except Exception as exc:
             latency = time.perf_counter() - t0
