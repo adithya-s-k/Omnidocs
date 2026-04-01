@@ -68,6 +68,16 @@ def main():
         help="Skip the official OmniDocBench evaluation step (inference only).",
     )
     parser.add_argument(
+        "--eval-only",
+        action="store_true",
+        default=False,
+        help=(
+            "Skip inference entirely. Run eval on existing .md files in --output-dir. "
+            "Requires --output-dir pointing to a previous run. "
+            "GT is read from <output-dir>/gt/<lang>.json."
+        ),
+    )
+    parser.add_argument(
         "--eval-repo-path",
         type=str,
         default="",
@@ -112,6 +122,7 @@ def main():
         max_per_language=args.max_per_language if args.max_per_language > 0 else None,
         output_dir=Path(args.output_dir) if args.output_dir else None,
         run_eval=not args.no_eval,
+        eval_only=args.eval_only,
         eval_repo_path=Path(args.eval_repo_path) if args.eval_repo_path else None,
     )
 

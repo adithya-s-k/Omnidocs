@@ -1,27 +1,5 @@
 """
 benchmarks/olmocrbench/__main__.py
-
-CLI entry point:
-    python -m benchmarks.olmocrbench [options]
-
-Examples:
-    # Run all models, all splits
-    python -m benchmarks.olmocrbench
-
-    # Run specific models
-    python -m benchmarks.olmocrbench --models glmocr,deepseek
-
-    # Run specific splits
-    python -m benchmarks.olmocrbench --splits arxiv_math,table_tests
-
-    # Quick iteration — 20 cases per split
-    python -m benchmarks.olmocrbench --models qwen --max-per-split 20
-
-    # Custom output path
-    python -m benchmarks.olmocrbench --models nanonets --output-dir results/olmocrbench_run01
-
-    # List available models and splits
-    python -m benchmarks.olmocrbench --list-info
 """
 
 import argparse
@@ -49,19 +27,20 @@ def main():
         "--splits",
         type=str,
         default="",
-        help=(f"Comma-separated split names (default: all 7). Available: {', '.join(OLM_SPLITS)}"),
+        help=f"Comma-separated split names (default: all 7). Available: {', '.join(OLM_SPLITS)}",
+    )
+    parser.add_argument("--max-per-split", type=int, default=0, help="Max test cases per split (0 = all).")
+    parser.add_argument(
+        "--output-dir", type=str, default="", help="Output directory (default: results/olmocrbench/<run_id>/)."
     )
     parser.add_argument(
-        "--max-per-split",
-        type=int,
-        default=0,
-        help="Max test cases per split (0 = all, default: 0).",
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        default="",
-        help="Output directory for results (default: results/olmocrbench/<run_id>/).",
+        "--rescore",
+        action="store_true",
+        default=False,
+        help=(
+            "Skip inference; reload saved raw results from --output-dir and re-aggregate. "
+            "Useful when scorer logic changes but inference is already done."
+        ),
     )
     parser.add_argument(
         "--list-info",
@@ -79,15 +58,19 @@ def main():
             print(f"  {s:<20} → leaderboard column: {SPLIT_LABELS[s]}")
         sys.exit(0)
 
-    model_keys = [m.strip() for m in args.models.split(",") if m.strip()] if args.models else list_models()
+    if args.rescore and not args.output_dir:
+        print("--rescore requires --output-dir pointing to a previous run.")
+        sys.exit(1)
 
-    split_names = [s.strip() for s in args.splits.split(",") if s.strip()] if args.splits else None  # None = all splits
+    model_keys = [m.strip() for m in args.models.split(",") if m.strip()] if args.models else list_models()
+    split_names = [s.strip() for s in args.splits.split(",") if s.strip()] if args.splits else None
 
     run_olmocrbench_bench(
         model_keys=model_keys,
         splits=split_names,
         max_per_split=args.max_per_split if args.max_per_split > 0 else None,
         output_dir=Path(args.output_dir) if args.output_dir else None,
+        rescore=args.rescore,
     )
 
 

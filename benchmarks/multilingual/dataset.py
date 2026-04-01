@@ -80,7 +80,6 @@ def load_multilingual(
                 "v1v1d1/NayanaOCRBench_Natural_final_transformed",
                 name=lang,
                 split="train",
-                trust_remote_code=True,
             )
         except Exception as e:
             print(f"  [{lang}] SKIP — could not load: {e}")

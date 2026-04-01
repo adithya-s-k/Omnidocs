@@ -186,8 +186,7 @@ class CDM:
             color = "green" if idx in pred_matched_idx and pred_matched_idx[idx] else "red"
             x_min, y_min, x_max, y_max = box["bbox"]
             match_draw.rectangle(
-                [x_min - 1, y_min - 1 + h1 + gap, x_max + 1, y_max + 1 + h1 + gap],
-                fill=None, outline=color, width=2
+                [x_min - 1, y_min - 1 + h1 + gap, x_max + 1, y_max + 1 + h1 + gap], fill=None, outline=color, width=2
             )
 
         # Save visualizations

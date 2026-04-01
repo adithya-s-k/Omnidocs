@@ -173,6 +173,7 @@ def is_all_l(spec: str) -> bool:
 #         # 其它情况不修改
 #         output.append(item)
 
+
 #     return output
 def split_gt_equation_arrays(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     output = []
@@ -208,6 +209,7 @@ def split_gt_equation_arrays(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]
         output.append(item)
 
     return output
+
 
 def _wrap(line: str) -> str:
     """给单行公式重新包 \\[ ... \\]"""

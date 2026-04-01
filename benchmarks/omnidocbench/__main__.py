@@ -62,6 +62,12 @@ def main():
         help="Skip the official OmniDocBench evaluation step (inference only).",
     )
     parser.add_argument(
+        "--eval-only",
+        action="store_true",
+        default=False,
+        help="Skip inference; run eval on existing .md files in --output-dir.",
+    )
+    parser.add_argument(
         "--eval-repo-path",
         type=str,
         default="",
@@ -96,6 +102,7 @@ def main():
         max_samples=args.max_samples if args.max_samples > 0 else None,
         output_dir=Path(args.output_dir) if args.output_dir else None,
         run_eval=not args.no_eval,
+        eval_only=args.eval_only,
         eval_repo_path=Path(args.eval_repo_path) if args.eval_repo_path else None,
         omnidocbench_json=Path(args.omnidocbench_json) if args.omnidocbench_json else None,
     )
