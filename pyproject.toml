@@ -36,6 +36,17 @@ dependencies = [
     "torch>=2.6",
     "torchvision",
     "transformers>=5.3.0",
+    "apted",
+    "Levenshtein",
+    "rapidfuzz",
+    "func-timeout",
+    "loguru",
+    "pylatexenc",
+    "tabulate",
+    "lxml",
+    "beautifulsoup4",
+    "mmeval",
+    "evaluate",
 ]
 
 [project.urls]
