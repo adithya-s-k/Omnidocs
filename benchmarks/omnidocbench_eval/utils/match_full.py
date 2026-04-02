@@ -210,7 +210,7 @@ class FuzzyMatch:
             if line[i] == window[0]:
                 dp[i][0] = 0
 
-        for j in range(1, n):
+        for j in range(1, m):
             for i in range(1, n):
                 dp[i][j] = dp[i - 1][j - 1]
                 if line[i] != window[j]:

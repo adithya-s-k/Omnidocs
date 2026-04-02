@@ -23,7 +23,8 @@ function parseArray(parser, result) {
             var cell = parser.parseExpression(false, null);
         } catch (e) {
             // console.error(e);
-            exit();
+            //exit();
+            console.log(); 
         }
         // if (q == 1) exit();
         row.push(new ParseNode("ordgroup", cell, parser.mode));
